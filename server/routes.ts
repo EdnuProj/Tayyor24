@@ -310,6 +310,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (settings.telegramBotToken && settings.telegramGroupId) {
         const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
         
+        // Get category name
+        const allCategories = await storage.getCategories();
+        const category = allCategories.find(c => c.id === order.categoryId);
+        const categoryName = category?.name || "Noma'lum";
+        
         // Send to group
         const orderItems = JSON.parse(data.items || "[]");
         const itemsList = orderItems
@@ -323,6 +328,7 @@ Raqam: #${order.orderNumber}
 👤 Mijoz: ${order.customerName}
 📞 Tel: ${order.customerPhone.replace(/\s/g, "")}
 📍 Manzil: ${order.customerAddress}
+📂 Kategoriya: ${categoryName}
 
 🛍️ *Mahsulotlar:*
 ${itemsList}
