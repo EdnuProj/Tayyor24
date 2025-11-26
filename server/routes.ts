@@ -1042,6 +1042,60 @@ Qabul qilamizmi?
     }
   });
 
+  app.post("/api/courier/transfer", async (req, res) => {
+    try {
+      const { fromTelegramId, toCardNumber, amount } = req.body;
+      if (!fromTelegramId || !toCardNumber || !amount || amount <= 0) {
+        return res.status(400).json({ error: "Invalid request" });
+      }
+
+      // Get sender courier
+      const senderCourier = await storage.getCourierByTelegramId(fromTelegramId);
+      if (!senderCourier) {
+        return res.status(404).json({ error: "Sender courier not found" });
+      }
+
+      if (senderCourier.balance < amount) {
+        return res.status(400).json({ error: "Insufficient balance" });
+      }
+
+      // Find receiver courier by card number
+      const allCouriers = await storage.getCouriers();
+      const receiverCourier = allCouriers.find((c) => c.cardNumber === toCardNumber);
+      if (!receiverCourier) {
+        return res.status(404).json({ error: "Receiver courier not found" });
+      }
+
+      // Process transfer
+      const sender = await storage.debitCourierBalance(senderCourier.id, amount);
+      const receiver = await storage.creditCourierBalance(receiverCourier.id, amount);
+
+      // Record transactions
+      await (storage as any).createCourierTransaction(
+        senderCourier.id,
+        -amount,
+        "order_debit",
+        `${receiverCourier.name} ga ${amount} so'm o'tkazma`
+      );
+
+      await (storage as any).createCourierTransaction(
+        receiverCourier.id,
+        amount,
+        "topup_credit",
+        `${senderCourier.name} dan ${amount} so'm qabul qildi`
+      );
+
+      res.json({ 
+        success: true, 
+        message: `O'tkazildi: ${receiverCourier.name} ga ${amount} so'm`,
+        senderBalance: sender?.balance || 0,
+        receiverBalance: receiver?.balance || 0
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to process transfer" });
+    }
+  });
+
   // ========== NEWSLETTERS ==========
   app.get("/api/newsletters", async (req, res) => {
     try {

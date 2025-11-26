@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   Wallet,
   ArrowRightLeft,
@@ -91,9 +92,88 @@ const features = [
 ];
 
 export default function CourierPayme() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>("home");
-  const [selectedBalance] = useState("125,500");
-  const [selectedCard] = useState("UzCard • 9860 ****");
+  const [telegramId, setTelegramId] = useState<string>("");
+  const [courierBalance, setCourierBalance] = useState<number>(0);
+  const [courierCard, setCourierCard] = useState<string>("");
+  const [transferCard, setTransferCard] = useState<string>("");
+  const [transferAmount, setTransferAmount] = useState<string>("");
+  const [isTransferring, setIsTransferring] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("telegramId");
+    if (id) setTelegramId(id);
+    
+    // Fetch courier data
+    if (id) {
+      fetchCourierData(id);
+    }
+  }, []);
+
+  const fetchCourierData = async (id: string) => {
+    try {
+      const res = await fetch(`/api/courier-dashboard/${id}`);
+      const data = await res.json();
+      if (data.courier) {
+        setCourierBalance(data.courier.balance || 0);
+        setCourierCard(data.courier.cardNumber || "");
+      }
+    } catch (error) {
+      console.error("Failed to fetch courier data:", error);
+    }
+  };
+
+  const handleTransfer = async () => {
+    if (!transferCard || !transferAmount) {
+      toast({ title: "❌ Hamma maydonlarni to'ldiring", variant: "destructive" });
+      return;
+    }
+    
+    const amount = parseInt(transferAmount);
+    if (amount <= 0 || amount > courierBalance) {
+      toast({ title: "❌ Noto'g'ri miqdor", variant: "destructive" });
+      return;
+    }
+
+    setIsTransferring(true);
+    try {
+      const res = await fetch("/api/courier/transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fromTelegramId: telegramId,
+          toCardNumber: transferCard,
+          amount,
+        }),
+      });
+      
+      if (!res.ok) throw new Error("Transfer failed");
+      
+      const data = await res.json();
+      toast({ 
+        title: "✅ O'tkazma muvaffaqiyatli amalga oshdi!",
+        description: `${amount} so'm ${transferCard} ga yuborildi`
+      });
+      
+      setCourierBalance(courierBalance - amount);
+      setTransferCard("");
+      setTransferAmount("");
+      setActiveTab("history");
+      
+      // Refresh data after 1 second
+      setTimeout(() => fetchCourierData(telegramId), 1000);
+    } catch (error) {
+      toast({ 
+        title: "❌ Xatolik", 
+        description: "O'tkazma amalga oshirilmadi",
+        variant: "destructive"
+      });
+    } finally {
+      setIsTransferring(false);
+    }
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -103,8 +183,9 @@ export default function CourierPayme() {
             {/* Balance Card */}
             <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 border-0 text-white p-6">
               <p className="text-emerald-100 text-sm mb-2">Joriy Balans</p>
-              <p className="text-4xl font-bold">{selectedBalance}</p>
-              <p className="text-emerald-100 text-sm mt-2">{selectedCard}</p>
+              <p className="text-4xl font-bold">{courierBalance.toLocaleString()}</p>
+              <p className="text-emerald-100 text-sm mt-2">so'm</p>
+              {courierCard && <p className="text-emerald-100 text-xs mt-2">💳 {courierCard}</p>}
             </Card>
 
             {/* Quick Actions */}
@@ -169,26 +250,36 @@ export default function CourierPayme() {
             <h2 className="text-xl font-bold">Pul O'tkazmalar</h2>
             <Card className="bg-slate-800 border-slate-700 p-4 space-y-3">
               <div>
-                <label className="text-sm text-slate-300">Karta raqami yoki Payme ID</label>
+                <label className="text-sm text-slate-300">Qabul Qiluvchi Karta Raqami</label>
                 <input
                   type="text"
                   placeholder="9860 1234 5678 9012"
+                  value={transferCard}
+                  onChange={(e) => setTransferCard(e.target.value)}
                   className="w-full bg-slate-700 border-slate-600 text-white p-2 rounded mt-1"
                   data-testid="input-transfer-account"
                 />
               </div>
               <div>
-                <label className="text-sm text-slate-300">Miqdor</label>
+                <label className="text-sm text-slate-300">Miqdor (so'm)</label>
                 <input
                   type="number"
                   placeholder="10,000"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
                   className="w-full bg-slate-700 border-slate-600 text-white p-2 rounded mt-1"
                   data-testid="input-transfer-amount"
                 />
+                <p className="text-xs text-slate-400 mt-1">Mavjud: {courierBalance.toLocaleString()} so'm</p>
               </div>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700" data-testid="button-send-transfer">
+              <Button 
+                onClick={handleTransfer}
+                disabled={isTransferring}
+                className="w-full bg-blue-600 hover:bg-blue-700" 
+                data-testid="button-send-transfer"
+              >
                 <ArrowRightLeft className="w-4 h-4 mr-2" />
-                O'tkazish
+                {isTransferring ? "O'tkazilmoqda..." : "O'tkazish"}
               </Button>
             </Card>
           </div>
