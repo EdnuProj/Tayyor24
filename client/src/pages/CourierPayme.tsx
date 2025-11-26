@@ -154,13 +154,19 @@ export default function CourierPayme() {
     const id = params.get("telegramId");
     if (id) setTelegramId(id);
     
-    // Request location permission
+    // Request location permission immediately
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setCourierLat(latitude);
           setCourierLon(longitude);
+          
+          // Show confirmation
+          toast({
+            title: "✅ Joylashuv saqlandi",
+            description: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+          });
           
           // Send location to server
           fetch("/api/courier/update-location", {
@@ -195,10 +201,20 @@ export default function CourierPayme() {
           
           return () => navigator.geolocation.clearWatch(watchId);
         },
-        () => {
-          console.log("Location permission denied");
+        (error) => {
+          toast({
+            title: "📍 Joylashuv kerak",
+            description: "Yaqin buyurtmalarni topish uchun joylashuv kerak. Iltimos, ruxsat bering.",
+            variant: "destructive",
+          });
         }
       );
+    } else {
+      toast({
+        title: "⚠️ Xatolik",
+        description: "Geolocation qo'llab-quvvatlanmaydi",
+        variant: "destructive",
+      });
     }
     
     // Fetch courier data
