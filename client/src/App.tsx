@@ -82,6 +82,14 @@ function Router() {
         )}
       />
       <Route
+        path="/admin/couriers"
+        component={() => (
+          <AdminGuard>
+            <AdminCouriers />
+          </AdminGuard>
+        )}
+      />
+      <Route
         path="/admin/promo-codes"
         component={() => (
           <AdminGuard>

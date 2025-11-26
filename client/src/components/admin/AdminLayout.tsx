@@ -12,6 +12,7 @@ import {
   Menu,
   LogOut,
   Send,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/admin/products", icon: Package, label: "Mahsulotlar" },
   { href: "/admin/orders", icon: ShoppingCart, label: "Buyurtmalar" },
   { href: "/admin/customers", icon: Users, label: "Mijozlar" },
+  { href: "/admin/couriers", icon: Truck, label: "Kuryerlar" },
   { href: "/admin/promo-codes", icon: Tag, label: "Promokodlar" },
   { href: "/admin/rassilka", icon: Send, label: "Rassilka" },
   { href: "/admin/settings", icon: Settings, label: "Sozlamalar" },
