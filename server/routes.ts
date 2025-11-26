@@ -305,15 +305,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const order = await storage.createOrder(data);
 
+      // Get category name (available for both group and courier messages)
+      const allCategories = await storage.getCategories();
+      const category = allCategories.find(c => c.id === order.categoryId);
+      const categoryName = category?.name || "Noma'lum";
+
       // Send Telegram notification to group
       const settings = await storage.getSettings();
       if (settings.telegramBotToken && settings.telegramGroupId) {
         const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
-        
-        // Get category name
-        const allCategories = await storage.getCategories();
-        const category = allCategories.find(c => c.id === order.categoryId);
-        const categoryName = category?.name || "Noma'lum";
         
         // Send to group
         const orderItems = JSON.parse(data.items || "[]");
