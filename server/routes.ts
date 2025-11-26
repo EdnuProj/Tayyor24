@@ -1077,19 +1077,19 @@ Qabul qilamizmi?
       const sender = await storage.debitCourierBalance(senderCourier.id, amount);
       const receiver = await storage.creditCourierBalance(receiverCourier.id, amount);
 
-      // Record transactions
+      // Record transactions with card details
       await (storage as any).createCourierTransaction(
         senderCourier.id,
         -amount,
         "order_debit",
-        `${receiverCourier.name} ga ${amount} so'm o'tkazma`
+        `${receiverCourier.name} - ${receiverCourier.cardNumber} ga ${amount} so'm o'tkazildi`
       );
 
       await (storage as any).createCourierTransaction(
         receiverCourier.id,
         amount,
         "topup_credit",
-        `${senderCourier.name} dan ${amount} so'm qabul qildi`
+        `${senderCourier.name} - ${senderCourier.cardNumber} dan ${amount} so'm qabul qilingan`
       );
 
       res.json({ 

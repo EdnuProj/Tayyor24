@@ -14,6 +14,8 @@ import {
   CreditCard,
   ChevronRight,
   ArrowLeft,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 
 type TabType = "home" | "transfer" | "payments" | "qr" | "history" | "settings";
@@ -91,6 +93,15 @@ const features = [
   },
 ];
 
+interface Transaction {
+  id: string;
+  courierId: string;
+  amount: number;
+  type: string;
+  description: string;
+  createdAt: string;
+}
+
 export default function CourierPayme() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>("home");
@@ -100,6 +111,7 @@ export default function CourierPayme() {
   const [transferCard, setTransferCard] = useState<string>("");
   const [transferAmount, setTransferAmount] = useState<string>("");
   const [isTransferring, setIsTransferring] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -119,6 +131,9 @@ export default function CourierPayme() {
       if (data.courier) {
         setCourierBalance(data.courier.balance || 0);
         setCourierCard(data.courier.cardNumber || "");
+      }
+      if (data.transactions) {
+        setTransactions(data.transactions);
       }
     } catch (error) {
       console.error("Failed to fetch courier data:", error);
@@ -168,8 +183,11 @@ export default function CourierPayme() {
       setTransferCard("");
       setTransferAmount("");
       
-      // Refresh data immediately
-      fetchCourierData(telegramId);
+      // Refresh data and go to history
+      setTimeout(() => {
+        fetchCourierData(telegramId);
+        setActiveTab("history");
+      }, 500);
     } catch (error: any) {
       toast({ 
         title: "❌ Xatolik", 
@@ -338,19 +356,58 @@ export default function CourierPayme() {
         return (
           <div className="space-y-4">
             <h2 className="text-xl font-bold">To'lov Tarixi</h2>
-            {[
-              { date: "26-noyabr", desc: "Transfer to Shahzod", amount: "-50,000", status: "✓" },
-              { date: "25-noyabr", desc: "Elektr to'lovi", amount: "-25,000", status: "✓" },
-              { date: "24-noyabr", desc: "Internet to'lovi", amount: "-15,000", status: "✓" },
-            ].map((tx, idx) => (
-              <Card key={idx} className="bg-slate-800 border-slate-700 p-3 flex justify-between items-center">
-                <div className="text-sm">
-                  <p className="font-medium">{tx.desc}</p>
-                  <p className="text-xs text-slate-400">{tx.date}</p>
-                </div>
-                <p className="text-red-400 font-medium">{tx.amount}</p>
+            {transactions.length === 0 ? (
+              <Card className="bg-slate-800 border-slate-700 p-4 text-center text-slate-400">
+                Tranzaksiya yo'q
               </Card>
-            ))}
+            ) : (
+              transactions.map((tx) => {
+                const isDebit = tx.type === "order_debit";
+                return (
+                  <Card
+                    key={tx.id}
+                    className={`border-slate-700 p-3 flex items-center justify-between ${
+                      isDebit
+                        ? "bg-red-950/30 border-red-800"
+                        : "bg-green-950/30 border-green-800"
+                    }`}
+                    data-testid={`card-transaction-${tx.id}`}
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      {isDebit ? (
+                        <div className="p-2 bg-red-500/20 rounded-lg">
+                          <TrendingDown className="w-5 h-5 text-red-400" />
+                        </div>
+                      ) : (
+                        <div className="p-2 bg-green-500/20 rounded-lg">
+                          <TrendingUp className="w-5 h-5 text-green-400" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{tx.description}</p>
+                        <p className="text-xs text-slate-400">
+                          {new Date(tx.createdAt).toLocaleDateString("uz-UZ", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <p
+                      className={`font-bold text-right ${
+                        isDebit ? "text-red-400" : "text-green-400"
+                      }`}
+                      data-testid={`text-amount-${tx.id}`}
+                    >
+                      {isDebit ? "-" : "+"}
+                      {Math.abs(tx.amount).toLocaleString()}
+                    </p>
+                  </Card>
+                );
+              })
+            )}
           </div>
         );
 
