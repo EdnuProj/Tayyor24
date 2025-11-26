@@ -1168,14 +1168,14 @@ Buyurtma: #${order.orderNumber}
       // Get order info
       const order = await storage.getOrder(orderId);
 
-      // Send notifications
+      // Send notifications only to customer
       const settings = await storage.getSettings();
-      if (settings.telegramBotToken && order) {
+      if (settings.telegramBotToken && order && order.customerTelegramId) {
         const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
         
         // Message to customer (direct)
         const messageToCustomer = `
-⏳ *SIZNING BUYURTMA JARAYONDA*
+✅ *SIZNING BUYURTMANGIZ QABUL QILINDI*
 
 Buyurtma raqam: #${order.orderNumber}
 👤 Kuryer: ${courier.name}
@@ -1188,44 +1188,19 @@ Kuryer tez orada yetkazib beradi!
 
 Rahmalingiz uchun! 🙏
         `.trim();
-        
-        // Message to group
-        const messageToGroup = `
-✅ *BUYURTMA OLIB OLINDI*
-
-Buyurtma: #${order.orderNumber}
-👤 Kuryer: ${courier.name}
-📞 Telefon: ${courier.phone}
-💰 Yexhilish haqi: 2000 so'm
-        `.trim();
 
         try {
-          // Send to customer if telegramId exists
-          if (order.customerTelegramId) {
-            await fetch(telegramUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                chat_id: order.customerTelegramId,
-                text: messageToCustomer,
-                parse_mode: "Markdown",
-              }),
-            });
-            console.log(`Customer notification sent to ${order.customerTelegramId}`);
-          }
-
-          // Send to group
-          if (settings.telegramGroupId) {
-            await fetch(telegramUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                chat_id: settings.telegramGroupId,
-                text: messageToGroup,
-                parse_mode: "Markdown",
-              }),
-            });
-          }
+          // Send ONLY to customer
+          await fetch(telegramUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: order.customerTelegramId,
+              text: messageToCustomer,
+              parse_mode: "Markdown",
+            }),
+          });
+          console.log(`Customer notification sent to ${order.customerTelegramId}`);
         } catch (telegramError) {
           console.error("Telegram notification failed:", telegramError);
         }
