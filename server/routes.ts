@@ -792,12 +792,37 @@ Buyurtma: #${order.orderNumber}
               }),
             });
           } else {
-            // Regular customer app
-            const checkoutUrl = `${baseUrl}/?telegramId=${chatId}`;
+            // Regular customer - show categories inline
+            const categories = await storage.getCategories();
+            const mainCategories = categories.filter(c => !c.parentId).sort((a, b) => (a.order || 0) - (b.order || 0));
+            
+            // Create category buttons (2 per row)
+            const categoryButtons = [];
+            for (let i = 0; i < mainCategories.length; i += 2) {
+              const row = [];
+              row.push({
+                text: `${mainCategories[i].icon || "📦"} ${mainCategories[i].name}`,
+                callback_data: `cat_${mainCategories[i].id}`,
+              });
+              if (i + 1 < mainCategories.length) {
+                row.push({
+                  text: `${mainCategories[i + 1].icon || "📦"} ${mainCategories[i + 1].name}`,
+                  callback_data: `cat_${mainCategories[i + 1].id}`,
+                });
+              }
+              categoryButtons.push(row);
+            }
+
+            // Add button to open full store in web app
+            categoryButtons.push([
+              {
+                text: "🌐 Poln Dokon",
+                web_app: { url: `${baseUrl}/?telegramId=${chatId}` },
+              },
+            ]);
+
             const inlineKeyboard = {
-              inline_keyboard: [
-                [{ text: "📱 Do'kon Ochish", web_app: { url: checkoutUrl } }],
-              ],
+              inline_keyboard: categoryButtons,
             };
 
             const botUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -806,7 +831,7 @@ Buyurtma: #${order.orderNumber}
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 chat_id: chatId,
-                text: "*Do'kon-ga Xush Kelibsiz!* 🛍️\n\nMahsulotlarni ko'ring va buyurtma bering.",
+                text: "*🛍️ Do'kon-ga Xush Kelibsiz!*\n\nKategoriyalarni tanlang yoki to'liq do'konga o'ting:",
                 parse_mode: "Markdown",
                 reply_markup: inlineKeyboard,
               }),
@@ -816,50 +841,116 @@ Buyurtma: #${order.orderNumber}
           return res.json({ ok: true });
         }
 
-        // Handle category selection
-        if (text && text.startsWith("/cat_")) {
-          const categoryId = text.replace("/cat_", "");
+        // Handle category selection via callback
+        if (update.callback_query && update.callback_query.data?.startsWith("cat_")) {
+          const categoryId = update.callback_query.data.replace("cat_", "");
           const products = await storage.getProducts({ categoryId });
+          const telegramId = update.callback_query.from?.id?.toString();
 
           if (products.length === 0) {
-            const botUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            const botUrl = `https://api.telegram.org/bot${botToken}/editMessageText`;
             await fetch(botUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                chat_id: chatId,
+                chat_id: telegramId,
+                message_id: update.callback_query.message?.message_id,
                 text: "Bu kategoriyada mahsulot topilmadi.",
               }),
             });
             return res.json({ ok: true });
           }
 
-          const siteUrl = process.env.SITE_URL || "https://do-kon.replit.dev";
+          const baseDomain = process.env.REPLIT_DOMAINS || "do-kon.replit.dev";
+          const baseUrl = `https://${baseDomain}`;
 
-          // Send first 5 products
+          // Create product buttons (1 per row with view button)
+          const productButtons = [];
           for (const product of products.slice(0, 5)) {
-            const inlineBtn = {
-              inline_keyboard: [
-                [
-                  {
-                    text: "Saytda Ko'rish",
-                    url: `${siteUrl}/product/${product.slug}`,
-                  },
-                ],
-              ],
-            };
-
-            const botUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
-            await fetch(botUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                chat_id: chatId,
-                text: `${product.name}\n\nNarx: ${product.price} so'm\n\n${product.description || ""}`,
-                reply_markup: inlineBtn,
-              }),
-            });
+            productButtons.push([
+              {
+                text: `${product.name} - ${product.price} so'm`,
+                url: `${baseUrl}/products/${product.slug}?telegramId=${telegramId}`,
+              },
+            ]);
           }
+
+          // Add back button
+          productButtons.push([
+            {
+              text: "⬅️ Ortga",
+              callback_data: "back_to_categories",
+            },
+          ]);
+
+          const inlineKeyboard = {
+            inline_keyboard: productButtons,
+          };
+
+          const botUrl = `https://api.telegram.org/bot${botToken}/editMessageText`;
+          const category = (await storage.getCategories()).find(c => c.id === categoryId);
+          
+          await fetch(botUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: telegramId,
+              message_id: update.callback_query.message?.message_id,
+              text: `*${category?.icon || "📦"} ${category?.name}*\n\nMahsulotlar:`,
+              parse_mode: "Markdown",
+              reply_markup: inlineKeyboard,
+            }),
+          });
+
+          return res.json({ ok: true });
+        }
+
+        // Handle back to categories
+        if (update.callback_query?.data === "back_to_categories") {
+          const telegramId = update.callback_query.from?.id?.toString();
+          const categories = await storage.getCategories();
+          const mainCategories = categories.filter(c => !c.parentId).sort((a, b) => (a.order || 0) - (b.order || 0));
+          
+          const categoryButtons = [];
+          for (let i = 0; i < mainCategories.length; i += 2) {
+            const row = [];
+            row.push({
+              text: `${mainCategories[i].icon || "📦"} ${mainCategories[i].name}`,
+              callback_data: `cat_${mainCategories[i].id}`,
+            });
+            if (i + 1 < mainCategories.length) {
+              row.push({
+                text: `${mainCategories[i + 1].icon || "📦"} ${mainCategories[i + 1].name}`,
+                callback_data: `cat_${mainCategories[i + 1].id}`,
+              });
+            }
+            categoryButtons.push(row);
+          }
+
+          const baseDomain = process.env.REPLIT_DOMAINS || "do-kon.replit.dev";
+          const baseUrl = `https://${baseDomain}`;
+
+          categoryButtons.push([
+            {
+              text: "🌐 Poln Dokon",
+              web_app: { url: `${baseUrl}/?telegramId=${telegramId}` },
+            },
+          ]);
+
+          const inlineKeyboard = { inline_keyboard: categoryButtons };
+          const botUrl = `https://api.telegram.org/bot${botToken}/editMessageText`;
+          
+          await fetch(botUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: telegramId,
+              message_id: update.callback_query.message?.message_id,
+              text: "*🛍️ Do'kon-ga Xush Kelibsiz!*\n\nKategoriyalarni tanlang yoki to'liq do'konga o'ting:",
+              parse_mode: "Markdown",
+              reply_markup: inlineKeyboard,
+            }),
+          });
 
           return res.json({ ok: true });
         }
