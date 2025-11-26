@@ -114,6 +114,9 @@ export default function Checkout() {
         categoryId: item.product.categoryId,
       }));
 
+      // Get category from first item
+      const categoryId = items.length > 0 ? items[0].product.categoryId : "elektronika";
+
       // Ensure customerTelegramId is from form, not URL params
       const finalTelegramId = data.customerTelegramId || initialTelegramId;
       console.log("Creating order with customerTelegramId:", finalTelegramId);
@@ -131,6 +134,7 @@ export default function Checkout() {
         discount: 0,
         total: data.deliveryType === "pickup" ? subtotal : total,
         items: JSON.stringify(orderItems),
+        categoryId,
         deliveryType: data.deliveryType,
         paymentType: data.paymentType,
         status: "new",
