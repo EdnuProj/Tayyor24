@@ -15,6 +15,9 @@ import Categories from "@/pages/Categories";
 import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
 
+// Courier App
+import CourierApp from "@/pages/CourierApp";
+
 // Admin Pages
 import Admin from "@/pages/Admin";
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -32,6 +35,9 @@ import NotFound from "@/pages/not-found";
 function Router() {
   return (
     <Switch>
+      {/* Courier Route */}
+      <Route path="/courier" component={CourierApp} />
+
       {/* Store Routes */}
       <Route path="/" component={Home} />
       <Route path="/products" component={Products} />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+ import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Search, SlidersHorizontal } from "lucide-react";
