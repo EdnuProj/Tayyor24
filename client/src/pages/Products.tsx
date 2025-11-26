@@ -180,170 +180,160 @@ export default function Products() {
           </p>
         </div>
 
-        {/* Main Layout with Sidebar */}
-        <div className="flex gap-6">
-          {/* Left Sidebar - Subcategories */}
-          {subcategories.length > 0 && (
-            <div className="w-48 flex-shrink-0">
-              <div className="sticky top-4 space-y-2">
-                <p className="text-sm font-semibold text-foreground mb-4">Kichik kategoriyalar:</p>
-                <Button
-                  variant={!filters.categoryId || !categories.find(c => c.id === filters.categoryId)?.parentId ? "default" : "outline"}
-                  size="sm"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    setFilters((prev) => ({ ...prev, categoryId: parentCategoryId }));
-                    setCurrentPage(1);
-                  }}
-                  data-testid="button-all-subcategories"
-                >
-                  Barchasi
-                </Button>
-                <div className="space-y-2">
-                  {subcategories.map((subcat) => (
-                    <Button
-                      key={subcat.id}
-                      variant={filters.categoryId === subcat.id ? "default" : "outline"}
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={() => {
-                        setFilters((prev) => ({ ...prev, categoryId: subcat.id }));
-                        setCurrentPage(1);
-                      }}
-                      data-testid={`button-subcategory-${subcat.id}`}
-                    >
-                      <span className="mr-2">{subcat.icon}</span>
-                      {subcat.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Right Content Area */}
-          <div className="flex-1">
-                {/* Search and Sort Bar */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center">
-              <form onSubmit={handleSearch} className="flex gap-2 w-full sm:w-auto sm:flex-1">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Mahsulot qidirish..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    className="pl-10"
-                    data-testid="input-product-search"
-                  />
-                </div>
-                <Button type="submit" data-testid="button-search">
-                  Qidirish
-                </Button>
-              </form>
-
-              <Select
-                value={filters.sortBy}
-                onValueChange={(value: FilterState["sortBy"]) => {
-                  setFilters((prev) => ({ ...prev, sortBy: value }));
+        {/* Subcategories Bar - Below Header */}
+        {subcategories.length > 0 && (
+          <div className="mb-6 pb-4 border-b">
+            <p className="text-sm font-semibold text-foreground mb-3">Kichik kategoriyalar:</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={!filters.categoryId || !categories.find(c => c.id === filters.categoryId)?.parentId ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setFilters((prev) => ({ ...prev, categoryId: parentCategoryId }));
                   setCurrentPage(1);
                 }}
+                data-testid="button-all-subcategories"
               >
-                <SelectTrigger className="w-[180px]" data-testid="select-sort">
-                  <SelectValue placeholder="Saralash" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Eng yangi</SelectItem>
-                  <SelectItem value="price_asc">Arzon → Qimmat</SelectItem>
-                  <SelectItem value="price_desc">Qimmat → Arzon</SelectItem>
-                  <SelectItem value="popular">Ommabop</SelectItem>
-                </SelectContent>
-              </Select>
+                Barchasi
+              </Button>
+              {subcategories.map((subcat) => (
+                <Button
+                  key={subcat.id}
+                  variant={filters.categoryId === subcat.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setFilters((prev) => ({ ...prev, categoryId: subcat.id }));
+                    setCurrentPage(1);
+                  }}
+                  data-testid={`button-subcategory-${subcat.id}`}
+                >
+                  <span className="mr-2">{subcat.icon}</span>
+                  {subcat.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Search and Sort Bar */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center">
+          <form onSubmit={handleSearch} className="flex gap-2 w-full sm:w-auto sm:flex-1">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Mahsulot qidirish..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="pl-10"
+                data-testid="input-product-search"
+              />
+            </div>
+            <Button type="submit" data-testid="button-search">
+              Qidirish
+            </Button>
+          </form>
+
+          <Select
+            value={filters.sortBy}
+            onValueChange={(value: FilterState["sortBy"]) => {
+              setFilters((prev) => ({ ...prev, sortBy: value }));
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[180px]" data-testid="select-sort">
+              <SelectValue placeholder="Saralash" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Eng yangi</SelectItem>
+              <SelectItem value="price_asc">Arzon → Qimmat</SelectItem>
+              <SelectItem value="price_desc">Qimmat → Arzon</SelectItem>
+              <SelectItem value="popular">Ommabop</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Product Grid */}
+        <ProductGrid products={paginatedProducts} isLoading={loadingProducts} />
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div 
+            ref={paginationRef}
+            className="mt-12 flex items-center justify-center gap-2 flex-wrap"
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              data-testid="button-prev-page-products"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Orqasi
+            </Button>
+
+            <div className="flex gap-1 flex-wrap justify-center">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .slice(Math.max(0, currentPage - 2), Math.min(totalPages, currentPage + 1))
+                .map((page) => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(page)}
+                    data-testid={`button-page-products-${page}`}
+                  >
+                    {page}
+                  </Button>
+                ))}
             </div>
 
-            {/* Product Grid */}
-            <ProductGrid products={paginatedProducts} isLoading={loadingProducts} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              data-testid="button-next-page-products"
+            >
+              Keyingi
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div 
-                ref={paginationRef}
-                className="mt-12 flex items-center justify-center gap-2 flex-wrap"
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  data-testid="button-prev-page-products"
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Orqasi
-                </Button>
-
-                <div className="flex gap-1 flex-wrap justify-center">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .slice(Math.max(0, currentPage - 2), Math.min(totalPages, currentPage + 1))
-                    .map((page) => (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handlePageChange(page)}
-                        data-testid={`button-page-products-${page}`}
-                      >
-                        {page}
-                      </Button>
-                    ))}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  data-testid="button-next-page-products"
-                >
-                  Keyingi
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-
-                {/* Scroll to Top Button - Shows on hover, positioned on right */}
-                <div className="ml-4 opacity-0 hover:opacity-100 transition-opacity duration-200">
-                  <Button
-                    size="icon"
-                    variant="default"
-                    onClick={() => {
-                      if (containerRef.current) {
-                        containerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }
-                    }}
-                    data-testid="button-scroll-to-top"
-                    title="Tepaga ko'tar"
-                  >
-                    <ChevronLeft className="h-4 w-4 rotate-90" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Floating Scroll to Top - Shows when scrolled down */}
-            {showScrollTop && (
-              <button
+            {/* Scroll to Top Button - Shows on hover, positioned on right */}
+            <div className="ml-4 opacity-0 hover:opacity-100 transition-opacity duration-200">
+              <Button
+                size="icon"
+                variant="default"
                 onClick={() => {
                   if (containerRef.current) {
                     containerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
                   }
                 }}
-                className="fixed bottom-8 right-8 z-40 bg-primary text-primary-foreground p-3 rounded-full shadow-lg hover-elevate"
-                data-testid="button-floating-scroll-top"
+                data-testid="button-scroll-to-top"
                 title="Tepaga ko'tar"
               >
-                <ChevronLeft className="h-5 w-5 rotate-90" />
-              </button>
-            )}
+                <ChevronLeft className="h-4 w-4 rotate-90" />
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Floating Scroll to Top - Shows when scrolled down */}
+        {showScrollTop && (
+          <button
+            onClick={() => {
+              if (containerRef.current) {
+                containerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
+            }}
+            className="fixed bottom-8 right-8 z-40 bg-primary text-primary-foreground p-3 rounded-full shadow-lg hover-elevate"
+            data-testid="button-floating-scroll-top"
+            title="Tepaga ko'tar"
+          >
+            <ChevronLeft className="h-5 w-5 rotate-90" />
+          </button>
+        )}
       </div>
     </StoreLayout>
   );
