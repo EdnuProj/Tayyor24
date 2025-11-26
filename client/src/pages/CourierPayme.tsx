@@ -205,12 +205,15 @@ export default function CourierPayme() {
         throw new Error(error.error || "Failed to accept order");
       }
 
+      const data = await res.json();
       toast({
         title: "✅ Buyurtma qabul qilindi!",
+        description: `Balans: ${data.newBalance.toLocaleString()} so'm`,
       });
 
       // Set selected order and show detail view
       setSelectedOrder(assignment);
+      setCourierBalance(data.newBalance);
       setActiveTab("orders");
       
       // Refresh orders
@@ -248,6 +251,15 @@ export default function CourierPayme() {
       toast({
         title: "✅ Holat yangilandi!",
       });
+
+      // Close modal when delivered
+      if (status === "delivered") {
+        setTimeout(() => {
+          setSelectedOrder(null);
+          setActiveTab("home");
+          fetchCourierData(telegramId);
+        }, 500);
+      }
     } catch (error: any) {
       toast({
         title: "❌ Xatolik",
@@ -579,6 +591,16 @@ export default function CourierPayme() {
           const isAccepted = selectedOrder.status === "accepted" || selectedOrder.status === "shipping" || selectedOrder.status === "delivered";
           const isShipping = selectedOrder.status === "shipping" || selectedOrder.status === "delivered";
           const isDelivered = selectedOrder.status === "delivered";
+          
+          // Get order details from assignment
+          const order = (selectedOrder as any).order;
+          const customerName = order?.customerName || "Noma'lum";
+          const customerPhone = order?.customerPhone || "Noma'lum";
+          const customerAddress = order?.customerAddress || "Noma'lum";
+          const total = order?.total || 0;
+          const orderNumber = order?.orderNumber || selectedOrder.orderId?.substring(0, 8);
+          const latitude = order?.latitude || 41.299496;
+          const longitude = order?.longitude || 69.240073;
 
           return (
             <div className="space-y-4">
@@ -586,24 +608,24 @@ export default function CourierPayme() {
               <Card className="bg-slate-800 border-slate-700 p-4 space-y-3">
                 <div>
                   <p className="text-slate-400 text-sm">Buyurtma ID</p>
-                  <p className="text-white font-bold text-lg">#{selectedOrder.orderId?.substring(0, 8)}</p>
+                  <p className="text-white font-bold text-lg">#{orderNumber}</p>
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm">Mijoz</p>
-                  <p className="text-white">Sarvar</p>
+                  <p className="text-white">{customerName}</p>
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm">Telefon</p>
-                  <p className="text-white">+998 99 907 07 02</p>
+                  <p className="text-white">{customerPhone}</p>
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm">Jami summa</p>
-                  <p className="text-white font-bold text-lg">141,282 UZS</p>
+                  <p className="text-white font-bold text-lg">{total.toLocaleString()} so'm</p>
                 </div>
                 <div className="bg-slate-700 p-3 rounded">
-                  <p className="text-slate-400 text-xs mb-2">📍 Manzil</p>
+                  <p className="text-slate-400 text-xs mb-2">📍 Manzil: {customerAddress}</p>
                   <iframe
-                    src="https://yandex.uz/map-widget/v1/?ll=69.240073,41.299496&z=15&pt=69.240073,41.299496,pm2pm0"
+                    src={`https://yandex.uz/map-widget/v1/?ll=${longitude},${latitude}&z=15&pt=${longitude},${latitude},pm2pm0`}
                     width="100%"
                     height="250"
                     frameBorder="0"

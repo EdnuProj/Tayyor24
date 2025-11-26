@@ -549,7 +549,14 @@ Buyurtma: #${order.orderNumber}
       
       // Get all assignments - both pending (available) and this courier's accepted orders
       const allAssignments = Array.from((storage as any).assignments?.values() || []);
-      const assignments = allAssignments.filter((a: any) => {
+      const assignmentsWithOrders = await Promise.all(
+        allAssignments.map(async (a: any) => {
+          const order = await storage.getOrder(a.orderId);
+          return { ...a, order };
+        })
+      );
+      
+      const assignments = assignmentsWithOrders.filter((a: any) => {
         // Pending orders available for any courier to accept
         if (a.status === "pending" && !a.courierId) {
           return true;
@@ -1136,6 +1143,22 @@ Buyurtma: #${order.orderNumber}
         return res.status(404).json({ error: "Courier not found" });
       }
 
+      // Check if balance is sufficient (2000 som)
+      if (courier.balance < 2000) {
+        return res.status(400).json({ error: "Balans yetarli emas (2000 som kerak)" });
+      }
+
+      // Debit 2000 som from balance
+      const updatedCourier = await storage.debitCourierBalance(courier.id, 2000);
+      
+      // Record transaction
+      await (storage as any).createCourierTransaction(
+        courier.id,
+        -2000,
+        "order_debit",
+        `Buyurtma #${assignmentId}: 2000 so'm yexhilish haqi`
+      );
+
       // Update assignment to accepted
       const assignment = await storage.updateAssignment(assignmentId, {
         status: "accepted",
@@ -1154,6 +1177,7 @@ Buyurtma: #${order.orderNumber}
 Buyurtma: #${order.orderNumber}
 👤 Kuryer: ${courier.name}
 📞 Telefon: ${courier.phone}
+💰 Yexhilish haqi: 2000 so'm
         `.trim();
 
         try {
@@ -1172,7 +1196,7 @@ Buyurtma: #${order.orderNumber}
         }
       }
 
-      res.json({ success: true, assignment });
+      res.json({ success: true, assignment, newBalance: updatedCourier?.balance || 0 });
     } catch (error) {
       console.error("Accept order error:", error);
       res.status(500).json({ error: "Failed to accept order" });
