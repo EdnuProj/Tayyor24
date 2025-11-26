@@ -415,10 +415,13 @@ ${itemsList}
             const orderCategory = allCategories.find(c => c.id === order.categoryId);
             
             if (orderCategory?.latitude && orderCategory?.longitude) {
+              console.log(`Order ${order.orderNumber}: Category location: (${orderCategory.latitude}, ${orderCategory.longitude})`);
               // Filter couriers within 1km of category location
               nearByCouriers = activeCouriers.filter((courier) => {
+                console.log(`Checking courier ${courier.id}: lat=${courier.latitude}, lon=${courier.longitude}`);
                 if (!courier.latitude || !courier.longitude) return false;
                 const distance = calculateDistance(orderCategory.latitude!, orderCategory.longitude!, courier.latitude, courier.longitude);
+                console.log(`Distance: ${distance}km`);
                 return distance <= 1; // 1km radius from category location
               });
               console.log(`Order ${order.orderNumber}: Category has location. Found ${nearByCouriers.length} couriers within 1km (total: ${activeCouriers.length})`);
