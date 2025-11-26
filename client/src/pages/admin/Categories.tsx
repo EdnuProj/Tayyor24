@@ -31,8 +31,8 @@ import type { Category } from "@shared/schema";
 const categorySchema = z.object({
   name: z.string().min(2, "Kamida 2 ta belgi"),
   icon: z.string().optional(),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  latitude: z.string().optional().transform(val => val && val.trim() ? parseFloat(val) : undefined),
+  longitude: z.string().optional().transform(val => val && val.trim() ? parseFloat(val) : undefined),
 });
 
 type CategoryForm = z.infer<typeof categorySchema>;
@@ -56,8 +56,8 @@ export default function AdminCategories() {
     defaultValues: {
       name: "",
       icon: "",
-      latitude: undefined,
-      longitude: undefined,
+      latitude: "",
+      longitude: "",
     },
   });
 
@@ -80,7 +80,6 @@ export default function AdminCategories() {
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       form.reset();
       setDialogOpen(false);
-      setMapCoords(null);
     },
     onError: () => {
       toast({ title: "Xato yuz berdi", variant: "destructive" });
