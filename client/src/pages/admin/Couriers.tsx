@@ -93,12 +93,12 @@ export default function AdminCouriers() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/couriers"] });
-      // Update selected courier with new balance
-      if (data.courier) {
-        setSelectedCourier(data.courier);
-      }
+      // Update selected courier with new balance - data IS the courier object
+      setSelectedCourier(data);
       setBalanceAmount("");
-      toast({ title: "✅ Balansi yangilandi", description: `Yangi balans: ${data.courier?.balance?.toLocaleString() || 0} so'm` });
+      toast({ title: "✅ Balansi yangilandi", description: `Yangi balans: ${data?.balance?.toLocaleString() || 0} so'm` });
+      // Refresh courier list after 300ms
+      setTimeout(() => refetch(), 300);
     },
   });
 
