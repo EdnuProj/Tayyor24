@@ -626,11 +626,11 @@ Qabul qilamizmi?
           const courier = await storage.getCourierByTelegramId(chatId);
           
           if (courier) {
-            // Courier app
-            const courierAppUrl = `${baseUrl}/courier?telegramId=${chatId}`;
+            // Courier app - Payme
+            const courierAppUrl = `${baseUrl}/courier/payme?telegramId=${chatId}`;
             const inlineKeyboard = {
               inline_keyboard: [
-                [{ text: "💼 Kuryer Paneli", web_app: { url: courierAppUrl } }],
+                [{ text: "💳 Payme", web_app: { url: courierAppUrl } }],
               ],
             };
 
