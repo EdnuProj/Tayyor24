@@ -24,7 +24,10 @@ import type { Newsletter } from "@shared/schema";
 const newsletterSchema = z.object({
   title: z.string().min(5, "Sarlavha kamida 5 ta belgi bo'lishi kerak"),
   message: z.string().min(10, "Xabar kamida 10 ta belgi bo'lishi kerak"),
-  imageUrl: z.string().url("To'g'ri rasm URL'sini kiriting").optional().or(z.literal("")),
+  imageUrl: z.string().refine(
+    (val) => val === "" || val.startsWith("data:") || val.startsWith("http"),
+    "To'g'ri rasm URL yoki base64 data kiriting"
+  ),
 });
 
 type NewsletterForm = z.infer<typeof newsletterSchema>;
@@ -73,16 +76,22 @@ export default function AdminRassilka() {
         imageUrl: data.imageUrl || null,
       });
     },
-    onSuccess: () => {
-      toast({ title: "✅ Rassilka muvaffaqiyatli yuborildi" });
+    onSuccess: (response: any) => {
+      const sentCount = response?.sentCount || 0;
+      const totalUsers = response?.totalUsers || 0;
+      toast({ 
+        title: "✅ Rassilka muvaffaqiyatli yuborildi",
+        description: `${sentCount} ta foydalanuvchiga jo'natildi`
+      });
       form.reset();
       setPreviewImage("");
       queryClient.invalidateQueries({ queryKey: ["/api/newsletters"] });
     },
-    onError: () => {
+    onError: (error: any) => {
+      const errorMsg = error?.message || "Rassilka yuborilmadi";
       toast({
         title: "❌ Xatolik",
-        description: "Rassilka yuborilmadi. Telegram sozlamalari tekshiring",
+        description: errorMsg,
         variant: "destructive",
       });
     },
