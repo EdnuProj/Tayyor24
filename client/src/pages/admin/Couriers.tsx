@@ -19,6 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function AdminCouriers() {
   const { toast } = useToast();
@@ -330,21 +337,28 @@ export default function AdminCouriers() {
       </div>
 
       {/* Balance Management Modal */}
-      {selectedCourier && (
-        <Card className="p-6 fixed inset-0 m-4 max-w-md mx-auto top-1/2 -translate-y-1/2 z-50">
-          <h3 className="text-lg font-semibold mb-4">
-            Balansi Boshqarish: {selectedCourier.name}
-          </h3>
+      <Dialog open={!!selectedCourier} onOpenChange={(open) => {
+        if (!open) {
+          setSelectedCourier(null);
+          setBalanceAmount("");
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Balansi Boshqarish: {selectedCourier?.name}
+            </DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-secondary">Hozirgi Balansi</p>
+              <p className="text-sm text-muted-foreground">Hozirgi Balansi</p>
               <p className="text-2xl font-bold" data-testid="text-current-balance">
-                {selectedCourier.balance?.toLocaleString() || 0} so'm
+                {selectedCourier?.balance?.toLocaleString() || 0} so'm
               </p>
             </div>
             <Input
               type="number"
-              placeholder="Miqdor"
+              placeholder="Miqdor kiriting"
               value={balanceAmount}
               onChange={(e) => setBalanceAmount(e.target.value)}
               data-testid="input-balance-amount"
@@ -354,7 +368,7 @@ export default function AdminCouriers() {
                 className="flex-1"
                 onClick={() =>
                   balanceMutation.mutate({
-                    id: selectedCourier.id,
+                    id: selectedCourier?.id,
                     amount: parseInt(balanceAmount) || 0,
                     type: "credit",
                   })
@@ -369,7 +383,7 @@ export default function AdminCouriers() {
                 className="flex-1"
                 onClick={() =>
                   balanceMutation.mutate({
-                    id: selectedCourier.id,
+                    id: selectedCourier?.id,
                     amount: parseInt(balanceAmount) || 0,
                     type: "debit",
                   })
@@ -380,9 +394,10 @@ export default function AdminCouriers() {
                 ➖ Yechish
               </Button>
             </div>
+          </div>
+          <DialogFooter>
             <Button
               variant="outline"
-              className="w-full"
               onClick={() => {
                 setSelectedCourier(null);
                 setBalanceAmount("");
@@ -391,9 +406,9 @@ export default function AdminCouriers() {
             >
               Yopish
             </Button>
-          </div>
-        </Card>
-      )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
