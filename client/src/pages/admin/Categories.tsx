@@ -323,6 +323,18 @@ export default function AdminCategories() {
                   
                   {showLocationInput && (
                     <div className="space-y-3 pt-2 border-t">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => window.open('https://yandex.uz/maps/', '_blank', 'width=800,height=600')}
+                        className="w-full"
+                        data-testid="button-open-yandex-map"
+                      >
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Xaritadan Tanlash (Yandex Maps)
+                      </Button>
+                      
                       <div className="grid grid-cols-2 gap-3">
                         <FormField
                           control={form.control}
@@ -352,9 +364,7 @@ export default function AdminCategories() {
                         />
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        <a href="https://yandex.uz/maps/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                          Yandex Maps
-                        </a> da joylashuvga click qilib koordinatalarni oling va yuqoriga kiriting
+                        Yandex Maps da joylashuvga click qilib, URL ko'rsatgichdan koordinatalarni olib yuqoriga kiriting
                       </p>
                     </div>
                   )}
