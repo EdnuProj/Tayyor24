@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { ShoppingBag, ArrowLeft, Trash2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { StoreLayout } from "@/components/layout/StoreLayout";
 import { CartItemComponent } from "@/components/cart/CartItem";
 import { CartSummary } from "@/components/cart/CartSummary";
@@ -7,9 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
+import type { SiteSettings } from "@shared/schema";
 
 export default function Cart() {
   const { items, isLoading, clearCart, itemCount } = useCart();
+  const { data: settings } = useQuery<SiteSettings>({
+    queryKey: ["/api/settings"],
+  });
 
   if (isLoading) {
     return (
@@ -97,7 +102,10 @@ export default function Cart() {
           {/* Summary - Sticky on desktop, normal on mobile */}
           <div>
             <div className="sticky top-20 lg:top-20">
-              <CartSummary />
+              <CartSummary 
+                deliveryPrice={settings?.deliveryPrice || 15000}
+                freeDeliveryThreshold={settings?.freeDeliveryThreshold || 500000}
+              />
             </div>
           </div>
         </div>
