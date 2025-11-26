@@ -308,35 +308,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get main category name (available for both group and courier messages)
       const allCategories = await storage.getCategories();
       const allProducts = await storage.getProducts();
+      const orderItems = JSON.parse(data.items || "[]");
       
       let categoryName = "Noma'lum";
       
-      // Try to find category by direct ID match
+      // Strategy 1: Try direct category lookup by order.categoryId
       let category = allCategories.find(c => c.id === order.categoryId);
-      
-      // If it's a subcategory (has parentId), get the parent category instead
-      if (category?.parentId) {
-        const parentCategory = allCategories.find(c => c.id === category.parentId);
-        if (parentCategory?.name) {
-          categoryName = parentCategory.name;
+      if (category?.name) {
+        // Check if it's a main category or needs parent lookup
+        if (category.parentId) {
+          const parentCategory = allCategories.find(c => c.id === category.parentId);
+          categoryName = parentCategory?.name || category.name;
+        } else {
+          categoryName = category.name;
         }
-      } else if (category?.name) {
-        // Direct main category found
-        categoryName = category.name;
-      } else {
-        // Fallback: find from order items
-        const orderItems = JSON.parse(data.items || "[]");
-        if (orderItems.length > 0) {
-          const firstProduct = allProducts.find(p => p.id === orderItems[0].productId);
-          if (firstProduct?.categoryId) {
-            const itemCategory = allCategories.find(c => c.id === firstProduct.categoryId);
-            if (itemCategory?.parentId) {
-              const parentCategory = allCategories.find(c => c.id === itemCategory.parentId);
-              if (parentCategory?.name) {
-                categoryName = parentCategory.name;
+      } else if (orderItems.length > 0) {
+        // Strategy 2: Find from actual products in the order
+        for (const item of orderItems) {
+          const product = allProducts.find(p => p.id === item.productId);
+          if (product?.categoryId) {
+            const productCategory = allCategories.find(c => c.id === product.categoryId);
+            if (productCategory) {
+              // Check if it's a subcategory, get parent if so
+              if (productCategory.parentId) {
+                const parentCategory = allCategories.find(c => c.id === productCategory.parentId);
+                if (parentCategory?.name) {
+                  categoryName = parentCategory.name;
+                  break;
+                }
+              } else if (productCategory.name) {
+                categoryName = productCategory.name;
+                break;
               }
-            } else if (itemCategory?.name) {
-              categoryName = itemCategory.name;
             }
           }
         }
