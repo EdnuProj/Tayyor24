@@ -206,6 +206,7 @@ export default function AdminProducts() {
       sizes: product.sizes || [],
       containers: product.containers || [],
       stock: product.stock,
+      sold: product.sold || 0,
       isPopular: product.isPopular || false,
       isNew: product.isNew || false,
     });
@@ -313,6 +314,7 @@ export default function AdminProducts() {
                     <TableHead>Kategoriya</TableHead>
                     <TableHead>Narx</TableHead>
                     <TableHead>Stok</TableHead>
+                    <TableHead>Sotilgan</TableHead>
                     <TableHead>Holat</TableHead>
                     <TableHead className="text-right">Amallar</TableHead>
                   </TableRow>
@@ -353,6 +355,11 @@ export default function AdminProducts() {
                         <TableCell>
                           <Badge variant={product.stock > 0 ? "secondary" : "destructive"}>
                             {product.stock} dona
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {product.sold || 0} dona
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -517,6 +524,20 @@ export default function AdminProducts() {
                       <FormLabel>Stok miqdori</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} data-testid="input-stock" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sold"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sotilgan miqdori</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} data-testid="input-sold" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
