@@ -517,7 +517,7 @@ export default function AdminProducts() {
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {form.watch("images").map((img, i) => (
+                    {(form.watch("images") || []).map((img, i) => (
                       <div key={i} className="relative group">
                         <img src={img} alt="" className="w-16 h-16 rounded-md object-cover" />
                         <button
@@ -556,7 +556,7 @@ export default function AdminProducts() {
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {form.watch("containers")?.map((container, i) => (
+                    {(form.watch("containers") || []).map((container, i) => (
                       <Badge key={i} variant="secondary" className="gap-2">
                         {container}
                         <button
@@ -589,7 +589,7 @@ export default function AdminProducts() {
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {form.watch("colors")?.map((color, i) => (
+                    {(form.watch("colors") || []).map((color, i) => (
                       <button
                         key={i}
                         type="button"
@@ -616,7 +616,7 @@ export default function AdminProducts() {
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {form.watch("sizes")?.map((size, i) => (
+                    {(form.watch("sizes") || []).map((size, i) => (
                       <Badge
                         key={i}
                         variant="secondary"
