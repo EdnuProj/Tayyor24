@@ -322,13 +322,11 @@ ${itemsList}
         // Send to eligible couriers if delivery is courier
         if (order.deliveryType === "courier") {
           try {
-            // Get couriers for this specific category ONLY
-            const couriers = await storage.getCouriers(order.categoryId);
+            // Get ALL active couriers (no category filtering)
+            const allCouriers = await storage.getCouriers("");
+            const activeCouriers = allCouriers.filter((c) => c.isActive && c.telegramId);
             
-            console.log(`Order ${order.orderNumber}: Category ${order.categoryId}, found ${couriers.length} couriers`);
-            
-            const activeCouriers = couriers.filter((c) => c.isActive && c.telegramId);
-            console.log(`Order ${order.orderNumber}: Active couriers = ${activeCouriers.length}`);
+            console.log(`Order ${order.orderNumber}: Sending to ${activeCouriers.length} active couriers`);
 
             // Always create assignment for pending orders
             const assignment = await storage.createAssignment({
