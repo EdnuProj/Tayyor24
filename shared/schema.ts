@@ -11,6 +11,7 @@ export const categories = pgTable("categories", {
   latitude: real("latitude"),
   longitude: real("longitude"),
   order: integer("order").notNull().default(0),
+  parentId: varchar("parent_id"), // For subcategories
 });
 
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });

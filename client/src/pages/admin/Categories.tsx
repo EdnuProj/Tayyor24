@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, GripVertical, Loader2, ChevronLeft } from "lucide-react";
+import { Plus, Trash2, GripVertical, Loader2, ChevronLeft, ArrowRight } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,10 +40,14 @@ export default function AdminCategories() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
 
   const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
+
+  const parentCategories = categories.filter(c => !c.parentId);
+  const subcategories = selectedParentId ? categories.filter(c => c.parentId === selectedParentId) : [];
 
   const form = useForm<CategoryForm>({
     resolver: zodResolver(categorySchema),
@@ -59,7 +63,8 @@ export default function AdminCategories() {
         name: data.name,
         slug: generateSlug(data.name),
         icon: data.icon || "📦",
-        order: categories.length,
+        order: selectedParentId ? subcategories.length : parentCategories.length,
+        parentId: selectedParentId || null,
       });
       return response.json();
     },
@@ -132,12 +137,30 @@ export default function AdminCategories() {
   };
 
   // Sort categories by order
-  const sortedCategories = [...categories].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const sortedParentCategories = [...parentCategories].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const sortedSubcategories = [...subcategories].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const displayCategories = selectedParentId ? sortedSubcategories : sortedParentCategories;
+  const currentParent = selectedParentId ? categories.find(c => c.id === selectedParentId) : null;
 
   return (
     <AdminLayout title="Kategoriyalar">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold">Kategoriyalar ({categories.length})</h2>
+        <div className="flex items-center gap-3">
+          {selectedParentId && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedParentId(null)}
+              data-testid="button-back-categories"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Orqasi
+            </Button>
+          )}
+          <h2 className="text-lg font-semibold">
+            {selectedParentId ? `${currentParent?.name} - Kichik kategoriyalar` : `Kategoriyalar (${parentCategories.length})`}
+          </h2>
+        </div>
         <Button
           onClick={() => {
             setEditingCategory(null);
@@ -147,7 +170,7 @@ export default function AdminCategories() {
           data-testid="button-add-category"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Yangi kategoriya
+          {selectedParentId ? "Kichik kategoriya qo'shish" : "Yangi kategoriya"}
         </Button>
       </div>
 
@@ -165,37 +188,49 @@ export default function AdminCategories() {
             </div>
           ) : (
             <div className="divide-y">
-              {sortedCategories.map((category) => (
+              {displayCategories.map((category) => (
                 <div
                   key={category.id}
-                  draggable
-                  onDragStart={() => handleDragStart(category.id)}
+                  draggable={!selectedParentId}
+                  onDragStart={() => !selectedParentId && handleDragStart(category.id)}
                   onDragOver={handleDragOver}
-                  onDrop={() => handleDrop(category.id)}
-                  className={`flex items-center gap-4 p-4 transition-colors cursor-move group ${
+                  onDrop={() => !selectedParentId && handleDrop(category.id)}
+                  className={`flex items-center gap-4 p-4 transition-colors ${!selectedParentId ? 'cursor-move' : ''} group ${
                     draggedItem === category.id ? "bg-muted opacity-50" : ""
                   }`}
                   data-testid={`category-item-${category.id}`}
                 >
-                  <div className="relative">
-                    <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                    {/* Scroll to Top Button - Shows only on grip handle hover */}
-                    <div className="absolute right-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center">
-                      <button
-                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                        className="p-1.5 hover-elevate active-elevate-2 rounded-md"
-                        title="Tepaga ko'tar"
-                        data-testid={`button-scroll-top-category-${category.id}`}
-                      >
-                        <ChevronLeft className="h-4 w-4 rotate-90" />
-                      </button>
+                  {!selectedParentId && (
+                    <div className="relative">
+                      <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      {/* Scroll to Top Button - Shows only on grip handle hover */}
+                      <div className="absolute right-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center">
+                        <button
+                          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                          className="p-1.5 hover-elevate active-elevate-2 rounded-md"
+                          title="Tepaga ko'tar"
+                          data-testid={`button-scroll-top-category-${category.id}`}
+                        >
+                          <ChevronLeft className="h-4 w-4 rotate-90" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="text-2xl flex-shrink-0">{category.icon || "📦"}</div>
                   <div className="flex-1">
                     <p className="font-medium">{category.name}</p>
                     <p className="text-sm text-muted-foreground">{category.slug}</p>
                   </div>
+                  {!selectedParentId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedParentId(category.id)}
+                      data-testid={`button-view-subcategories-${category.id}`}
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
