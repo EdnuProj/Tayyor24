@@ -162,49 +162,28 @@ export default function Products() {
             </Button>
           </form>
 
-          <div className="flex gap-2 w-full sm:w-auto">
-            <ProductFilters
-              categories={categories}
-              brands={brands}
-              filters={filters}
-              onFilterChange={setFilters}
-            />
-
-            <Select
-              value={filters.sortBy}
-              onValueChange={(value: FilterState["sortBy"]) =>
-                setFilters((prev) => ({ ...prev, sortBy: value }))
-              }
-            >
-              <SelectTrigger className="w-[180px]" data-testid="select-sort">
-                <SelectValue placeholder="Saralash" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Eng yangi</SelectItem>
-                <SelectItem value="price_asc">Arzon → Qimmat</SelectItem>
-                <SelectItem value="price_desc">Qimmat → Arzon</SelectItem>
-                <SelectItem value="popular">Ommabop</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select
+            value={filters.sortBy}
+            onValueChange={(value: FilterState["sortBy"]) =>
+              setFilters((prev) => ({ ...prev, sortBy: value }))
+            }
+          >
+            <SelectTrigger className="w-[180px]" data-testid="select-sort">
+              <SelectValue placeholder="Saralash" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Eng yangi</SelectItem>
+              <SelectItem value="price_asc">Arzon → Qimmat</SelectItem>
+              <SelectItem value="price_desc">Qimmat → Arzon</SelectItem>
+              <SelectItem value="popular">Ommabop</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Main Content */}
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Desktop Filters Sidebar - Hidden on mobile */}
-          <div className="hidden lg:block">
-            <ProductFilters
-              categories={categories}
-              brands={brands}
-              filters={filters}
-              onFilterChange={setFilters}
-            />
-          </div>
-
+        <div>
           {/* Product Grid */}
-          <div className="flex-1 min-w-0">
-            <ProductGrid products={filteredProducts} isLoading={loadingProducts} />
-          </div>
+          <ProductGrid products={filteredProducts} isLoading={loadingProducts} />
         </div>
       </div>
     </StoreLayout>
