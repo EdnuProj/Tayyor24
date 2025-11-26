@@ -219,7 +219,7 @@ export default function Home() {
               </Link>
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
-              {[...categories].sort((a, b) => (a.order || 0) - (b.order || 0)).slice(0, 6).map((category) => (
+              {mainCategories.slice(0, 6).map((category) => (
                 <Link key={category.id} href={`/products?category=${category.id}`}>
                   <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-category-${category.id}`}>
                     <CardContent className="p-3 sm:p-4 md:p-6 text-center space-y-1 sm:space-y-2">
