@@ -127,7 +127,7 @@ export default function Checkout() {
         latitude: data.latitude,
         longitude: data.longitude,
         subtotal,
-        deliveryPrice: data.deliveryType === "pickup" ? 0 : actualDeliveryPrice,
+        deliveryPrice: data.deliveryType === "pickup" ? 0 : deliveryPrice,
         discount: 0,
         total: data.deliveryType === "pickup" ? subtotal : total,
         items: JSON.stringify(orderItems),
