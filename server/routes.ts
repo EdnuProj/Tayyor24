@@ -270,6 +270,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/orders", async (req, res) => {
     try {
       const data = insertOrderSchema.parse(req.body);
+      // Set default categoryId if not provided
+      if (!data.categoryId) {
+        data.categoryId = "elektronika";
+      }
       const order = await storage.createOrder(data);
 
       // Send Telegram notification to group
@@ -318,15 +322,13 @@ ${itemsList}
         // Send to eligible couriers if delivery is courier
         if (order.deliveryType === "courier") {
           try {
-            // Get all active couriers (if categoryId doesn't match, get all)
-            let couriers = await storage.getCouriers(order.categoryId || "");
+            // Get couriers for this specific category ONLY
+            const couriers = await storage.getCouriers(order.categoryId);
             
-            // If no couriers for that category, get all active couriers
-            if (couriers.length === 0) {
-              couriers = await storage.getCouriers("");
-            }
+            console.log(`Order ${order.orderNumber}: Category ${order.categoryId}, found ${couriers.length} couriers`);
             
             const activeCouriers = couriers.filter((c) => c.isActive && c.telegramId);
+            console.log(`Order ${order.orderNumber}: Active couriers = ${activeCouriers.length}`);
 
             // Always create assignment for pending orders
             const assignment = await storage.createAssignment({
