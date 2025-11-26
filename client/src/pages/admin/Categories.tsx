@@ -221,17 +221,17 @@ export default function AdminCategories() {
                     <p className="font-medium">{category.name}</p>
                     <p className="text-sm text-muted-foreground">{category.slug}</p>
                   </div>
-                  {!selectedParentId && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.location.href = `/admin/categories/${category.id}/products`}
-                        data-testid={`button-view-products-${category.id}`}
-                        title="Mahsulotlar"
-                      >
-                        <Package className="h-4 w-4" />
-                      </Button>
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.location.href = `/admin/categories/${category.id}/products`}
+                      data-testid={`button-view-products-${category.id}`}
+                      title="Mahsulotlar"
+                    >
+                      <Package className="h-4 w-4" />
+                    </Button>
+                    {!selectedParentId && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -240,8 +240,8 @@ export default function AdminCategories() {
                       >
                         <ArrowRight className="h-4 w-4" />
                       </Button>
-                    </>
-                  )}
+                    )}
+                  </>
                   <Button
                     variant="ghost"
                     size="sm"
