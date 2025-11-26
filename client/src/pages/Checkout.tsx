@@ -107,11 +107,15 @@ export default function Checkout() {
         categoryId: item.product.categoryId,
       }));
 
+      // Ensure customerTelegramId is from form, not URL params
+      const finalTelegramId = data.customerTelegramId || initialTelegramId;
+      console.log("Creating order with customerTelegramId:", finalTelegramId);
+
       const orderData = {
         orderNumber,
         customerName: data.customerName,
         customerPhone: data.customerPhone,
-        customerTelegramId: data.customerTelegramId,
+        customerTelegramId: finalTelegramId,
         customerAddress: data.customerAddress,
         latitude: data.latitude,
         longitude: data.longitude,
