@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Send, Loader2, Image as ImageIcon } from "lucide-react";
+import { Send, Loader2, Image as ImageIcon, Upload, X } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,7 @@ type NewsletterForm = z.infer<typeof newsletterSchema>;
 export default function AdminRassilka() {
   const { toast } = useToast();
   const [previewImage, setPreviewImage] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: newsletters = [] } = useQuery<Newsletter[]>({
     queryKey: ["/api/newsletters"],
@@ -45,6 +46,24 @@ export default function AdminRassilka() {
       imageUrl: "",
     },
   });
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Xatolik", description: "Iltimos, rasm faylini tanlang", variant: "destructive" });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      form.setValue("imageUrl", dataUrl);
+      setPreviewImage(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const sendMutation = useMutation({
     mutationFn: async (data: NewsletterForm) => {
@@ -120,28 +139,41 @@ export default function AdminRassilka() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="imageUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Rasm URL (ixtiyoriy)</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="https://example.com/image.jpg"
-                            {...field}
-                            onChange={(e) => {
-                              field.onChange(e);
-                              if (e.target.value) {
-                                setPreviewImage(e.target.value);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-3">
+                    <FormLabel>Rasm (ixtiyoriy)</FormLabel>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex-1 border-2 border-dashed rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        <Upload className="h-5 w-5 mx-auto mb-1" />
+                        Rasm yuklash
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        data-testid="input-file-upload"
+                      />
+                      {previewImage && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreviewImage("");
+                            form.setValue("imageUrl", "");
+                            if (fileInputRef.current) fileInputRef.current.value = "";
+                          }}
+                          className="px-4 py-2 border rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          data-testid="button-remove-image"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
 
                   {previewImage && (
                     <div className="space-y-2">
