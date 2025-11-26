@@ -152,6 +152,20 @@ export default function CategoryProducts() {
     createMutation.mutate(data);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        const current = form.getValues("images") || [];
+        form.setValue("images", [...current, base64]);
+        e.target.value = "";
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const addImage = () => {
     if (imageInput.trim()) {
       const current = form.getValues("images") || [];
@@ -367,7 +381,18 @@ export default function CategoryProducts() {
                     <div className="space-y-2">
                       <div className="flex gap-2">
                         <Input
-                          placeholder="Rasm URL'i yoki base64"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          data-testid="input-image-file"
+                        />
+                        <Button type="button" onClick={() => document.querySelector('input[type="file"]')?.click()} variant="default" size="sm">
+                          Yuklash
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="yoki URL kiriting"
                           value={imageInput}
                           onChange={(e) => setImageInput(e.target.value)}
                           data-testid="input-image-url"
@@ -383,7 +408,7 @@ export default function CategoryProducts() {
                             <button
                               type="button"
                               onClick={() => removeImage(idx)}
-                              className="absolute -top-2 -right-2 bg-destructive text-white rounded-full w-6 h-6 flex items-center justify-center"
+                              className="absolute -top-2 -right-2 bg-destructive text-white rounded-full w-6 h-6 flex items-center justify-center text-sm"
                             >
                               ×
                             </button>
