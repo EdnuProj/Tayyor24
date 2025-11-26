@@ -27,6 +27,8 @@ import {
   type InsertCourier,
   type CourierAssignment,
   type InsertCourierAssignment,
+  type ChatMessage,
+  type InsertChatMessage,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -911,6 +913,54 @@ export class MemStorage implements IStorage {
       }
     }
     return transactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  // Chat Messages
+  async sendChatMessage(data: InsertChatMessage): Promise<ChatMessage> {
+    const id = randomUUID();
+    const message = { 
+      id, 
+      ...data, 
+      createdAt: new Date() 
+    };
+    (this as any).chatMessages = (this as any).chatMessages || new Map();
+    (this as any).chatMessages.set(id, message);
+    return message as any;
+  }
+
+  async getChatMessages(customerPhone: string): Promise<ChatMessage[]> {
+    (this as any).chatMessages = (this as any).chatMessages || new Map();
+    const messages: any[] = [];
+    for (const msg of (this as any).chatMessages.values()) {
+      if (msg.customerPhone === customerPhone) {
+        messages.push(msg);
+      }
+    }
+    return messages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }
+
+  async getAllChatRooms(): Promise<Array<{ customerPhone: string; customerName: string; lastMessage?: ChatMessage }>> {
+    (this as any).chatMessages = (this as any).chatMessages || new Map();
+    const rooms = new Map<string, { customerPhone: string; customerName: string; lastMessage?: ChatMessage }>();
+    
+    for (const msg of (this as any).chatMessages.values()) {
+      if (!rooms.has(msg.customerPhone)) {
+        rooms.set(msg.customerPhone, {
+          customerPhone: msg.customerPhone,
+          customerName: msg.customerName,
+        });
+      }
+      const room = rooms.get(msg.customerPhone);
+      if (room && (!room.lastMessage || new Date(msg.createdAt) > new Date(room.lastMessage.createdAt))) {
+        room.lastMessage = msg;
+      }
+    }
+    
+    return Array.from(rooms.values()).sort((a, b) => {
+      const dateA = a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0;
+      const dateB = b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
   }
 
   // Dashboard Stats

@@ -472,8 +472,8 @@ export default function Checkout() {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Yetkazish</span>
-                        <span className={form.watch("deliveryType") === "pickup" || isFreeDelivery ? "text-green-600" : ""}>
-                          {form.watch("deliveryType") === "pickup" || isFreeDelivery
+                        <span className={form.watch("deliveryType") === "pickup" ? "text-green-600" : ""}>
+                          {form.watch("deliveryType") === "pickup"
                             ? "Bepul"
                             : formatPrice(deliveryPrice)}
                         </span>
