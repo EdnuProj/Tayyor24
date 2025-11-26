@@ -53,6 +53,7 @@ import {
   orderStatusColors,
   deliveryTypeLabels,
   paymentTypeLabels,
+  generateOrderNumber,
 } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Order, OrderItem, Category, Product } from "@shared/schema";
@@ -128,6 +129,7 @@ export default function AdminOrders() {
       }));
 
       return apiRequest("POST", "/api/orders", {
+        orderNumber: generateOrderNumber(),
         customerName,
         customerPhone,
         customerAddress,
@@ -428,10 +430,8 @@ export default function AdminOrders() {
               <div className="space-y-3">
                 <p className="font-medium">2. Tanlangan mahsulotlar ({selectedItems.length})</p>
                 <div className="space-y-2 border rounded-lg p-3">
-                  {selectedItems.map((item, index) => {
-                    const existingItem = selectedItems.find((i) => i.product.id === item.product.id);
-                    return (
-                      <div key={index} className="flex items-center justify-between gap-3 p-2 bg-muted/50 rounded">
+                  {selectedItems.map((item, index) => (
+                      <div key={`${item.product.id}-${index}`} className="flex items-center justify-between gap-3 p-2 bg-muted/50 rounded">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{item.product.name}</p>
                           <p className="text-xs text-muted-foreground">{formatPrice(item.product.price)} x {item.quantity}</p>
@@ -473,8 +473,8 @@ export default function AdminOrders() {
                           </p>
                         </div>
                       </div>
-                    );
-                  })}
+                    ))}
+                  
                 </div>
                 <div className="flex justify-between font-semibold bg-primary/10 p-3 rounded-lg">
                   <span>Jami (Mahsulotlar):</span>
