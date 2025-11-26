@@ -55,6 +55,8 @@ const settingsSchema = z.object({
 const categorySchema = z.object({
   name: z.string().min(2, "Kamida 2 ta belgi"),
   icon: z.string().optional(),
+  latitude: z.coerce.number().optional(),
+  longitude: z.coerce.number().optional(),
 });
 
 type SettingsForm = z.infer<typeof settingsSchema>;
@@ -146,6 +148,8 @@ export default function AdminSettings() {
     defaultValues: {
       name: "",
       icon: "",
+      latitude: undefined,
+      longitude: undefined,
     },
   });
 
