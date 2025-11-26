@@ -897,25 +897,35 @@ ${message}
       `.trim();
 
       try {
-        const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
-        await fetch(telegramUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: settings.telegramGroupId,
-            text: telegramMessage,
-          }),
-        });
-
         if (imageUrl) {
           const photoUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendPhoto`;
+          const formData = new FormData();
+          formData.append("chat_id", settings.telegramGroupId);
+          formData.append("caption", `${title}\n\n${message}`);
+          formData.append("parse_mode", "HTML");
+
+          if (imageUrl.startsWith("data:")) {
+            const base64Data = imageUrl.split(",")[1];
+            const buffer = Buffer.from(base64Data, "base64");
+            const blob = new Blob([buffer], { type: "image/jpeg" });
+            formData.append("photo", blob, "image.jpg");
+          } else {
+            formData.append("photo", imageUrl);
+          }
+
           await fetch(photoUrl, {
+            method: "POST",
+            body: formData,
+          });
+        } else {
+          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+          await fetch(telegramUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               chat_id: settings.telegramGroupId,
-              photo: imageUrl,
-              caption: title,
+              text: telegramMessage,
+              parse_mode: "HTML",
             }),
           });
         }
@@ -960,24 +970,32 @@ ${message}
 
       for (const courier of activeCouriers) {
         try {
-          await fetch(telegramUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: courier.telegramId,
-              text: telegramMessage,
-              parse_mode: "Markdown",
-            }),
-          });
-
           if (imageUrl) {
+            const formData = new FormData();
+            formData.append("chat_id", courier.telegramId);
+            formData.append("caption", telegramMessage);
+            formData.append("parse_mode", "Markdown");
+
+            if (imageUrl.startsWith("data:")) {
+              const base64Data = imageUrl.split(",")[1];
+              const buffer = Buffer.from(base64Data, "base64");
+              const blob = new Blob([buffer], { type: "image/jpeg" });
+              formData.append("photo", blob, "image.jpg");
+            } else {
+              formData.append("photo", imageUrl);
+            }
+
             await fetch(photoUrl, {
+              method: "POST",
+              body: formData,
+            });
+          } else {
+            await fetch(telegramUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 chat_id: courier.telegramId,
-                photo: imageUrl,
-                caption: title,
+                text: telegramMessage,
                 parse_mode: "Markdown",
               }),
             });
