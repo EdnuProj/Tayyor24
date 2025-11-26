@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, GripVertical, Loader2 } from "lucide-react";
+import { Plus, Trash2, GripVertical, Loader2, ChevronLeft } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -172,12 +172,25 @@ export default function AdminCategories() {
                   onDragStart={() => handleDragStart(category.id)}
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(category.id)}
-                  className={`flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors cursor-move ${
+                  className={`flex items-center gap-4 p-4 transition-colors cursor-move group ${
                     draggedItem === category.id ? "bg-muted opacity-50" : ""
                   }`}
                   data-testid={`category-item-${category.id}`}
                 >
-                  <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <div className="relative">
+                    <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    {/* Scroll to Top Button - Shows only on grip handle hover */}
+                    <div className="absolute right-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center">
+                      <button
+                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                        className="p-1.5 hover-elevate active-elevate-2 rounded-md"
+                        title="Tepaga ko'tar"
+                        data-testid={`button-scroll-top-category-${category.id}`}
+                      >
+                        <ChevronLeft className="h-4 w-4 rotate-90" />
+                      </button>
+                    </div>
+                  </div>
                   <div className="text-2xl flex-shrink-0">{category.icon || "📦"}</div>
                   <div className="flex-1">
                     <p className="font-medium">{category.name}</p>
