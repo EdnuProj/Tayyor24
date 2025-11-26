@@ -112,16 +112,19 @@ export default function AdminCategories() {
   const handleDrop = (targetId: string) => {
     if (!draggedItem || draggedItem === targetId) return;
 
-    const draggedIdx = categories.findIndex((c) => c.id === draggedItem);
-    const targetIdx = categories.findIndex((c) => c.id === targetId);
+    // Sort by current order first
+    const sorted = [...categories].sort((a, b) => (a.order || 0) - (b.order || 0));
+    
+    const draggedIdx = sorted.findIndex((c) => c.id === draggedItem);
+    const targetIdx = sorted.findIndex((c) => c.id === targetId);
 
-    const newCategories = [...categories];
-    [newCategories[draggedIdx], newCategories[targetIdx]] = [
-      newCategories[targetIdx],
-      newCategories[draggedIdx],
-    ];
+    if (draggedIdx === -1 || targetIdx === -1) return;
 
-    reorderMutation.mutate(newCategories);
+    // Swap items
+    const newOrder = [...sorted];
+    [newOrder[draggedIdx], newOrder[targetIdx]] = [newOrder[targetIdx], newOrder[draggedIdx]];
+
+    reorderMutation.mutate(newOrder);
     setDraggedItem(null);
   };
 
