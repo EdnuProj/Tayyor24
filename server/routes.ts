@@ -292,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 Raqam: #${order.orderNumber}
 👤 Mijoz: ${order.customerName}
-📞 Tel: ${order.customerPhone}
+📞 Tel: ${order.customerPhone.replace(/\s/g, "")}
 📍 Manzil: ${order.customerAddress}
 
 🛍️ *Mahsulotlar:*
@@ -342,7 +342,7 @@ ${itemsList}
 🎯 *Yangi Buyurtma Mavjud*
 
 📋 #${order.orderNumber}
-👤 ${order.customerName} - ${order.customerPhone}
+👤 ${order.customerName} - ${order.customerPhone.replace(/\s/g, "")}
 📍 ${order.customerAddress}
 
 💰 ${order.total} so'm
@@ -393,7 +393,7 @@ Qabul qilamizmi?
 
 Buyurtma: #${order.orderNumber}
 👤 Mijoz: ${order.customerName}
-📞 Tel: ${order.customerPhone}
+📞 Tel: ${order.customerPhone.replace(/\s/g, "")}
 📍 Manzil: ${order.customerAddress}
 
 💰 Jami: ${order.total} so'm
