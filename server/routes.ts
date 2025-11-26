@@ -1281,16 +1281,13 @@ Sababu: Redd etilgan
         return res.status(404).json({ error: "Order not found" });
       }
 
-      // Send notifications
+      // Send notifications only to customer
       const settings = await storage.getSettings();
-      if (settings.telegramBotToken) {
+      if (settings.telegramBotToken && order && order.customerTelegramId) {
         const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
-        let statusText = "";
         let messageToCustomer = "";
-        let messageToGroup = "";
         
         if (status === "accepted") {
-          statusText = "⏳ JARAYONDA";
           messageToCustomer = `
 ⏳ *SIZNING BUYURTMA JARAYONDA*
 
@@ -1302,17 +1299,7 @@ Kuryer tez orada yetkazib beradi.
 
 Biron vaqtda ijobiy yangiliklarning kutmoqdamiz!
           `.trim();
-          
-          messageToGroup = `
-${statusText}
-
-Buyurtma: #${order.orderNumber}
-Mijoz: ${order.customerName}
-📞 ${order.customerPhone}
-Jami: ${order.total} so'm
-          `.trim();
         } else if (status === "shipping") {
-          statusText = "🚗 YO'LDA";
           messageToCustomer = `
 🚗 *BUYURTMA YO'LDA*
 
@@ -1324,17 +1311,7 @@ Kuryer sizga olib kelmoqda!
 
 Rahmalingiz uchun!
           `.trim();
-          
-          messageToGroup = `
-${statusText}
-
-Buyurtma: #${order.orderNumber}
-Mijoz: ${order.customerName}
-📞 ${order.customerPhone}
-Jami: ${order.total} so'm
-          `.trim();
         } else if (status === "delivered") {
-          statusText = "✅ YETKAZILDI";
           const currentTime = new Date().toLocaleString('uz-UZ', { 
             year: 'numeric', 
             month: '2-digit', 
@@ -1357,21 +1334,10 @@ Tabriklaymiz! Sizning buyurtma #${order.orderNumber} muvaffaqiyatli yetkazildi.
 Xizmatdan foydalanganingiz uchun rahmat! 🙏
 Do'kon-da xarid qilib davomi bering!
           `.trim();
-
-          messageToGroup = `
-${statusText}
-
-Buyurtma: #${order.orderNumber}
-Mijoz: ${order.customerName}
-📞 ${order.customerPhone}
-📍 Manzil: ${order.customerAddress}
-Jami: ${order.total} so'm
-⏰ Vaqt: ${currentTime}
-          `.trim();
         }
 
-        // Send to customer directly if telegramId exists
-        if (order.customerTelegramId && messageToCustomer) {
+        // Send ONLY to customer if messageToCustomer exists
+        if (messageToCustomer) {
           try {
             await fetch(telegramUrl, {
               method: "POST",
@@ -1382,26 +1348,9 @@ Jami: ${order.total} so'm
                 parse_mode: "Markdown",
               }),
             });
-            console.log(`Customer notification sent to ${order.customerTelegramId} for order ${order.orderNumber}`);
+            console.log(`Customer notification sent to ${order.customerTelegramId} for order ${order.orderNumber} - status: ${status}`);
           } catch (error) {
             console.error("Failed to send customer notification:", error);
-          }
-        }
-
-        // Send to group
-        if (settings.telegramGroupId && messageToGroup) {
-          try {
-            await fetch(telegramUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                chat_id: settings.telegramGroupId,
-                text: messageToGroup,
-                parse_mode: "Markdown",
-              }),
-            });
-          } catch (telegramError) {
-            console.error("Telegram notification failed:", telegramError);
           }
         }
       }
