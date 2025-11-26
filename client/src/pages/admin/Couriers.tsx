@@ -29,8 +29,8 @@ export default function AdminCouriers() {
   const { data: couriers = [], isLoading, refetch } = useQuery({
     queryKey: ["/api/couriers"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/couriers");
-      return res;
+      const res = await fetch("/api/couriers");
+      return res.json();
     },
   });
 
@@ -58,7 +58,7 @@ export default function AdminCouriers() {
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/couriers", data);
-      return res;
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/couriers"] });
