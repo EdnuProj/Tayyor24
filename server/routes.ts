@@ -777,6 +777,69 @@ ${message}
     }
   });
 
+  app.post("/api/admin/send-courier-rassilka", async (req, res) => {
+    try {
+      const { title, message, imageUrl } = req.body;
+      if (!title || !message) {
+        return res.status(400).json({ error: "Title and message required" });
+      }
+
+      const settings = await storage.getSettings();
+      if (!settings.telegramBotToken) {
+        return res.status(400).json({ error: "Telegram bot not configured" });
+      }
+
+      const couriers = await storage.getCouriers();
+      const activeCouriers = couriers.filter((c) => c.isActive && c.telegramId);
+
+      if (activeCouriers.length === 0) {
+        return res.status(400).json({ error: "No active couriers found" });
+      }
+
+      const telegramMessage = `
+📢 *${title}*
+
+${message}
+      `.trim();
+
+      const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+      const photoUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendPhoto`;
+
+      for (const courier of activeCouriers) {
+        try {
+          await fetch(telegramUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: courier.telegramId,
+              text: telegramMessage,
+              parse_mode: "Markdown",
+            }),
+          });
+
+          if (imageUrl) {
+            await fetch(photoUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: courier.telegramId,
+                photo: imageUrl,
+                caption: title,
+                parse_mode: "Markdown",
+              }),
+            });
+          }
+        } catch (courierError) {
+          console.error(`Failed to send message to courier ${courier.id}:`, courierError);
+        }
+      }
+
+      res.json({ success: true, message: `Rassilka ${activeCouriers.length} ta kuryerga yuborildi` });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to send courier rassilka" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
