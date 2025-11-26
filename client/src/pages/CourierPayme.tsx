@@ -17,9 +17,10 @@ import {
   TrendingDown,
   TrendingUp,
   Package,
+  MapPin,
 } from "lucide-react";
 
-type TabType = "home" | "transfer" | "payments" | "qr" | "history" | "orders" | "settings";
+type TabType = "home" | "transfer" | "payments" | "qr" | "history" | "orders" | "nearby" | "settings";
 
 const features = [
   {
@@ -137,6 +138,9 @@ export default function CourierPayme() {
   const [selectedOrder, setSelectedOrder] = useState<Assignment | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [rejectingOrderId, setRejectingOrderId] = useState<string>("");
+  const [courierLat, setCourierLat] = useState<number | null>(null);
+  const [courierLon, setCourierLon] = useState<number | null>(null);
+  const [nearbyOrders, setNearbyOrders] = useState<Assignment[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -148,6 +152,9 @@ export default function CourierPayme() {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
+          setCourierLat(latitude);
+          setCourierLon(longitude);
+          
           // Send location to server
           fetch("/api/courier/update-location", {
             method: "POST",
@@ -163,6 +170,9 @@ export default function CourierPayme() {
           const watchId = navigator.geolocation.watchPosition(
             (pos) => {
               const { latitude: lat, longitude: lon } = pos.coords;
+              setCourierLat(lat);
+              setCourierLon(lon);
+              
               fetch("/api/courier/update-location", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -222,10 +232,41 @@ export default function CourierPayme() {
           return false;
         });
         setOrders(filteredAssignments);
+        
+        // Filter nearby orders (within 5km)
+        if (courierLat && courierLon) {
+          const nearby = filteredAssignments.filter((a: Assignment) => {
+            const order = (a as any).order;
+            if (!order || !order.latitude || !order.longitude) return false;
+            
+            const distance = calculateDistance(
+              courierLat,
+              courierLon,
+              order.latitude,
+              order.longitude
+            );
+            return distance <= 5; // 5km radius
+          });
+          setNearbyOrders(nearby);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch courier data:", error);
     }
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   };
 
   const handleAcceptOrder = async (orderId: string, assignmentId: string, assignment: Assignment) => {
@@ -417,6 +458,19 @@ export default function CourierPayme() {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-4 gap-2">
+              <button
+                onClick={() => setActiveTab("nearby")}
+                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition relative"
+                data-testid="button-quick-nearby"
+              >
+                <MapPin className="w-5 h-5 mx-auto mb-1" />
+                Yaqin
+                {nearbyOrders.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {nearbyOrders.length}
+                  </span>
+                )}
+              </button>
               <button
                 onClick={() => setActiveTab("orders")}
                 className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition relative"
@@ -620,6 +674,101 @@ export default function CourierPayme() {
                       {isDebit ? "-" : "+"}
                       {Math.abs(tx.amount).toLocaleString()}
                     </p>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        );
+
+      case "nearby":
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Joylashuvdagi Zakaz</h2>
+            {!courierLat || !courierLon ? (
+              <Card className="bg-slate-800 border-slate-700 p-4 text-center text-slate-400">
+                Joylashuv topilmadi. Geolocation ruxsati bering.
+              </Card>
+            ) : nearbyOrders.length === 0 ? (
+              <Card className="bg-slate-800 border-slate-700 p-4 text-center text-slate-400">
+                Yaqin atrofda buyurtma yo'q
+              </Card>
+            ) : (
+              nearbyOrders.map((order) => {
+                const distance = calculateDistance(
+                  courierLat,
+                  courierLon,
+                  (order as any).order?.latitude || 0,
+                  (order as any).order?.longitude || 0
+                );
+                const orderData = (order as any).order;
+
+                return (
+                  <Card
+                    key={order.orderId}
+                    className="border-slate-700 bg-slate-800 p-4 space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-bold text-white">
+                          #{orderData?.orderNumber || order.orderId?.substring(0, 8)}
+                        </p>
+                        <p className="text-sm text-slate-400">
+                          {orderData?.customerName}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-emerald-400">
+                          {distance.toFixed(1)} km
+                        </p>
+                        <p className="text-xs text-slate-400">Masofasi</p>
+                      </div>
+                    </div>
+
+                    <div className="text-sm">
+                      <p className="text-slate-300">
+                        📍 {orderData?.customerAddress}
+                      </p>
+                      <p className="text-slate-300">
+                        📞 {orderData?.customerPhone}
+                      </p>
+                      <p className="text-emerald-400 font-semibold mt-1">
+                        💰 {orderData?.total?.toLocaleString()} so'm
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() =>
+                          handleAcceptOrder(
+                            order.orderId,
+                            order.id,
+                            order
+                          )
+                        }
+                        disabled={acceptingOrderId === order.orderId}
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                        data-testid={`button-accept-nearby-${order.orderId}`}
+                      >
+                        {acceptingOrderId === order.orderId
+                          ? "Qabul qilinmoqda..."
+                          : "Qabul Qilish"}
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          handleRejectOrder(
+                            order.orderId,
+                            order.id
+                          )
+                        }
+                        disabled={rejectingOrderId === order.orderId}
+                        variant="outline"
+                        className="flex-1"
+                        data-testid={`button-reject-nearby-${order.orderId}`}
+                      >
+                        Bekor
+                      </Button>
+                    </div>
                   </Card>
                 );
               })
