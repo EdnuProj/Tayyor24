@@ -29,6 +29,7 @@ export const products = pgTable("products", {
   images: text("images").array().notNull(),
   colors: text("colors").array(),
   sizes: text("sizes").array(),
+  containers: text("containers").array(),
   stock: integer("stock").notNull().default(0),
   rating: real("rating").default(0),
   reviewCount: integer("review_count").default(0),
@@ -49,6 +50,7 @@ export const cartItems = pgTable("cart_items", {
   quantity: integer("quantity").notNull().default(1),
   selectedColor: text("selected_color"),
   selectedSize: text("selected_size"),
+  selectedContainer: text("selected_container"),
 });
 
 export const insertCartItemSchema = createInsertSchema(cartItems).omit({ id: true });

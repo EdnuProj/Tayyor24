@@ -73,6 +73,7 @@ const productSchema = z.object({
   images: z.array(z.string()).min(1, "Kamida 1 ta rasm kerak"),
   colors: z.array(z.string()).optional(),
   sizes: z.array(z.string()).optional(),
+  containers: z.array(z.string()).optional(),
   stock: z.coerce.number().min(0).default(0),
   isPopular: z.boolean().default(false),
   isNew: z.boolean().default(true),
@@ -88,6 +89,7 @@ export default function AdminProducts() {
   const [imageInput, setImageInput] = useState("");
   const [colorInput, setColorInput] = useState("");
   const [sizeInput, setSizeInput] = useState("");
+  const [containerInput, setContainerInput] = useState("");
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
@@ -96,6 +98,18 @@ export default function AdminProducts() {
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setImageInput(base64);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const form = useForm<ProductForm>({
     resolver: zodResolver(productSchema),
@@ -109,6 +123,7 @@ export default function AdminProducts() {
       images: [],
       colors: [],
       sizes: [],
+      containers: [],
       stock: 0,
       isPopular: false,
       isNew: true,
@@ -196,6 +211,14 @@ export default function AdminProducts() {
     }
   };
 
+  const handleSubmit = (data: ProductForm) => {
+    if (editingProduct) {
+      updateMutation.mutate({ ...data, id: editingProduct.id });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
   const removeImage = (index: number) => {
     const current = form.getValues("images");
     form.setValue("images", current.filter((_, i) => i !== index));
@@ -250,7 +273,7 @@ export default function AdminProducts() {
             <Button
               onClick={() => {
                 setEditingProduct(null);
-                form.reset();
+                form.reset({ containers: [] });
                 setDialogOpen(true);
               }}
               data-testid="button-add-product"
@@ -491,10 +514,10 @@ export default function AdminProducts() {
                   <FormLabel>Rasmlar</FormLabel>
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Rasm URL"
-                      value={imageInput}
-                      onChange={(e) => setImageInput(e.target.value)}
-                      data-testid="input-image-url"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      data-testid="input-image-file"
                     />
                     <Button type="button" variant="secondary" onClick={addImage}>
                       <ImagePlus className="h-4 w-4" />
@@ -517,6 +540,45 @@ export default function AdminProducts() {
                   {form.formState.errors.images && (
                     <p className="text-sm text-destructive">{form.formState.errors.images.message}</p>
                   )}
+                </div>
+
+                {/* Containers */}
+                <div className="col-span-2 space-y-2">
+                  <FormLabel>Idishlar/Turlar</FormLabel>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Masalan: 10 dona, 500ml, 1kg"
+                      value={containerInput}
+                      onChange={(e) => setContainerInput(e.target.value)}
+                      data-testid="input-container"
+                    />
+                    <Button type="button" variant="secondary" size="sm" onClick={() => {
+                      if (containerInput.trim()) {
+                        const current = form.getValues("containers") || [];
+                        form.setValue("containers", [...current, containerInput.trim()]);
+                        setContainerInput("");
+                      }
+                    }}>
+                      Qo'shish
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {form.watch("containers")?.map((container, i) => (
+                      <Badge key={i} variant="secondary" className="gap-2">
+                        {container}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const current = form.getValues("containers") || [];
+                            form.setValue("containers", current.filter((_, idx) => idx !== i));
+                          }}
+                          className="ml-1"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Colors */}
