@@ -218,6 +218,19 @@ export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({ 
 export type InsertSiteSettings = z.infer<typeof insertSiteSettingsSchema>;
 export type SiteSettings = typeof siteSettings.$inferSelect;
 
+// Courier Transactions
+export const courierTransactions = pgTable("courier_transactions", {
+  id: varchar("id").primaryKey(),
+  courierId: varchar("courier_id").notNull(),
+  amount: real("amount").notNull(), // negative for debit, positive for credit
+  type: text("type").notNull(), // "order_debit", "topup_credit"
+  description: text("description"),
+  orderId: varchar("order_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type CourierTransaction = typeof courierTransactions.$inferSelect;
+
 // Telegram Users (Bot users)
 export const telegramUsers = pgTable("telegram_users", {
   id: varchar("id").primaryKey(),

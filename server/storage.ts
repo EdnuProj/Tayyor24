@@ -142,6 +142,7 @@ export class MemStorage implements IStorage {
   private assignments: Map<string, CourierAssignment>;
   private settings: SiteSettings;
   private telegramUsers: Map<string, any>;
+  private courierTransactions: Map<string, any>;
 
   constructor() {
     this.users = new Map();
@@ -157,6 +158,7 @@ export class MemStorage implements IStorage {
     this.couriers = new Map();
     this.assignments = new Map();
     this.telegramUsers = new Map();
+    this.courierTransactions = new Map();
     this.settings = {
       id: "default",
       logoUrl: null,
@@ -881,6 +883,33 @@ export class MemStorage implements IStorage {
     const user = { id, telegramId: data.telegramId, firstName: data.firstName || null, createdAt: new Date() };
     this.telegramUsers.set(id, user);
     return user;
+  }
+
+  // Courier Transactions
+  async createCourierTransaction(courierId: string, amount: number, type: string, description: string, orderId?: string) {
+    const id = randomUUID();
+    const transaction = { id, courierId, amount, type, description, orderId: orderId || null, createdAt: new Date() };
+    this.courierTransactions.set(id, transaction);
+    
+    // Update courier balance
+    if (type === "order_debit") {
+      const courier = this.couriers.get(courierId);
+      if (courier) {
+        courier.balance = (courier.balance || 0) + amount; // amount is negative
+        this.couriers.set(courierId, courier);
+      }
+    }
+    return transaction;
+  }
+
+  async getCourierTransactions(courierId: string) {
+    const transactions: any[] = [];
+    for (const tx of this.courierTransactions.values()) {
+      if (tx.courierId === courierId) {
+        transactions.push(tx);
+      }
+    }
+    return transactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   // Dashboard Stats

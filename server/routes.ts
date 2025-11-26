@@ -619,27 +619,52 @@ Qabul qilamizmi?
             firstName: from?.first_name,
           });
 
-          const siteUrl = process.env.REPLIT_DOMAINS 
-            ? `https://${process.env.REPLIT_DOMAINS}`
-            : "https://do-kon.replit.dev";
+          const baseDomain = process.env.REPLIT_DOMAINS || "do-kon.replit.dev";
+          const baseUrl = `https://${baseDomain}`;
           
-          const inlineKeyboard = {
-            inline_keyboard: [
-              [{ text: "📱 Do'kon Ochish", web_app: { url: siteUrl } }],
-            ],
-          };
+          // Check if this is a courier
+          const courier = await storage.getCourierByTelegramId(chatId);
+          
+          if (courier) {
+            // Courier app
+            const courierAppUrl = `${baseUrl}/courier?telegramId=${chatId}`;
+            const inlineKeyboard = {
+              inline_keyboard: [
+                [{ text: "💼 Kuryer Paneli", web_app: { url: courierAppUrl } }],
+              ],
+            };
 
-          const botUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
-          await fetch(botUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: chatId,
-              text: "*Do'kon-ga Xush Kelibsiz!* 🛍️\n\nMahsulotlarni ko'ring va buyurtma bering.",
-              parse_mode: "Markdown",
-              reply_markup: inlineKeyboard,
-            }),
-          });
+            const botUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            await fetch(botUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: "*Xush Kelibsiz, Kuryer!* 🚚\n\nYour delivery dashboard",
+                parse_mode: "Markdown",
+                reply_markup: inlineKeyboard,
+              }),
+            });
+          } else {
+            // Regular customer app
+            const inlineKeyboard = {
+              inline_keyboard: [
+                [{ text: "📱 Do'kon Ochish", web_app: { url: baseUrl } }],
+              ],
+            };
+
+            const botUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            await fetch(botUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: "*Do'kon-ga Xush Kelibsiz!* 🛍️\n\nMahsulotlarni ko'ring va buyurtma bering.",
+                parse_mode: "Markdown",
+                reply_markup: inlineKeyboard,
+              }),
+            });
+          }
 
           return res.json({ ok: true });
         }
@@ -957,6 +982,63 @@ Qabul qilamizmi?
       res.json({ success });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete advertisement" });
+    }
+  });
+
+  // ========== COURIER DASHBOARD ==========
+  app.get("/api/courier-dashboard/:telegramId", async (req, res) => {
+    try {
+      const { telegramId } = req.params;
+      const courier = await storage.getCourierByTelegramId(telegramId);
+      
+      if (!courier) {
+        return res.status(404).json({ error: "Courier not found" });
+      }
+
+      const assignments = await Promise.all(
+        Array.from({ length: 100 }, async (_, i) => {
+          const assignment = Array.from((storage as any).assignments?.values?.() || []).find(
+            (a: any) => a.courierId === courier.id
+          );
+          return assignment;
+        })
+      ).then(a => a.filter(Boolean));
+
+      const transactions = await (storage as any).getCourierTransactions(courier.id);
+
+      res.json({
+        courier,
+        assignments,
+        transactions,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch courier dashboard" });
+    }
+  });
+
+  app.post("/api/courier/topup", async (req, res) => {
+    try {
+      const { telegramId, amount } = req.body;
+      if (!telegramId || !amount || amount <= 0) {
+        return res.status(400).json({ error: "Invalid request" });
+      }
+
+      const courier = await storage.getCourierByTelegramId(telegramId);
+      if (!courier) {
+        return res.status(404).json({ error: "Courier not found" });
+      }
+
+      const updated = await storage.creditCourierBalance(courier.id, amount);
+      await (storage as any).createCourierTransaction(
+        courier.id,
+        amount,
+        "topup_credit",
+        `Topup: +${amount} so'm`
+      );
+
+      res.json({ success: true, newBalance: updated?.balance || 0 });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to process topup" });
     }
   });
 
