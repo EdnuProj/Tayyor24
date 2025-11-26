@@ -477,18 +477,143 @@ Qabul qilamizmi?
     }
   });
 
-  // Courier Assignment Callback (Telegram inline button callback)
+  // Telegram Webhook - Receives messages and callbacks from Telegram
+  app.post("/api/telegram-webhook", async (req, res) => {
+    try {
+      const update = req.body;
+      
+      // Handle callback queries (button clicks)
+      if (update.callback_query) {
+        const { data, from, id: queryId } = update.callback_query;
+        const telegramId = from?.id?.toString();
+
+        if (data?.startsWith("courier_")) {
+          const [action, orderId, courierId] = data.replace("courier_", "").split("_");
+          const assignment = await storage.getAssignment(orderId);
+          if (assignment && assignment.status === "pending") {
+            if (action === "accept") {
+              await storage.updateAssignment(assignment.id, {
+                courierId,
+                status: "accepted",
+              });
+            } else if (action === "reject") {
+              await storage.updateAssignment(assignment.id, {
+                status: "rejected",
+              });
+            }
+          }
+        }
+        return res.json({ ok: true });
+      }
+
+      // Handle text messages
+      if (update.message) {
+        const { text, chat } = update.message;
+        const chatId = chat?.id?.toString();
+        const settings = await storage.getSettings();
+
+        if (!settings.telegramBotToken) {
+          return res.json({ ok: true });
+        }
+
+        // Handle /start command
+        if (text === "/start") {
+          const categories = await storage.getCategories();
+          
+          const inlineKeyboard = {
+            inline_keyboard: [
+              [{ text: "🛒 Saytni Ochish", url: "https://do-kon.replit.dev" }],
+              ...categories.slice(0, 4).map((cat) => [
+                {
+                  text: `${cat.icon || "📦"} ${cat.name}`,
+                  callback_data: `cat_${cat.id}`,
+                },
+              ]),
+              [{ text: "📞 Biz bilan Bog'lanish", callback_data: "contact" }],
+            ],
+          };
+
+          const botUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+          await fetch(botUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: "🎉 *Do'kon-ga Xush Kelibsiz!*\n\nMahsulotlarni ko'ring va buyurtma bering:\n\n📱 Sayt orqali yoki Telegram-da to'g'ri shu yerdan buyurtma qiling!",
+              parse_mode: "Markdown",
+              reply_markup: inlineKeyboard,
+            }),
+          });
+
+          return res.json({ ok: true });
+        }
+
+        // Handle category selection
+        if (text && text.startsWith("/cat_")) {
+          const categoryId = text.replace("/cat_", "");
+          const products = await storage.getProducts({ categoryId });
+
+          if (products.length === 0) {
+            const botUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+            await fetch(botUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: "❌ Bu kategoriyada mahsulot topilmadi.",
+              }),
+            });
+            return res.json({ ok: true });
+          }
+
+          // Send first 5 products
+          for (const product of products.slice(0, 5)) {
+            const inlineBtn = {
+              inline_keyboard: [
+                [
+                  {
+                    text: "📱 Saytda Ko'rish",
+                    url: `https://do-kon.replit.dev/product/${product.slug}`,
+                  },
+                ],
+              ],
+            };
+
+            const botUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+            await fetch(botUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: `*${product.name}*\n\n💰 ${product.price.toLocaleString("uz-UZ")} so'm\n\n${product.description || ""}`,
+                parse_mode: "Markdown",
+                reply_markup: inlineBtn,
+              }),
+            });
+          }
+
+          return res.json({ ok: true });
+        }
+      }
+
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Telegram webhook error:", error);
+      res.json({ ok: true });
+    }
+  });
+
+  // Courier Assignment Callback (Telegram inline button callback) - Legacy, kept for compatibility
   app.post("/api/telegram-callback", async (req, res) => {
     try {
       const { callback_query } = req.body;
       if (!callback_query) {
-        return res.json({ ok: true }); // Telegram requires ok response
+        return res.json({ ok: true });
       }
 
       const { data, from } = callback_query;
       const telegramId = from?.id?.toString();
 
-      // Parse callback data: courier_accept_orderId_courierId or courier_reject_orderId_courierId
       if (data?.startsWith("courier_")) {
         const [action, orderId, courierId] = data.replace("courier_", "").split("_");
 
