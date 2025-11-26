@@ -39,7 +39,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SiteSettings, Category } from "@shared/schema";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const settingsSchema = z.object({
   siteName: z.string().min(1, "Sayt nomini kiriting"),
@@ -65,6 +65,9 @@ export default function AdminSettings() {
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const heroInputRef = useRef<HTMLInputElement>(null);
 
   const { data: settings, isLoading } = useQuery<SiteSettings>({
     queryKey: ["/api/settings"],
@@ -105,6 +108,27 @@ export default function AdminSettings() {
   const handleClearHeroImage = () => {
     form.setValue("heroImageUrl", "");
     setHeroPreview(null);
+    if (heroInputRef.current) heroInputRef.current.value = "";
+  };
+
+  const handleLogoImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      form.setValue("logoUrl", base64);
+      setLogoPreview(base64);
+      toast({ title: "Logo yuklandi" });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleClearLogo = () => {
+    form.setValue("logoUrl", "");
+    setLogoPreview(null);
+    if (logoInputRef.current) logoInputRef.current.value = "";
   };
 
   const categoryForm = useForm<CategoryForm>({
@@ -257,10 +281,45 @@ export default function AdminSettings() {
                     name="logoUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Logo URL</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="https://..." data-testid="input-logo-url" />
-                        </FormControl>
+                        <FormLabel>Logo</FormLabel>
+                        <div className="space-y-3">
+                          {(logoPreview || field.value) && (
+                            <div className="relative rounded-lg overflow-hidden bg-muted h-24 w-24">
+                              <img
+                                src={logoPreview || field.value}
+                                alt="Logo preview"
+                                className="w-full h-full object-cover"
+                              />
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="destructive"
+                                className="absolute top-1 right-1 h-7 w-7"
+                                onClick={handleClearLogo}
+                                data-testid="button-clear-logo"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                          <div className="flex gap-2">
+                            <label className="flex-1">
+                              <FormControl>
+                                <input
+                                  ref={logoInputRef}
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleLogoImageUpload}
+                                  className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
+                                  data-testid="input-logo-file"
+                                />
+                              </FormControl>
+                            </label>
+                          </div>
+                          <FormDescription>
+                            Logo fayli yuklang (PNG, JPG). O'chirish uchun yuqoridagi X tugmasini bosing.
+                          </FormDescription>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -294,18 +353,19 @@ export default function AdminSettings() {
                           <div className="flex gap-2">
                             <label className="flex-1">
                               <FormControl>
-                                <Input
+                                <input
+                                  ref={heroInputRef}
                                   type="file"
                                   accept="image/*"
                                   onChange={handleHeroImageUpload}
-                                  className="cursor-pointer"
+                                  className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
                                   data-testid="input-hero-image"
                                 />
                               </FormControl>
                             </label>
                           </div>
                           <FormDescription>
-                            Bosh sahifadagi hero rasm. Rasm fayli yuklang (PNG, JPG)
+                            Bosh sahifadagi hero rasm. Rasm fayli yuklang (PNG, JPG). O'chirish uchun yuqoridagi X tugmasini bosing.
                           </FormDescription>
                         </div>
                         <FormMessage />
