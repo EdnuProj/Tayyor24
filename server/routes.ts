@@ -316,19 +316,27 @@ ${itemsList}
         // Send to eligible couriers if delivery is courier
         if (order.deliveryType === "courier") {
           try {
-            const couriers = await storage.getCouriers(order.categoryId);
+            // Get all active couriers (if categoryId doesn't match, get all)
+            let couriers = await storage.getCouriers(order.categoryId || "");
+            
+            // If no couriers for that category, get all active couriers
+            if (couriers.length === 0) {
+              couriers = await storage.getCouriers("");
+            }
+            
             const activeCouriers = couriers.filter((c) => c.isActive && c.telegramId);
 
-            if (activeCouriers.length > 0) {
-              // Create assignment
-              const assignment = await storage.createAssignment({
-                orderId: order.id,
-                status: "pending",
-              });
+            // Always create assignment for pending orders
+            const assignment = await storage.createAssignment({
+              orderId: order.id,
+              status: "pending",
+            });
+            
+            console.log(`Created assignment ${assignment.id} for order ${order.orderNumber}, ${activeCouriers.length} active couriers found`);
 
-              // Send messages to couriers with buttons
-              for (const courier of activeCouriers) {
-                const courierMessage = `
+            // Send messages to couriers with buttons
+            for (const courier of activeCouriers) {
+              const courierMessage = `
 🎯 *Yangi Buyurtma Mavjud*
 
 📋 #${order.orderNumber}
@@ -338,46 +346,45 @@ ${itemsList}
 💰 ${order.total} so'm
 
 Qabul qilamizmi?
-                `.trim();
+              `.trim();
 
-                const keyboard = {
-                  inline_keyboard: [
-                    [
-                      {
-                        text: "✅ Qabul qilish",
-                        callback_data: `courier_accept_${order.id}_${courier.id}`,
-                      },
-                      {
-                        text: "❌ Rad etish",
-                        callback_data: `courier_reject_${order.id}_${courier.id}`,
-                      },
-                    ],
+              const keyboard = {
+                inline_keyboard: [
+                  [
+                    {
+                      text: "✅ Qabul qilish",
+                      callback_data: `courier_accept_${order.id}_${courier.id}`,
+                    },
+                    {
+                      text: "❌ Rad etish",
+                      callback_data: `courier_reject_${order.id}_${courier.id}`,
+                    },
                   ],
-                };
+                ],
+              };
 
-                await fetch(telegramUrl, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    chat_id: courier.telegramId,
-                    text: courierMessage,
-                    reply_markup: keyboard,
-                    parse_mode: "Markdown",
-                  }),
-                });
-              }
-
-              // Set 15-second auto-assign timer
-              setTimeout(async () => {
-                const currentAssignment = await storage.getAssignment(order.id);
-                if (currentAssignment && currentAssignment.status === "pending") {
-                  await storage.updateAssignment(assignment.id, {
-                    status: "auto_assigned",
-                  });
-                  console.log(`Auto-assigned order ${order.orderNumber}`);
-                }
-              }, 15000);
+              await fetch(telegramUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  chat_id: courier.telegramId,
+                  text: courierMessage,
+                  reply_markup: keyboard,
+                  parse_mode: "Markdown",
+                }),
+              });
             }
+
+            // Set 15-second auto-assign timer
+            setTimeout(async () => {
+              const currentAssignment = await storage.getAssignment(order.id);
+              if (currentAssignment && currentAssignment.status === "pending") {
+                await storage.updateAssignment(assignment.id, {
+                  status: "auto_assigned",
+                });
+                console.log(`Auto-assigned order ${order.orderNumber}`);
+              }
+            }, 15000);
           } catch (courierError) {
             console.error("Failed to send courier notifications:", courierError);
           }
