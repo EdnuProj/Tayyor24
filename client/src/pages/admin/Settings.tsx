@@ -217,6 +217,8 @@ export default function AdminSettings() {
     categoryForm.reset({
       name: category.name,
       icon: category.icon || "",
+      latitude: category.latitude || undefined,
+      longitude: category.longitude || undefined,
     });
     setCategoryDialogOpen(true);
   };
@@ -673,6 +675,56 @@ export default function AdminSettings() {
                   </FormItem>
                 )}
               />
+
+              <div>
+                <FormLabel>Joylashuv (Opsional)</FormLabel>
+                <FormDescription>Google Maps-dan koordinatalarni kiriting</FormDescription>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <FormField
+                  control={categoryForm.control}
+                  name="latitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Latitude</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number"
+                          step="0.000001"
+                          placeholder="41.2995"
+                          data-testid="input-category-latitude"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={categoryForm.control}
+                  name="longitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Longitude</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field}
+                          type="number"
+                          step="0.000001"
+                          placeholder="69.2401"
+                          data-testid="input-category-longitude"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                🗺️ Google Maps-dan koordinatalarni topish uchun: Maps-ni oching, joylashuvga bosing va koordinatalarni ko'ching.
+              </p>
 
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setCategoryDialogOpen(false)}>
