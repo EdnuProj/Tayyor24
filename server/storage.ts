@@ -174,10 +174,6 @@ export class MemStorage implements IStorage {
   private initializeSampleData() {
     // Categories
     const categories = [
-      { name: "Elektronika", slug: "elektronika", icon: "📱" },
-      { name: "Kiyim-kechak", slug: "kiyim-kechak", icon: "👕" },
-      { name: "Uy-ro'zg'or", slug: "uy-rozgor", icon: "🏠" },
-      { name: "Sport", slug: "sport", icon: "⚽" },
       { name: "Go'zallik", slug: "gozallik", icon: "💄" },
       { name: "Bolalar", slug: "bolalar", icon: "🧸" },
     ];
