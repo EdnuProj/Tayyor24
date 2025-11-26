@@ -24,6 +24,13 @@ type TabType = "home" | "transfer" | "payments" | "qr" | "history" | "orders" | 
 
 const features = [
   {
+    id: "nearby",
+    icon: MapPin,
+    title: "Joylashuvdagi Zakaz",
+    description: "Yaqin atrofdagi buyurtmalar",
+    color: "from-blue-400 to-blue-500",
+  },
+  {
     id: "balance",
     icon: Wallet,
     title: "Balansni Ko'rish",
