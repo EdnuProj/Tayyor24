@@ -86,9 +86,9 @@ export default function CourierBalance() {
           <button
             onClick={() => (window.location.href = "/courier/payme")}
             className="bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 rounded-lg p-4 text-center transition"
-            data-testid="button-go-payme"
+            data-testid="button-go-taayyorcash"
           >
-            <p className="text-sm font-medium">💳 Payme</p>
+            <p className="text-sm font-medium">💳 TaayyorCash</p>
           </button>
         </div>
 

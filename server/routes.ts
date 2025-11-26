@@ -633,11 +633,11 @@ Qabul qilamizmi?
           const courier = await storage.getCourierByTelegramId(chatId);
           
           if (courier) {
-            // Courier app - Payme
+            // Courier app - TaayyorCash
             const courierAppUrl = `${baseUrl}/courier/payme?telegramId=${chatId}`;
             const inlineKeyboard = {
               inline_keyboard: [
-                [{ text: "💳 Payme", web_app: { url: courierAppUrl } }],
+                [{ text: "💳 TaayyorCash", web_app: { url: courierAppUrl } }],
               ],
             };
 
