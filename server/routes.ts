@@ -613,7 +613,6 @@ Qabul qilamizmi?
 
         // Handle /start command
         if (text === "/start") {
-          const categories = await storage.getCategories();
           const siteUrl = process.env.REPLIT_DOMAINS 
             ? `https://${process.env.REPLIT_DOMAINS}`
             : "https://do-kon.replit.dev";
@@ -621,13 +620,6 @@ Qabul qilamizmi?
           const inlineKeyboard = {
             inline_keyboard: [
               [{ text: "📱 Do'kon Ochish", web_app: { url: siteUrl } }],
-              ...categories.slice(0, 4).map((cat) => [
-                {
-                  text: `${cat.icon || '📦'} ${cat.name}`,
-                  callback_data: `cat_${cat.id}`,
-                },
-              ]),
-              [{ text: "📞 Bog'lanish", callback_data: "contact" }],
             ],
           };
 
@@ -695,7 +687,6 @@ Qabul qilamizmi?
         }
 
         // Fallback - show menu for any other message
-        const categories = await storage.getCategories();
         const siteUrl = process.env.REPLIT_DOMAINS 
           ? `https://${process.env.REPLIT_DOMAINS}`
           : "https://do-kon.replit.dev";
@@ -703,13 +694,6 @@ Qabul qilamizmi?
         const inlineKeyboard = {
           inline_keyboard: [
             [{ text: "📱 Do'kon Ochish", web_app: { url: siteUrl } }],
-            ...categories.slice(0, 4).map((cat) => [
-              {
-                text: `${cat.icon || '📦'} ${cat.name}`,
-                callback_data: `cat_${cat.id}`,
-              },
-            ]),
-            [{ text: "📞 Bog'lanish", callback_data: "contact" }],
           ],
         };
 
