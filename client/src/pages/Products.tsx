@@ -36,6 +36,16 @@ export default function Products() {
   const containerRef = useRef<HTMLDivElement>(null);
   const paginationRef = useRef<HTMLDivElement>(null);
 
+  // Get parent category if subcategory is selected
+  const getParentCategory = (categoryId: string | null) => {
+    if (!categoryId) return null;
+    const cat = categories.find(c => c.id === categoryId);
+    return cat?.parentId || categoryId;
+  };
+
+  const parentCategoryId = filters.categoryId ? getParentCategory(filters.categoryId) : null;
+  const subcategories = parentCategoryId ? categories.filter(c => c.parentId === parentCategoryId) : [];
+
   const ITEMS_PER_PAGE = 12;
 
   useEffect(() => {
@@ -169,6 +179,37 @@ export default function Products() {
             {filteredProducts.length} ta mahsulot topildi
           </p>
         </div>
+
+        {/* Subcategories Bar */}
+        {subcategories.length > 0 && (
+          <div className="mb-6 pb-4 border-b">
+            <p className="text-sm text-muted-foreground mb-3">Kichik kategoriyalar:</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={!filters.categoryId || !categories.find(c => c.id === filters.categoryId)?.parentId ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilters((prev) => ({ ...prev, categoryId: parentCategoryId }))}
+                data-testid="button-all-subcategories"
+              >
+                Barchasi
+              </Button>
+              {subcategories.map((subcat) => (
+                <Button
+                  key={subcat.id}
+                  variant={filters.categoryId === subcat.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setFilters((prev) => ({ ...prev, categoryId: subcat.id }));
+                    setCurrentPage(1);
+                  }}
+                  data-testid={`button-subcategory-${subcat.id}`}
+                >
+                  {subcat.icon} {subcat.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Search and Sort Bar */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center">
