@@ -1242,6 +1242,38 @@ Tez orada yetkazib bering! ⚡
             }),
           });
           console.log(`Courier notification sent to ${courier.telegramId}`);
+
+          // Send to group
+          if (settings.telegramGroupId) {
+            const messageToGroup = `
+✅ *BUYURTMA QABUL QILINDI*
+
+Raqam: #${order.orderNumber}
+👤 Kuryer: ${courier.name}
+📞 Tel: ${courier.phone}
+
+👤 Mijoz: ${order.customerName}
+📞 Telefon: ${order.customerPhone}
+📍 Manzil: ${order.customerAddress}
+
+💰 Jami: ${order.total} so'm
+⚡ Yetkazish haqi: 2000 so'm
+
+Kuryer yetkazishni boshlaydi!
+            `.trim();
+
+            console.log(`Sending group notification to ${settings.telegramGroupId}`);
+            await fetch(telegramUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: settings.telegramGroupId,
+                text: messageToGroup,
+                parse_mode: "Markdown",
+              }),
+            });
+            console.log(`Group notification sent`);
+          }
         } catch (telegramError) {
           console.error("Telegram notification failed:", telegramError);
         }
