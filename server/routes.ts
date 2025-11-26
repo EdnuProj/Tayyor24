@@ -1170,7 +1170,7 @@ Buyurtma: #${order.orderNumber}
 
       console.log(`Accept order: orderId=${orderId}, customerTelegramId=${order?.customerTelegramId}`);
 
-      // Send notifications only to customer
+      // Send notifications to both customer and courier
       const settings = await storage.getSettings();
       if (settings.telegramBotToken && order) {
         const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
@@ -1191,6 +1191,22 @@ Kuryer tez orada yetkazib beradi!
 Rahmalingiz uchun! 🙏
         `.trim();
 
+        // Message to courier
+        const messageToCourier = `
+✅ *SIZNING BUYURTMANGIZ QABUL BODI*
+
+Buyurtma raqam: #${order.orderNumber}
+👤 Mijoz: ${order.customerName}
+📞 Telefon: ${order.customerPhone}
+
+📍 Manzil: ${order.customerAddress}
+💰 Yetkazish haqi: 2000 so'm
+
+💳 Yangi balansingiz: ${updatedCourier?.balance || 0} so'm
+
+Tez orada yetkazib bering! ⚡
+        `.trim();
+
         try {
           // Send to customer if telegramId exists
           if (order.customerTelegramId) {
@@ -1208,6 +1224,19 @@ Rahmalingiz uchun! 🙏
           } else {
             console.log(`No customerTelegramId for order ${order.orderNumber}`);
           }
+
+          // Send to courier
+          console.log(`Sending courier notification to ${courier.telegramId}`);
+          await fetch(telegramUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: courier.telegramId,
+              text: messageToCourier,
+              parse_mode: "Markdown",
+            }),
+          });
+          console.log(`Courier notification sent to ${courier.telegramId}`);
         } catch (telegramError) {
           console.error("Telegram notification failed:", telegramError);
         }
