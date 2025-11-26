@@ -22,12 +22,8 @@ export default function Home() {
     }
   }, []);
 
-  const { data: featuredProducts = [], isLoading: loadingProducts } = useQuery<Product[]>({
-    queryKey: ["/api/products?popular=true&limit=8"],
-  });
-
-  const { data: newProducts = [], isLoading: loadingNew } = useQuery<Product[]>({
-    queryKey: ["/api/products?new=true&limit=4"],
+  const { data: allProducts = [] } = useQuery<Product[]>({
+    queryKey: ["/api/products"],
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
@@ -72,6 +68,18 @@ export default function Home() {
       description: "Muntazam chegirmalar va aksiyalar",
     },
   ];
+
+  // Get main categories (no parentId) sorted by order
+  const mainCategories = categories
+    .filter(c => !c.parentId)
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  // Get products for a specific category (5 products)
+  const getProductsByCategory = (categoryId: string) => {
+    return allProducts
+      .filter(p => p.categoryId === categoryId)
+      .slice(0, 5);
+  };
 
   const heroImage = settings?.heroImageUrl;
   const primaryColor = settings?.primaryColor || "#8B5CF6";
@@ -197,55 +205,41 @@ export default function Home() {
         </section>
       )}
 
-      {/* Categories */}
-      {categories.length > 0 && (
-        <section className="py-8 sm:py-12 md:py-16">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">Kategoriyalar</h2>
-              <Link href="/categories">
-                <Button variant="ghost" size="sm" data-testid="link-view-all-categories">
-                  Barchasi
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
-              {[...categories].sort((a, b) => (a.order || 0) - (b.order || 0)).slice(0, 6).map((category) => (
-                <Link key={category.id} href={`/products?category=${category.id}`}>
-                  <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-category-${category.id}`}>
-                    <CardContent className="p-3 sm:p-4 md:p-6 text-center space-y-1 sm:space-y-2">
-                      <div className="w-10 sm:w-12 h-10 sm:h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center text-lg sm:text-2xl">
-                        {category.icon || "📦"}
-                      </div>
-                      <h3 className="font-medium text-xs sm:text-sm line-clamp-2">{category.name}</h3>
-                    </CardContent>
-                  </Card>
+      {/* Main Categories with Products */}
+      {mainCategories.map((mainCategory, idx) => {
+        const categoryProducts = getProductsByCategory(mainCategory.id);
+        const isAlternate = idx % 2 === 1;
+        
+        return (
+          <section 
+            key={mainCategory.id} 
+            className={`py-8 sm:py-12 md:py-16 ${isAlternate ? 'bg-muted/30' : ''}`}
+          >
+            <div className="container mx-auto px-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl sm:text-3xl">
+                    {mainCategory.icon || "📦"}
+                  </div>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">{mainCategory.name}</h2>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                      {categoryProducts.length} mahsulot
+                    </p>
+                  </div>
+                </div>
+                <Link href={`/products?category=${mainCategory.id}`}>
+                  <Button variant="ghost" size="sm" data-testid={`link-view-category-${mainCategory.id}`}>
+                    Barchasi
+                    <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
                 </Link>
-              ))}
+              </div>
+              <ProductGrid products={categoryProducts} isLoading={false} />
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* Featured Products */}
-      <section className="py-8 sm:py-12 md:py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-2">
-            <div>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">Ommabop mahsulotlar</h2>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Eng ko'p sotilgan mahsulotlarimiz</p>
-            </div>
-            <Link href="/products?filter=popular">
-              <Button variant="ghost" size="sm" data-testid="link-view-all-popular">
-                Barchasi
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-          <ProductGrid products={featuredProducts} isLoading={loadingProducts} />
-        </div>
-      </section>
+          </section>
+        );
+      })}
 
       {/* Features */}
       <section className="py-8 sm:py-12 md:py-16">
@@ -265,27 +259,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* New Arrivals */}
-      {newProducts.length > 0 && (
-        <section className="py-8 sm:py-12 md:py-16 bg-gradient-to-r from-primary/5 to-accent/5">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-2">
-              <div>
-                <Badge className="mb-1 sm:mb-2 text-xs">Yangi</Badge>
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">Yangi mahsulotlar</h2>
-              </div>
-              <Link href="/products?filter=new">
-                <Button variant="ghost" size="sm" data-testid="link-view-all-new">
-                  Barchasi
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-            <ProductGrid products={newProducts} isLoading={loadingNew} />
-          </div>
-        </section>
-      )}
 
       {/* CTA Section */}
       <section className="py-12 sm:py-16 md:py-24">
