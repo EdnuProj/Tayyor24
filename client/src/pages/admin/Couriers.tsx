@@ -26,11 +26,11 @@ export default function AdminCouriers() {
   const [selectedCourier, setSelectedCourier] = useState<any>(null);
   const [balanceAmount, setBalanceAmount] = useState<string>("");
 
-  const { data: couriers = [], isLoading } = useQuery({
+  const { data: couriers = [], isLoading, refetch } = useQuery({
     queryKey: ["/api/couriers"],
     queryFn: async () => {
-      const res = await fetch("/api/couriers");
-      return res.json();
+      const res = await apiRequest("GET", "/api/couriers");
+      return res;
     },
   });
 
@@ -58,12 +58,13 @@ export default function AdminCouriers() {
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/couriers", data);
-      return res.json();
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/couriers"] });
+      setTimeout(() => refetch(), 100);
       form.reset();
-      toast({ title: "Kuryer qo'shildi" });
+      toast({ title: "Kuryer qo'shildi - Balansi: 10,000 so'm" });
     },
   });
 
