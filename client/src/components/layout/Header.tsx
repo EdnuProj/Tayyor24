@@ -61,15 +61,15 @@ export function Header({ onSearch }: HeaderProps) {
           </nav>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="hidden lg:flex mx-4" style={{ width: "280px" }}>
+          <form onSubmit={handleSearch} className="hidden lg:flex mx-2" style={{ width: "180px" }}>
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Mahsulot qidirish..."
+                placeholder="Qidirish..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4"
+                className="w-full pl-10 pr-4 text-sm"
                 data-testid="input-search"
               />
             </div>
