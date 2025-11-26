@@ -108,7 +108,6 @@ export const orders = pgTable("orders", {
   promoCode: text("promo_code"),
   items: text("items").notNull(), // JSON string of order items
   categoryId: varchar("category_id"),
-  qrCode: text("qr_code"), // QR code data URL
   createdAt: timestamp("created_at").defaultNow(),
 });
 
