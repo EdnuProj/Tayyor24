@@ -43,6 +43,18 @@ export default function Products() {
     return cat?.parentId || categoryId;
   };
 
+  // Get main categories (those without parentId and have subcategories)
+  const mainCategories = useMemo(() => {
+    return categories.filter(c => !c.parentId);
+  }, [categories]);
+
+  // Get selected main category
+  const selectedMainCategory = filters.categoryId 
+    ? (categories.find(c => c.id === filters.categoryId)?.parentId 
+        ? categories.find(c => c.id === filters.categoryId)?.parentId
+        : filters.categoryId)
+    : null;
+
   const parentCategoryId = filters.categoryId ? getParentCategory(filters.categoryId) : null;
   const subcategories = parentCategoryId ? categories.filter(c => c.parentId === parentCategoryId) : [];
 
@@ -179,6 +191,41 @@ export default function Products() {
             {filteredProducts.length} ta mahsulot topildi
           </p>
         </div>
+
+        {/* Main Categories Bar */}
+        {mainCategories.length > 0 && (
+          <div className="mb-6 pb-4 border-b">
+            <p className="text-sm font-semibold text-foreground mb-3">Kategoriyalar:</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={!filters.categoryId ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setFilters((prev) => ({ ...prev, categoryId: null }));
+                  setCurrentPage(1);
+                }}
+                data-testid="button-all-categories"
+              >
+                Barchasi
+              </Button>
+              {mainCategories.map((mainCat) => (
+                <Button
+                  key={mainCat.id}
+                  variant={selectedMainCategory === mainCat.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setFilters((prev) => ({ ...prev, categoryId: mainCat.id }));
+                    setCurrentPage(1);
+                  }}
+                  data-testid={`button-category-${mainCat.id}`}
+                >
+                  <span className="mr-2">{mainCat.icon}</span>
+                  {mainCat.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Subcategories Bar - Below Header */}
         {subcategories.length > 0 && (
