@@ -114,6 +114,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== CATEGORIES REORDER ==========
+  app.post("/api/categories/reorder", async (req, res) => {
+    try {
+      const { categories: reordered } = req.body;
+      for (const item of reordered) {
+        const category = storage.categories.get(item.id);
+        if (category) {
+          category.order = item.order;
+          storage.categories.set(item.id, category);
+        }
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to reorder categories" });
+    }
+  });
+
   // ========== COURIER TRANSACTIONS ==========
   app.get("/api/courier-transactions", async (req, res) => {
     try {

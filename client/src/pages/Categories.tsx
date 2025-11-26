@@ -40,7 +40,7 @@ export default function Categories() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {categories.map((category) => (
+            {[...categories].sort((a, b) => (a.order || 0) - (b.order || 0)).map((category) => (
               <Link key={category.id} href={`/products?category=${category.id}`}>
                 <Card 
                   className="hover-elevate cursor-pointer h-full group"

@@ -10,6 +10,7 @@ export const categories = pgTable("categories", {
   icon: text("icon"),
   latitude: real("latitude"),
   longitude: real("longitude"),
+  order: integer("order").notNull().default(0),
 });
 
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });
