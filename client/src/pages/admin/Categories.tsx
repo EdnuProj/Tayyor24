@@ -120,9 +120,12 @@ export default function AdminCategories() {
 
     if (draggedIdx === -1 || targetIdx === -1) return;
 
-    // Swap items
-    const newOrder = [...sorted];
-    [newOrder[draggedIdx], newOrder[targetIdx]] = [newOrder[targetIdx], newOrder[draggedIdx]];
+    // Remove dragged item from its current position
+    const newOrder = sorted.filter((_, idx) => idx !== draggedIdx);
+    
+    // Insert dragged item at target position
+    const insertIdx = draggedIdx < targetIdx ? targetIdx - 1 : targetIdx;
+    newOrder.splice(insertIdx, 0, sorted[draggedIdx]);
 
     reorderMutation.mutate(newOrder);
     setDraggedItem(null);
