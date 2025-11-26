@@ -357,6 +357,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
+      
+      // Update order with category's location so kuryer app can find nearby orders
+      if (category?.latitude && category?.longitude) {
+        await storage.updateOrder(order.id, {
+          latitude: category.latitude,
+          longitude: category.longitude,
+        });
+        console.log(`Order ${order.orderNumber}: Updated with category location (${category.latitude}, ${category.longitude})`);
+      }
 
       // Send Telegram notification to group
       const settings = await storage.getSettings();
