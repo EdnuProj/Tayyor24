@@ -226,6 +226,13 @@ export default function AdminOrders() {
         <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
           <CardTitle className="text-lg">Buyurtmalar ro'yxati</CardTitle>
           <div className="flex items-center gap-4 flex-wrap">
+            <Button 
+              onClick={() => setIsCreateOpen(true)}
+              data-testid="button-create-order"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Yaratish
+            </Button>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -349,6 +356,243 @@ export default function AdminOrders() {
           )}
         </CardContent>
       </Card>
+
+      {/* Create Order Dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Yangi Buyurtma Yaratish</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* Product Selection */}
+            <div className="space-y-3">
+              <p className="font-medium">1. Mahsulotlarni tanlang</p>
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Mahsulot qidirish..."
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-product-search"
+                />
+              </div>
+              <div className="border rounded-lg max-h-64 overflow-y-auto">
+                {filteredProducts.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground">Mahsulot topilmadi</div>
+                ) : (
+                  <div className="space-y-2 p-2">
+                    {filteredProducts.map((product) => (
+                      <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg hover-elevate">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {product.images[0] && (
+                            <img
+                              src={product.images[0]}
+                              alt={product.name}
+                              className="w-10 h-10 rounded object-cover"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{product.name}</p>
+                            <p className="text-xs text-muted-foreground">{formatPrice(product.price)}</p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={selectedItems.some((item) => item.product.id === product.id) ? "default" : "outline"}
+                          onClick={() => {
+                            const existingItem = selectedItems.find((item) => item.product.id === product.id);
+                            if (existingItem) {
+                              setSelectedItems(selectedItems.filter((item) => item.product.id !== product.id));
+                            } else {
+                              setSelectedItems([...selectedItems, { product, quantity: 1 }]);
+                            }
+                          }}
+                          data-testid={`button-select-product-${product.id}`}
+                        >
+                          {existingItem ? "Olib tashlash" : "Tanlash"}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Selected Items */}
+            {selectedItems.length > 0 && (
+              <div className="space-y-3">
+                <p className="font-medium">2. Tanlangan mahsulotlar ({selectedItems.length})</p>
+                <div className="space-y-2 border rounded-lg p-3">
+                  {selectedItems.map((item, index) => {
+                    const existingItem = selectedItems.find((i) => i.product.id === item.product.id);
+                    return (
+                      <div key={index} className="flex items-center justify-between gap-3 p-2 bg-muted/50 rounded">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{item.product.name}</p>
+                          <p className="text-xs text-muted-foreground">{formatPrice(item.product.price)} x {item.quantity}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              if (item.quantity > 1) {
+                                setSelectedItems(
+                                  selectedItems.map((i) =>
+                                    i.product.id === item.product.id ? { ...i, quantity: i.quantity - 1 } : i
+                                  )
+                                );
+                              }
+                            }}
+                            data-testid={`button-decrease-qty-${item.product.id}`}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-6 text-center text-sm">{item.quantity}</span>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              setSelectedItems(
+                                selectedItems.map((i) =>
+                                  i.product.id === item.product.id ? { ...i, quantity: i.quantity + 1 } : i
+                                )
+                              );
+                            }}
+                            data-testid={`button-increase-qty-${item.product.id}`}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                          <p className="font-medium text-sm min-w-20 text-right">
+                            {formatPrice(item.product.price * item.quantity)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between font-semibold bg-primary/10 p-3 rounded-lg">
+                  <span>Jami (Mahsulotlar):</span>
+                  <span>{formatPrice(selectedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0))}</span>
+                </div>
+              </div>
+            )}
+
+            <Separator />
+
+            {/* Customer Info */}
+            <div className="space-y-3">
+              <p className="font-medium">3. Mijoz Ma'lumotlari</p>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium">Ism</label>
+                  <Input
+                    placeholder="Mijoz ismi"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    data-testid="input-customer-name"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Telefon</label>
+                  <Input
+                    placeholder="+998 XX XXX XX XX"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    data-testid="input-customer-phone"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Manzil</label>
+                  <Input
+                    placeholder="Yetkazish manzili"
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    data-testid="input-customer-address"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Delivery & Payment */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Yetkazish turi</label>
+                <Select value={deliveryType} onValueChange={setDeliveryType}>
+                  <SelectTrigger data-testid="select-delivery-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="courier">Kuryer</SelectItem>
+                    <SelectItem value="pickup">Olib ketish</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">To'lov turi</label>
+                <Select value={paymentType} onValueChange={setPaymentType}>
+                  <SelectTrigger data-testid="select-payment-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Naqd</SelectItem>
+                    <SelectItem value="card">Karta</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Total */}
+            {selectedItems.length > 0 && (
+              <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Mahsulotlar:</span>
+                  <span>{formatPrice(selectedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0))}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Yetkazish:</span>
+                  <span>{deliveryType === "courier" ? formatPrice(15000) : "Bepul"}</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between font-semibold text-lg text-green-700 dark:text-green-300">
+                  <span>Jami:</span>
+                  <span>
+                    {formatPrice(
+                      selectedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0) +
+                        (deliveryType === "courier" ? 15000 : 0)
+                    )}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateOpen(false)}
+                className="flex-1"
+                data-testid="button-cancel-create"
+              >
+                Bekor qilish
+              </Button>
+              <Button
+                onClick={() => createOrderMutation.mutate()}
+                disabled={!customerName || !customerPhone || !customerAddress || selectedItems.length === 0 || createOrderMutation.isPending}
+                className="flex-1"
+                data-testid="button-submit-create-order"
+              >
+                {createOrderMutation.isPending ? "Yaratilmoqda..." : "Buyurtmani Yaratish"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Order Detail Dialog */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
