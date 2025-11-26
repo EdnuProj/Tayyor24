@@ -721,9 +721,10 @@ Buyurtma: #${order.orderNumber}
             });
           } else {
             // Regular customer app
+            const checkoutUrl = `${baseUrl}/?telegramId=${chatId}`;
             const inlineKeyboard = {
               inline_keyboard: [
-                [{ text: "📱 Do'kon Ochish", web_app: { url: baseUrl } }],
+                [{ text: "📱 Do'kon Ochish", web_app: { url: checkoutUrl } }],
               ],
             };
 
@@ -796,9 +797,10 @@ Buyurtma: #${order.orderNumber}
           ? `https://${process.env.REPLIT_DOMAINS}`
           : "https://do-kon.replit.dev";
         
+        const checkoutUrl = `${siteUrl}/?telegramId=${chatId}`;
         const inlineKeyboard = {
           inline_keyboard: [
-            [{ text: "📱 Do'kon Ochish", web_app: { url: siteUrl } }],
+            [{ text: "📱 Do'kon Ochish", web_app: { url: checkoutUrl } }],
           ],
         };
 
