@@ -624,7 +624,17 @@ export default function CourierPayme() {
 
           return (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Buyurtma Tafsilotlari</h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedOrder(null)}
+                  data-testid="button-back-orders"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h2 className="text-xl font-bold">Buyurtma Tafsilotlari</h2>
+              </div>
               <Card className="bg-slate-800 border-slate-700 p-4 space-y-3">
                 <div>
                   <p className="text-slate-400 text-sm">Buyurtma ID</p>
@@ -695,7 +705,7 @@ export default function CourierPayme() {
                     className="flex-1 bg-blue-600 hover:bg-blue-700"
                     data-testid="button-progress"
                   >
-                    {!isAccepted ? "⏳ Jarayonda" : !isShipping ? "🚗 Yo'lda" : "📍 Yetkazildi"}
+                    {updatingStatus ? "⏳ Yangilanmoqda..." : !isAccepted ? "⏳ Jarayonda" : !isShipping ? "🚗 Yo'lda" : "📍 Yetkazildi"}
                   </Button>
                 )}
                 {isDelivered && (
