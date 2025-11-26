@@ -52,16 +52,15 @@ export default function Checkout() {
   const actualDeliveryPrice = isFreeDelivery ? 0 : deliveryPrice;
   const total = subtotal + actualDeliveryPrice;
 
-  // Get telegramId from URL params
-  const params = new URLSearchParams(window.location.search);
-  const initialTelegramId = params.get("telegramId") || params.get("telegram_id") || "";
+  // Get telegramId from localStorage (saved from URL params in Home.tsx)
+  const storedTelegramId = typeof window !== "undefined" ? localStorage.getItem("customerTelegramId") || "" : "";
 
   const form = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       customerName: "",
       customerPhone: "+998",
-      customerTelegramId: initialTelegramId,
+      customerTelegramId: storedTelegramId,
       customerAddress: "",
       latitude: undefined,
       longitude: undefined,

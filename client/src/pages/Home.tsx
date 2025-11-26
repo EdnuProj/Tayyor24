@@ -12,6 +12,16 @@ import type { Product, Category, Advertisement, SiteSettings } from "@shared/sch
 export default function Home() {
   const [adIndex, setAdIndex] = useState(0);
 
+  // Save Telegram ID from URL to localStorage
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const telegramId = params.get("telegramId");
+    if (telegramId) {
+      localStorage.setItem("customerTelegramId", telegramId);
+      console.log("✅ Telegram ID saved:", telegramId);
+    }
+  }, []);
+
   const { data: featuredProducts = [], isLoading: loadingProducts } = useQuery<Product[]>({
     queryKey: ["/api/products?popular=true&limit=8"],
   });

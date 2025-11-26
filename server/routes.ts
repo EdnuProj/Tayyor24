@@ -1167,6 +1167,9 @@ Buyurtma: #${order.orderNumber}
         courierId: courier.id,
       });
 
+      // Update order status to processing (accepted)
+      await storage.updateOrder(orderId, { status: "processing" });
+
       // Get order info
       const order = await storage.getOrder(orderId);
 
