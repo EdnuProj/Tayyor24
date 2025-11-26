@@ -809,7 +809,12 @@ export class MemStorage implements IStorage {
 
   async createCourier(courier: InsertCourier): Promise<Courier> {
     const id = randomUUID();
-    const newCourier: Courier = { ...courier, id, createdAt: new Date() } as Courier;
+    const newCourier: Courier = { 
+      ...courier, 
+      id, 
+      createdAt: new Date(),
+      balance: typeof courier.balance === 'number' ? courier.balance : 10000
+    } as Courier;
     this.couriers.set(id, newCourier);
     return newCourier;
   }

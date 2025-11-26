@@ -472,17 +472,24 @@ Qabul qilamizmi?
     try {
       const { id } = req.params;
       const { amount, type } = req.body; // type: "credit" or "debit"
+      
+      const numAmount = parseInt(amount) || 0;
+      if (numAmount <= 0) {
+        return res.status(400).json({ error: "Amount must be greater than 0" });
+      }
+
       let courier;
       if (type === "credit") {
-        courier = await storage.creditCourierBalance(id, amount);
+        courier = await storage.creditCourierBalance(id, numAmount);
       } else if (type === "debit") {
-        courier = await storage.debitCourierBalance(id, amount);
+        courier = await storage.debitCourierBalance(id, numAmount);
       }
       if (!courier) {
         return res.status(404).json({ error: "Courier not found" });
       }
       res.json(courier);
     } catch (error) {
+      console.error("Balance update error:", error);
       res.status(500).json({ error: "Failed to update balance" });
     }
   });

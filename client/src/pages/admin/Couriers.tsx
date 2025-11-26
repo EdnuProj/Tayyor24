@@ -88,18 +88,24 @@ export default function AdminCouriers() {
 
   const balanceMutation = useMutation({
     mutationFn: async ({ id, amount, type }: { id: string; amount: number; type: string }) => {
+      console.log("Sending balance update:", { id, amount, type });
       const res = await apiRequest("PATCH", `/api/couriers/${id}/balance`, { amount, type });
-      return res.json();
+      const data = await res.json();
+      console.log("Balance update response:", data);
+      return data;
     },
     onSuccess: (data) => {
+      console.log("Balance update success - new balance:", data?.balance);
       queryClient.invalidateQueries({ queryKey: ["/api/couriers"] });
-      // Update selected courier with new balance - data IS the courier object
       setSelectedCourier(data);
       setBalanceAmount("");
       toast({ title: "✅ Balansi yangilandi", description: `Yangi balans: ${data?.balance?.toLocaleString() || 0} so'm` });
-      // Refresh courier list after 300ms
       setTimeout(() => refetch(), 300);
     },
+    onError: (error: any) => {
+      console.error("Balance update error:", error);
+      toast({ title: "❌ Xatolik", description: error?.message || "Balansi yangilashda xatolik", variant: "destructive" });
+    }
   });
 
   const updateStatusMutation = useMutation({
