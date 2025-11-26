@@ -29,6 +29,7 @@ import type { OrderItem } from "@shared/schema";
 const checkoutSchema = z.object({
   customerName: z.string().min(2, "Ism kamida 2 ta belgi bo'lishi kerak"),
   customerPhone: z.string().min(9, "Telefon raqamini kiriting").regex(/^\+?[0-9]+$/, "Noto'g'ri telefon raqam"),
+  customerTelegramId: z.string().min(1, "Telegram ID ni kiriting"),
   customerAddress: z.string().min(5, "Manzilni kiriting"),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
@@ -51,11 +52,16 @@ export default function Checkout() {
   const actualDeliveryPrice = isFreeDelivery ? 0 : deliveryPrice;
   const total = subtotal + actualDeliveryPrice;
 
+  // Get telegramId from URL params
+  const params = new URLSearchParams(window.location.search);
+  const initialTelegramId = params.get("telegramId") || params.get("telegram_id") || "";
+
   const form = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       customerName: "",
       customerPhone: "+998",
+      customerTelegramId: initialTelegramId,
       customerAddress: "",
       latitude: undefined,
       longitude: undefined,
@@ -101,14 +107,11 @@ export default function Checkout() {
         categoryId: item.product.categoryId,
       }));
 
-      // Try to get customer's telegram ID from URL params if available
-      const params = new URLSearchParams(window.location.search);
-      const customerTelegramId = params.get("telegramId") || params.get("telegram_id");
-
       const orderData = {
         orderNumber,
         customerName: data.customerName,
         customerPhone: data.customerPhone,
+        customerTelegramId: data.customerTelegramId,
         customerAddress: data.customerAddress,
         latitude: data.latitude,
         longitude: data.longitude,
@@ -120,7 +123,6 @@ export default function Checkout() {
         deliveryType: data.deliveryType,
         paymentType: data.paymentType,
         status: "new",
-        customerTelegramId,
       };
 
       const res = await apiRequest("POST", "/api/orders", orderData);
@@ -216,6 +218,19 @@ export default function Checkout() {
                           <FormLabel>Telefon raqam</FormLabel>
                           <FormControl>
                             <Input placeholder="+998 90 123 45 67" {...field} data-testid="input-phone" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="customerTelegramId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telegram ID (@username yoki raqam)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Masalan: @username yoki 123456789" {...field} data-testid="input-telegram-id" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
