@@ -87,11 +87,17 @@ export default async function runApp(
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
   const host = process.env.HOST || "127.0.0.1";
-  server.listen({
+  const listenOptions: any = {
     port,
     host,
-    reusePort: true,
-  }, () => {
+  };
+  
+  // reusePort is not supported on Windows
+  if (process.platform !== 'win32') {
+    listenOptions.reusePort = true;
+  }
+  
+  server.listen(listenOptions, () => {
     log(`serving on port ${port}`);
   });
 }
