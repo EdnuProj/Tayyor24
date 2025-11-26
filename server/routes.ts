@@ -411,6 +411,7 @@ ${itemsList}
             
             // Get category information to check for location
             let nearByCouriers = activeCouriers;
+            let needsExpand = false;
             const orderCategory = allCategories.find(c => c.id === order.categoryId);
             
             if (orderCategory?.latitude && orderCategory?.longitude) {
@@ -421,8 +422,20 @@ ${itemsList}
                 return distance <= 1; // 1km radius from category location
               });
               console.log(`Order ${order.orderNumber}: Category has location. Found ${nearByCouriers.length} couriers within 1km (total: ${activeCouriers.length})`);
+              
+              // If no nearby couriers, send to ALL immediately
+              if (nearByCouriers.length === 0) {
+                console.log(`Order ${order.orderNumber}: No nearby couriers, sending to ALL ${activeCouriers.length} couriers immediately`);
+                nearByCouriers = activeCouriers;
+                needsExpand = false;
+              } else {
+                // If found nearby couriers, will expand after 30s if no one accepts
+                needsExpand = true;
+              }
             } else {
-              console.log(`Order ${order.orderNumber}: Category has no location, will send to all ${activeCouriers.length} couriers after 30s timeout`);
+              console.log(`Order ${order.orderNumber}: Category has no location, sending to all ${activeCouriers.length} couriers`);
+              nearByCouriers = activeCouriers;
+              needsExpand = false;
             }
             
             console.log(`Order ${order.orderNumber}: Sending to ${nearByCouriers.length} couriers`);
@@ -477,23 +490,21 @@ Qabul qilamizmi?
               });
             }
 
-            // Set 30-second timeout to send to all couriers if no one accepts nearby couriers
-            setTimeout(async () => {
-              const currentAssignment = await storage.getAssignment(order.id);
-              if (currentAssignment && currentAssignment.status === "pending") {
-                // Check if we already sent to all couriers (nearByCouriers === activeCouriers)
-                const alreadySentToAll = nearByCouriers.length === activeCouriers.length;
-                
-                if (!alreadySentToAll && activeCouriers.length > nearByCouriers.length) {
+            // Set 30-second timeout ONLY if nearby couriers were found and need expansion
+            if (needsExpand) {
+              setTimeout(async () => {
+                const currentAssignment = await storage.getAssignment(order.id);
+                if (currentAssignment && currentAssignment.status === "pending") {
                   // Find couriers we haven't sent to yet
                   const sentCourierIds = new Set(nearByCouriers.map(c => c.id));
                   const remainingCouriers = activeCouriers.filter(c => !sentCourierIds.has(c.id));
                   
-                  console.log(`30s timeout: Sending to ${remainingCouriers.length} remaining couriers for order ${order.orderNumber}`);
-                  
-                  // Send to remaining couriers
-                  for (const courier of remainingCouriers) {
-                    const courierMessage = `
+                  if (remainingCouriers.length > 0) {
+                    console.log(`30s timeout: Sending to ${remainingCouriers.length} remaining couriers for order ${order.orderNumber}`);
+                    
+                    // Send to remaining couriers
+                    for (const courier of remainingCouriers) {
+                      const courierMessage = `
 🎯 *Yangi Buyurtma Mavjud (Qo'shimcha)*
 
 📋 #${order.orderNumber}
@@ -504,38 +515,38 @@ Qabul qilamizmi?
 💰 ${order.total} so'm
 
 Qabul qilamizmi?
-                    `.trim();
+                      `.trim();
 
-                    const keyboard = {
-                      inline_keyboard: [
-                        [
-                          {
-                            text: "✅ Qabul qilish",
-                            callback_data: `courier_accept_${order.id}_${courier.id}`,
-                          },
-                          {
-                            text: "❌ Rad etish",
-                            callback_data: `courier_reject_${order.id}_${courier.id}`,
-                          },
+                      const keyboard = {
+                        inline_keyboard: [
+                          [
+                            {
+                              text: "✅ Qabul qilish",
+                              callback_data: `courier_accept_${order.id}_${courier.id}`,
+                            },
+                            {
+                              text: "❌ Rad etish",
+                              callback_data: `courier_reject_${order.id}_${courier.id}`,
+                            },
+                          ],
                         ],
-                      ],
-                    };
+                      };
 
-                    await fetch(telegramUrl, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        chat_id: courier.telegramId,
-                        text: courierMessage,
-                        reply_markup: keyboard,
-                        parse_mode: "Markdown",
-                      }),
-                    });
-                  }
+                      await fetch(telegramUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          chat_id: courier.telegramId,
+                          text: courierMessage,
+                          reply_markup: keyboard,
+                          parse_mode: "Markdown",
+                        }),
+                      });
+                    }
 
-                  // Send notification to group
-                  try {
-                    const expandMessage = `
+                    // Send notification to group
+                    try {
+                      const expandMessage = `
 🔔 *BUYURTMA BARCHAGA YUBORILDI*
 
 Buyurtma: #${order.orderNumber}
@@ -546,23 +557,24 @@ Buyurtma: #${order.orderNumber}
 💰 Jami: ${order.total} so'm
 
 ⚠️ Yaqin kuryerlar qabul qilmadi, barchaga yuborildi
-                    `.trim();
-                    
-                    await fetch(telegramUrl, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        chat_id: settings.telegramGroupId,
-                        text: expandMessage,
-                        parse_mode: "Markdown",
-                      }),
-                    });
-                  } catch (error) {
-                    console.error("Failed to send expand notification to group:", error);
+                      `.trim();
+                      
+                      await fetch(telegramUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          chat_id: settings.telegramGroupId,
+                          text: expandMessage,
+                          parse_mode: "Markdown",
+                        }),
+                      });
+                    } catch (error) {
+                      console.error("Failed to send expand notification to group:", error);
+                    }
                   }
                 }
-              }
-            }, 30000);
+              }, 30000);
+            }
           } catch (courierError) {
             console.error("Failed to send courier notifications:", courierError);
           }
