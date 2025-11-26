@@ -405,21 +405,24 @@ ${itemsList}
         // Send to eligible couriers if delivery is courier
         if (order.deliveryType === "courier") {
           try {
-            // Get ALL active couriers (no category filtering)
+            // Get ALL active couriers
             const allCouriers = await storage.getCouriers("");
             const activeCouriers = allCouriers.filter((c) => c.isActive && c.telegramId);
             
-            // Filter couriers within 1km radius if order has location
+            // Get category information to check for location
             let nearByCouriers = activeCouriers;
-            if (order.latitude && order.longitude) {
+            const orderCategory = allCategories.find(c => c.id === order.categoryId);
+            
+            if (orderCategory?.latitude && orderCategory?.longitude) {
+              // Filter couriers within 1km of category location
               nearByCouriers = activeCouriers.filter((courier) => {
                 if (!courier.latitude || !courier.longitude) return false;
-                const distance = calculateDistance(order.latitude!, order.longitude!, courier.latitude, courier.longitude);
-                return distance <= 1; // 1km radius
+                const distance = calculateDistance(orderCategory.latitude!, orderCategory.longitude!, courier.latitude, courier.longitude);
+                return distance <= 1; // 1km radius from category location
               });
-              console.log(`Order ${order.orderNumber}: Found ${nearByCouriers.length} couriers within 1km radius (total: ${activeCouriers.length})`);
+              console.log(`Order ${order.orderNumber}: Category has location. Found ${nearByCouriers.length} couriers within 1km (total: ${activeCouriers.length})`);
             } else {
-              console.log(`Order ${order.orderNumber}: No location data, sending to all ${activeCouriers.length} couriers`);
+              console.log(`Order ${order.orderNumber}: Category has no location, will send to all ${activeCouriers.length} couriers after 30s timeout`);
             }
             
             console.log(`Order ${order.orderNumber}: Sending to ${nearByCouriers.length} couriers`);
@@ -430,10 +433,10 @@ ${itemsList}
               status: "pending",
             });
             
-            console.log(`Created assignment ${assignment.id} for order ${order.orderNumber}, ${activeCouriers.length} active couriers found`);
+            console.log(`Created assignment ${assignment.id} for order ${order.orderNumber}`);
 
-            // Send messages to couriers with buttons
-            for (const courier of activeCouriers) {
+            // Send messages to nearby couriers with buttons
+            for (const courier of nearByCouriers) {
               const courierMessage = `
 🎯 *Yangi Buyurtma Mavjud*
 
@@ -474,19 +477,66 @@ Qabul qilamizmi?
               });
             }
 
-            // Set 15-second auto-assign timer
+            // Set 30-second timeout to send to all couriers if no one accepts nearby couriers
             setTimeout(async () => {
               const currentAssignment = await storage.getAssignment(order.id);
               if (currentAssignment && currentAssignment.status === "pending") {
-                await storage.updateAssignment(assignment.id, {
-                  status: "auto_assigned",
-                });
-                console.log(`Auto-assigned order ${order.orderNumber}`);
+                // Check if we already sent to all couriers (nearByCouriers === activeCouriers)
+                const alreadySentToAll = nearByCouriers.length === activeCouriers.length;
                 
-                // Send notification to group about auto-assignment
-                try {
-                  const autoAssignMessage = `
-🤖 *AVTOMATIK TAQSIMOT*
+                if (!alreadySentToAll && activeCouriers.length > nearByCouriers.length) {
+                  // Find couriers we haven't sent to yet
+                  const sentCourierIds = new Set(nearByCouriers.map(c => c.id));
+                  const remainingCouriers = activeCouriers.filter(c => !sentCourierIds.has(c.id));
+                  
+                  console.log(`30s timeout: Sending to ${remainingCouriers.length} remaining couriers for order ${order.orderNumber}`);
+                  
+                  // Send to remaining couriers
+                  for (const courier of remainingCouriers) {
+                    const courierMessage = `
+🎯 *Yangi Buyurtma Mavjud (Qo'shimcha)*
+
+📋 #${order.orderNumber}
+👤 ${order.customerName} - ${order.customerPhone.replace(/\s/g, "")}
+📍 ${order.customerAddress}
+📂 ${categoryName}
+
+💰 ${order.total} so'm
+
+Qabul qilamizmi?
+                    `.trim();
+
+                    const keyboard = {
+                      inline_keyboard: [
+                        [
+                          {
+                            text: "✅ Qabul qilish",
+                            callback_data: `courier_accept_${order.id}_${courier.id}`,
+                          },
+                          {
+                            text: "❌ Rad etish",
+                            callback_data: `courier_reject_${order.id}_${courier.id}`,
+                          },
+                        ],
+                      ],
+                    };
+
+                    await fetch(telegramUrl, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        chat_id: courier.telegramId,
+                        text: courierMessage,
+                        reply_markup: keyboard,
+                        parse_mode: "Markdown",
+                      }),
+                    });
+                  }
+
+                  // Send notification to group
+                  try {
+                    const expandMessage = `
+🔔 *BUYURTMA BARCHAGA YUBORILDI*
 
 Buyurtma: #${order.orderNumber}
 👤 Mijoz: ${order.customerName}
@@ -495,30 +545,24 @@ Buyurtma: #${order.orderNumber}
 
 💰 Jami: ${order.total} so'm
 
-⚠️ 15 soniyada hech kim qabul qilmadi, avtomatik taqsimot amalga oshdi
-                  `.trim();
-                  
-                  console.log("Sending auto-assign notification to group...");
-                  const telegramResponse = await fetch(telegramUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      chat_id: settings.telegramGroupId,
-                      text: autoAssignMessage,
-                      parse_mode: "Markdown",
-                    }),
-                  });
-                  
-                  if (telegramResponse.ok) {
-                    console.log("✅ Auto-assign notification sent to group successfully");
-                  } else {
-                    console.error("Auto-assign notification failed:", telegramResponse.status);
+⚠️ Yaqin kuryerlar qabul qilmadi, barchaga yuborildi
+                    `.trim();
+                    
+                    await fetch(telegramUrl, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        chat_id: settings.telegramGroupId,
+                        text: expandMessage,
+                        parse_mode: "Markdown",
+                      }),
+                    });
+                  } catch (error) {
+                    console.error("Failed to send expand notification to group:", error);
                   }
-                } catch (autoAssignError) {
-                  console.error("Failed to send auto-assign notification:", autoAssignError);
                 }
               }
-            }, 15000);
+            }, 30000);
           } catch (courierError) {
             console.error("Failed to send courier notifications:", courierError);
           }
