@@ -1050,6 +1050,62 @@ Qabul qilamizmi?
     }
   });
 
+  app.post("/api/courier/accept-order", async (req, res) => {
+    try {
+      const { orderId, assignmentId, telegramId } = req.body;
+      if (!orderId || !assignmentId || !telegramId) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Get courier info
+      const courier = await storage.getCourierByTelegramId(telegramId);
+      if (!courier) {
+        return res.status(404).json({ error: "Courier not found" });
+      }
+
+      // Update assignment to accepted
+      const assignment = await storage.updateAssignment(assignmentId, {
+        status: "accepted",
+        courierId: courier.id,
+      });
+
+      // Get order info
+      const order = await storage.getOrder(orderId);
+
+      // Send notification to group
+      const settings = await storage.getSettings();
+      if (settings.telegramBotToken && settings.telegramGroupId && order) {
+        const message = `
+✅ *BUYURTMA OLIB OLINDI*
+
+Buyurtma: #${order.orderNumber}
+👤 Kuryer: ${courier.name}
+📞 Telefon: ${courier.phone}
+        `.trim();
+
+        try {
+          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+          await fetch(telegramUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: settings.telegramGroupId,
+              text: message,
+              parse_mode: "Markdown",
+            }),
+          });
+        } catch (telegramError) {
+          console.error("Telegram notification failed:", telegramError);
+        }
+      }
+
+      res.json({ success: true, assignment });
+    } catch (error) {
+      console.error("Accept order error:", error);
+      res.status(500).json({ error: "Failed to accept order" });
+    }
+  });
+
   app.post("/api/courier/transfer", async (req, res) => {
     try {
       const { fromTelegramId, toCardNumber, amount } = req.body;

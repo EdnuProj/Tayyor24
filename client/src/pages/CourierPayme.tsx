@@ -133,6 +133,7 @@ export default function CourierPayme() {
   const [isTransferring, setIsTransferring] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [orders, setOrders] = useState<Assignment[]>([]);
+  const [acceptingOrderId, setAcceptingOrderId] = useState<string>("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -157,10 +158,46 @@ export default function CourierPayme() {
         setTransactions(data.transactions);
       }
       if (data.assignments) {
-        setOrders(data.assignments);
+        setOrders(data.assignments.filter((a: Assignment) => a.status === "pending"));
       }
     } catch (error) {
       console.error("Failed to fetch courier data:", error);
+    }
+  };
+
+  const handleAcceptOrder = async (orderId: string, assignmentId: string) => {
+    setAcceptingOrderId(orderId);
+    try {
+      const res = await fetch("/api/courier/accept-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          assignmentId,
+          telegramId,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to accept order");
+      }
+
+      toast({
+        title: "✅ Buyurtma qabul qilindi!",
+        description: "Guruhda siz buyurtmani oldingiz deya xabar yuborildi",
+      });
+
+      // Refresh orders - pending orders will be filtered
+      setTimeout(() => fetchCourierData(telegramId), 500);
+    } catch (error: any) {
+      toast({
+        title: "❌ Xatolik",
+        description: error.message || "Buyurtma qabul qilinmadi",
+        variant: "destructive",
+      });
+    } finally {
+      setAcceptingOrderId("");
     }
   };
 
@@ -451,16 +488,16 @@ export default function CourierPayme() {
       case "orders":
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">Mening Buyurtmalarim</h2>
+            <h2 className="text-xl font-bold">Buyurtmalar</h2>
             {orders.length === 0 ? (
               <Card className="bg-slate-800 border-slate-700 p-4 text-center text-slate-400">
-                Aktiv buyurtma yo'q
+                Yangi buyurtma yo'q
               </Card>
             ) : (
               orders.map((assignment) => (
                 <Card
                   key={assignment.id}
-                  className="bg-slate-800 border-slate-700 p-4 space-y-2"
+                  className="bg-slate-800 border-slate-700 p-4 space-y-3"
                   data-testid={`card-order-${assignment.orderId}`}
                 >
                   <div className="flex justify-between items-start">
@@ -468,13 +505,8 @@ export default function CourierPayme() {
                       <p className="font-bold text-lg text-white">#${assignment.orderId?.substring(0, 6) || 'N/A'}</p>
                       <p className="text-sm text-slate-300">{new Date(assignment.assignedAt).toLocaleDateString('uz-UZ')}</p>
                     </div>
-                    <span className={`px-3 py-1 rounded text-xs font-medium ${
-                      assignment.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
-                      assignment.status === "accepted" ? "bg-green-500/20 text-green-400" :
-                      "bg-blue-500/20 text-blue-400"
-                    }`}>
-                      {assignment.status === "pending" ? "Kutilmoqda" :
-                       assignment.status === "accepted" ? "Qabul qilindi" : "Boshlandi"}
+                    <span className="px-3 py-1 rounded text-xs font-medium bg-yellow-500/20 text-yellow-400">
+                      Yangi
                     </span>
                   </div>
                   <div className="bg-slate-700 p-3 rounded space-y-1">
@@ -482,6 +514,14 @@ export default function CourierPayme() {
                     <p className="text-slate-200">Telefon: +998 33 020 60 00</p>
                     <p className="text-slate-300 text-sm mt-2">📍 Manzil</p>
                   </div>
+                  <Button
+                    onClick={() => handleAcceptOrder(assignment.orderId, assignment.id)}
+                    disabled={acceptingOrderId === assignment.orderId}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    data-testid={`button-accept-order-${assignment.orderId}`}
+                  >
+                    {acceptingOrderId === assignment.orderId ? "Qabul qilinmoqda..." : "✅ Qabul Qilish"}
+                  </Button>
                 </Card>
               ))
             )}
