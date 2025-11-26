@@ -107,18 +107,18 @@ function Router() {
         )}
       />
       <Route
-        path="/admin/settings"
+        path="/admin/banners"
         component={() => (
           <AdminGuard>
-            <AdminSettings />
+            <AdminBanners />
           </AdminGuard>
         )}
       />
       <Route
-        path="/admin/couriers"
+        path="/admin/settings"
         component={() => (
           <AdminGuard>
-            <AdminCouriers />
+            <AdminSettings />
           </AdminGuard>
         )}
       />
