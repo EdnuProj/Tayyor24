@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit2, Trash2, MoreHorizontal, Image as ImageIcon, Loader2 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -60,6 +60,7 @@ export default function AdminBanners() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Advertisement | null>(null);
   const [imageInput, setImageInput] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: banners = [], isLoading } = useQuery<Advertisement[]>({
     queryKey: ["/api/advertisements"],
@@ -85,6 +86,8 @@ export default function AdminBanners() {
       toast({ title: "Banner qo'shildi" });
       setDialogOpen(false);
       form.reset();
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setImageInput("");
     },
     onError: () => {
       toast({ title: "Xatolik yuz berdi", variant: "destructive" });
@@ -101,6 +104,8 @@ export default function AdminBanners() {
       setDialogOpen(false);
       setEditingBanner(null);
       form.reset();
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setImageInput("");
     },
     onError: () => {
       toast({ title: "Xatolik yuz berdi", variant: "destructive" });
@@ -315,11 +320,13 @@ export default function AdminBanners() {
 
               <div className="space-y-2">
                 <FormLabel>Rasm</FormLabel>
-                <Input
+                <input
+                  ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
                   data-testid="input-image-file"
+                  className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
                 />
                 {imageInput && (
                   <div className="w-32 h-32 rounded-md overflow-hidden bg-muted">
