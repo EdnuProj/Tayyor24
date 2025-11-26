@@ -126,22 +126,24 @@ export interface OrderWithAssignment extends Order {
 export interface OrderItem {
   productId: string;
   productName: string;
-  productImage: string;
   price: number;
   quantity: number;
-  selectedColor?: string;
-  selectedSize?: string;
-  categoryId?: string;
+}
+
+// Cart Items with Products for display
+export interface CartItemWithProduct extends CartItem {
+  product: Product;
 }
 
 // Customers
 export const customers = pgTable("customers", {
   id: varchar("id").primaryKey(),
-  name: text("name").notNull(),
   phone: text("phone").notNull().unique(),
-  address: text("address"),
-  totalOrders: integer("total_orders").notNull().default(0),
-  totalSpent: real("total_spent").notNull().default(0),
+  name: text("name").notNull(),
+  email: text("email"),
+  orders: integer("orders").notNull().default(1),
+  spent: real("spent").notNull().default(0),
+  lastOrderAt: timestamp("last_order_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -246,6 +248,21 @@ export const telegramUsers = pgTable("telegram_users", {
 export const insertTelegramUserSchema = createInsertSchema(telegramUsers).omit({ id: true, createdAt: true });
 export type InsertTelegramUser = z.infer<typeof insertTelegramUserSchema>;
 export type TelegramUser = typeof telegramUsers.$inferSelect;
+
+// Chat Messages (Admin - Customer)
+export const chatMessages = pgTable("chat_messages", {
+  id: varchar("id").primaryKey(),
+  customerPhone: text("customer_phone").notNull(),
+  customerName: text("customer_name").notNull(),
+  message: text("message").notNull(),
+  senderType: text("sender_type").notNull(), // "admin" or "customer"
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
 
 // Users (Admin)
 export const users = pgTable("users", {
