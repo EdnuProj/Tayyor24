@@ -206,14 +206,14 @@ export default function AdminProducts() {
 
   const addImage = () => {
     if (imageInput.trim()) {
-      const current = form.getValues("images");
+      const current = form.getValues("images") || [];
       form.setValue("images", [...current, imageInput.trim()]);
       setImageInput("");
     }
   };
 
   const removeImage = (index: number) => {
-    const current = form.getValues("images");
+    const current = form.getValues("images") || [];
     form.setValue("images", current.filter((_, i) => i !== index));
   };
 
