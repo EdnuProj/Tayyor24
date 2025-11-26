@@ -91,11 +91,14 @@ export default function AdminCouriers() {
       const res = await apiRequest("PATCH", `/api/couriers/${id}/balance`, { amount, type });
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/couriers"] });
-      setSelectedCourier(null);
+      // Update selected courier with new balance
+      if (data.courier) {
+        setSelectedCourier(data.courier);
+      }
       setBalanceAmount("");
-      toast({ title: "Balansi yangilandi" });
+      toast({ title: "✅ Balansi yangilandi", description: `Yangi balans: ${data.courier?.balance?.toLocaleString() || 0} so'm` });
     },
   });
 
