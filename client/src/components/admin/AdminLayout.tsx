@@ -11,6 +11,7 @@ import {
   Moon,
   Menu,
   LogOut,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -23,11 +24,12 @@ interface AdminLayoutProps {
 }
 
 const navItems = [
-  { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/admin/products", icon: Package, label: "Mahsulotlar" },
   { href: "/admin/orders", icon: ShoppingCart, label: "Buyurtmalar" },
   { href: "/admin/customers", icon: Users, label: "Mijozlar" },
   { href: "/admin/promo-codes", icon: Tag, label: "Promokodlar" },
+  { href: "/admin/rassilka", icon: Send, label: "Rassilka" },
   { href: "/admin/settings", icon: Settings, label: "Sozlamalar" },
 ];
 

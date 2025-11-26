@@ -320,6 +320,57 @@ export class MemStorage implements IStorage {
       const id = randomUUID();
       this.promoCodes.set(id, { ...promo, id } as PromoCode);
     });
+
+    // Advertisements
+    const advertisements = [
+      {
+        businessName: "Leziz Restoran",
+        description: "O'zbekcha taomlarning eng yaxshi joy. Har kunlik yangi taomlar",
+        imageUrl: "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=800",
+        contactPhone: "+998-90-123-45-67",
+        isActive: true,
+      },
+      {
+        businessName: "Ustun Kiyim Do'koni",
+        description: "Zamonaviy va klassik kiyimlarning katta assortimenti",
+        imageUrl: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800",
+        contactPhone: "+998-91-234-56-78",
+        isActive: true,
+      },
+      {
+        businessName: "Tech Store",
+        description: "Eng yangi elektronika va gadjetlar. Muddatli to'lov mavjud",
+        imageUrl: "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=800",
+        contactPhone: "+998-93-345-67-89",
+        isActive: true,
+      },
+      {
+        businessName: "Spa va Saloon",
+        description: "Professional xizmat. Soch, tun, manikyur, pedikir",
+        imageUrl: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800",
+        contactPhone: "+998-94-456-78-90",
+        isActive: true,
+      },
+      {
+        businessName: "Avtomobil Servisi",
+        description: "Barcha modellar uchun ta'mirlash va to'qimalar",
+        imageUrl: "https://images.unsplash.com/photo-1486262715619-67b519e0abe8?w=800",
+        contactPhone: "+998-95-567-89-01",
+        isActive: true,
+      },
+      {
+        businessName: "O'quv Markazi",
+        description: "Ingliz tili, kompyuter va boshqa fanlarni o'rganish",
+        imageUrl: "https://images.unsplash.com/photo-1427504494785-cacee5b3c1e0?w=800",
+        contactPhone: "+998-96-678-90-12",
+        isActive: true,
+      },
+    ];
+
+    advertisements.forEach((ad) => {
+      const id = randomUUID();
+      this.advertisements.set(id, { ...ad, id, createdAt: new Date() } as Advertisement);
+    });
   }
 
   // Users
@@ -646,6 +697,57 @@ export class MemStorage implements IStorage {
     }
 
     return newReview;
+  }
+
+  // Advertisements
+  async getAdvertisements(): Promise<Advertisement[]> {
+    return Array.from(this.advertisements.values())
+      .filter((ad) => ad.isActive)
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getAdvertisement(id: string): Promise<Advertisement | undefined> {
+    return this.advertisements.get(id);
+  }
+
+  async createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement> {
+    const id = randomUUID();
+    const newAd: Advertisement = { ...ad, id, createdAt: new Date() } as Advertisement;
+    this.advertisements.set(id, newAd);
+    return newAd;
+  }
+
+  async updateAdvertisement(id: string, data: Partial<InsertAdvertisement>): Promise<Advertisement | undefined> {
+    const ad = this.advertisements.get(id);
+    if (!ad) return undefined;
+    const updated = { ...ad, ...data };
+    this.advertisements.set(id, updated);
+    return updated;
+  }
+
+  async deleteAdvertisement(id: string): Promise<boolean> {
+    return this.advertisements.delete(id);
+  }
+
+  // Newsletters
+  async getNewsletters(): Promise<Newsletter[]> {
+    return Array.from(this.newsletters.values())
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async createNewsletter(newsletter: InsertNewsletter): Promise<Newsletter> {
+    const id = randomUUID();
+    const newNewsletter: Newsletter = { ...newsletter, id, createdAt: new Date() } as Newsletter;
+    this.newsletters.set(id, newNewsletter);
+    return newNewsletter;
   }
 
   // Settings
