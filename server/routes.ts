@@ -379,6 +379,7 @@ ${itemsList}
 📋 #${order.orderNumber}
 👤 ${order.customerName} - ${order.customerPhone.replace(/\s/g, "")}
 📍 ${order.customerAddress}
+📂 ${categoryName}
 
 💰 ${order.total} so'm
 
