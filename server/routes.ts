@@ -246,28 +246,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertOrderSchema.parse(req.body);
       const order = await storage.createOrder(data);
 
-      // Send Telegram notification to admin and find couriers
+      // Send Telegram notification to group
       const settings = await storage.getSettings();
-      if (settings.telegramBotToken && settings.telegramChatId) {
+      if (settings.telegramBotToken && settings.telegramGroupId) {
         const orderItems = JSON.parse(data.items || "[]");
         const itemsList = orderItems
           .map((item: any) => `• ${item.productName} x${item.quantity}`)
           .join("\n");
 
         const message = `
-🆕 *Yangi Buyurtma*
+Yangi Buyurtma
 
-📋 Raqam: #${order.orderNumber}
-👤 Mijoz: ${order.customerName}
-📱 Tel: ${order.customerPhone}
-📍 Manzil: ${order.customerAddress}
+Raqam: #${order.orderNumber}
+Mijoz: ${order.customerName}
+Tel: ${order.customerPhone}
+Manzil: ${order.customerAddress}
 
-*Mahsulotlar:*
+Mahsulotlar:
 ${itemsList}
 
-💰 Jami: ${order.total} so'm
-💳 To'lov: ${order.paymentType === "cash" ? "Naqd" : "Karta"}
-🚚 Yetkazish: ${order.deliveryType === "courier" ? "Kuryer" : "Olib ketish"}
+Jami: ${order.total} so'm
+To'lov: ${order.paymentType === "cash" ? "Naqd" : "Karta"}
+Yetkazish: ${order.deliveryType === "courier" ? "Kuryer" : "Olib ketish"}
 
 Holati: Yangi
         `.trim();
@@ -278,9 +278,8 @@ Holati: Yangi
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              chat_id: settings.telegramChatId,
+              chat_id: settings.telegramGroupId,
               text: message,
-              parse_mode: "Markdown",
             }),
           });
         } catch (telegramError) {
@@ -857,12 +856,12 @@ Qabul qilamizmi?
       }
 
       const settings = await storage.getSettings();
-      if (!settings.telegramBotToken || !settings.telegramChatId) {
+      if (!settings.telegramBotToken || !settings.telegramGroupId) {
         return res.status(400).json({ error: "Telegram bot not configured" });
       }
 
       const telegramMessage = `
-📢 *${title}*
+${title}
 
 ${message}
       `.trim();
@@ -873,9 +872,8 @@ ${message}
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            chat_id: settings.telegramChatId,
+            chat_id: settings.telegramGroupId,
             text: telegramMessage,
-            parse_mode: "Markdown",
           }),
         });
 
@@ -885,10 +883,9 @@ ${message}
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              chat_id: settings.telegramChatId,
+              chat_id: settings.telegramGroupId,
               photo: imageUrl,
               caption: title,
-              parse_mode: "Markdown",
             }),
           });
         }

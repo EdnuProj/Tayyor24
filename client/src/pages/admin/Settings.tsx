@@ -505,15 +505,15 @@ export default function AdminSettings() {
 
                   <FormField
                     control={form.control}
-                    name="telegramChatId"
+                    name="telegramGroupId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Chat ID</FormLabel>
+                        <FormLabel>Telegram Guruh ID</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="-1001234567890" data-testid="input-chat-id" />
+                          <Input {...field} placeholder="-1001234567890" data-testid="input-group-id" />
                         </FormControl>
                         <FormDescription>
-                          Guruh yoki kanal ID si (xabarlar shu yerga yuboriladi)
+                          Guruh ID (bot-ni admin qilib qo'shing va shu guruh ID kiriting)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
