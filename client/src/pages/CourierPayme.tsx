@@ -252,14 +252,10 @@ export default function CourierPayme() {
         title: "✅ Holat yangilandi!",
       });
 
-      // Close modal when delivered
-      if (status === "delivered") {
-        setTimeout(() => {
-          setSelectedOrder(null);
-          setActiveTab("home");
-          fetchCourierData(telegramId);
-        }, 500);
-      }
+      // Refresh orders data
+      setTimeout(() => {
+        fetchCourierData(telegramId);
+      }, 500);
     } catch (error: any) {
       toast({
         title: "❌ Xatolik",
