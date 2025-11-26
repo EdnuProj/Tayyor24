@@ -61,6 +61,7 @@ export default function Checkout() {
 
   // Get telegramId from localStorage (saved from URL params in Home.tsx)
   const storedTelegramId = typeof window !== "undefined" ? localStorage.getItem("customerTelegramId") || "" : "";
+  const initialTelegramId = storedTelegramId;
 
   const form = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
