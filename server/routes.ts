@@ -17,6 +17,18 @@ import {
   insertChatMessageSchema,
 } from "@shared/schema";
 
+// Haversine formula to calculate distance between two coordinates (in km)
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auto-setup Telegram webhook on server start
   const setupTelegramWebhook = async () => {
@@ -397,7 +409,20 @@ ${itemsList}
             const allCouriers = await storage.getCouriers("");
             const activeCouriers = allCouriers.filter((c) => c.isActive && c.telegramId);
             
-            console.log(`Order ${order.orderNumber}: Sending to ${activeCouriers.length} active couriers`);
+            // Filter couriers within 1km radius if order has location
+            let nearByCouriers = activeCouriers;
+            if (order.latitude && order.longitude) {
+              nearByCouriers = activeCouriers.filter((courier) => {
+                if (!courier.latitude || !courier.longitude) return false;
+                const distance = calculateDistance(order.latitude!, order.longitude!, courier.latitude, courier.longitude);
+                return distance <= 1; // 1km radius
+              });
+              console.log(`Order ${order.orderNumber}: Found ${nearByCouriers.length} couriers within 1km radius (total: ${activeCouriers.length})`);
+            } else {
+              console.log(`Order ${order.orderNumber}: No location data, sending to all ${activeCouriers.length} couriers`);
+            }
+            
+            console.log(`Order ${order.orderNumber}: Sending to ${nearByCouriers.length} couriers`);
 
             // Always create assignment for pending orders
             const assignment = await storage.createAssignment({
