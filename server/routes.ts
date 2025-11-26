@@ -519,17 +519,18 @@ Qabul qilamizmi?
         // Handle /start command
         if (text === "/start") {
           const categories = await storage.getCategories();
+          const siteUrl = process.env.SITE_URL || "https://do-kon.replit.dev";
           
           const inlineKeyboard = {
             inline_keyboard: [
-              [{ text: "🛒 Saytni Ochish", url: "https://do-kon.replit.dev" }],
+              [{ text: "Saytni Ochish", url: siteUrl }],
               ...categories.slice(0, 4).map((cat) => [
                 {
-                  text: `${cat.icon || "📦"} ${cat.name}`,
+                  text: `${cat.name}`,
                   callback_data: `cat_${cat.id}`,
                 },
               ]),
-              [{ text: "📞 Biz bilan Bog'lanish", callback_data: "contact" }],
+              [{ text: "Biz bilan Bog'lanish", callback_data: "contact" }],
             ],
           };
 
@@ -539,8 +540,7 @@ Qabul qilamizmi?
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               chat_id: chatId,
-              text: "🎉 *Do'kon-ga Xush Kelibsiz!*\n\nMahsulotlarni ko'ring va buyurtma bering:\n\n📱 Sayt orqali yoki Telegram-da to'g'ri shu yerdan buyurtma qiling!",
-              parse_mode: "Markdown",
+              text: "Do'kon-ga Xush Kelibsiz!\n\nMahsulotlarni ko'ring va buyurtma bering:",
               reply_markup: inlineKeyboard,
             }),
           });
@@ -560,11 +560,13 @@ Qabul qilamizmi?
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 chat_id: chatId,
-                text: "❌ Bu kategoriyada mahsulot topilmadi.",
+                text: "Bu kategoriyada mahsulot topilmadi.",
               }),
             });
             return res.json({ ok: true });
           }
+
+          const siteUrl = process.env.SITE_URL || "https://do-kon.replit.dev";
 
           // Send first 5 products
           for (const product of products.slice(0, 5)) {
@@ -572,8 +574,8 @@ Qabul qilamizmi?
               inline_keyboard: [
                 [
                   {
-                    text: "📱 Saytda Ko'rish",
-                    url: `https://do-kon.replit.dev/product/${product.slug}`,
+                    text: "Saytda Ko'rish",
+                    url: `${siteUrl}/product/${product.slug}`,
                   },
                 ],
               ],
@@ -585,8 +587,7 @@ Qabul qilamizmi?
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 chat_id: chatId,
-                text: `*${product.name}*\n\n💰 ${product.price.toLocaleString("uz-UZ")} so'm\n\n${product.description || ""}`,
-                parse_mode: "Markdown",
+                text: `${product.name}\n\nNarx: ${product.price} so'm\n\n${product.description || ""}`,
                 reply_markup: inlineBtn,
               }),
             });
