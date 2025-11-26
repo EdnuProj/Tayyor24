@@ -601,6 +601,26 @@ export default function CourierPayme() {
           const orderNumber = order?.orderNumber || selectedOrder.orderId?.substring(0, 8);
           const latitude = order?.latitude || 41.299496;
           const longitude = order?.longitude || 69.240073;
+          const categoryId = order?.categoryId || "elektronika";
+          
+          // Parse order items
+          let orderItems: any[] = [];
+          try {
+            orderItems = JSON.parse(order?.items || "[]");
+          } catch (e) {
+            orderItems = [];
+          }
+          
+          // Category name mapping
+          const categoryNames: Record<string, string> = {
+            "elektronika": "📱 Elektronika",
+            "kiyim": "👕 Kiyim",
+            "sport": "⚽ Sport",
+            "oziq-ovqat": "🍔 Oziq-ovqat",
+            "kitoblar": "📚 Kitoblar",
+            "mebellar": "🪑 Mebellar"
+          };
+          const categoryName = categoryNames[categoryId] || `📦 ${categoryId}`;
 
           return (
             <div className="space-y-4">
@@ -611,6 +631,10 @@ export default function CourierPayme() {
                   <p className="text-white font-bold text-lg">#{orderNumber}</p>
                 </div>
                 <div>
+                  <p className="text-slate-400 text-sm">Kategoriya</p>
+                  <p className="text-white font-semibold">{categoryName}</p>
+                </div>
+                <div>
                   <p className="text-slate-400 text-sm">Mijoz</p>
                   <p className="text-white">{customerName}</p>
                 </div>
@@ -618,7 +642,29 @@ export default function CourierPayme() {
                   <p className="text-slate-400 text-sm">Telefon</p>
                   <p className="text-white">{customerPhone}</p>
                 </div>
-                <div>
+                <div className="border-t border-slate-700 pt-3">
+                  <p className="text-slate-400 text-sm mb-2">🛍️ Mahsulotlar</p>
+                  <div className="space-y-2">
+                    {orderItems.length > 0 ? (
+                      orderItems.map((item: any, idx: number) => (
+                        <div key={idx} className="bg-slate-700 p-2 rounded text-sm">
+                          <div className="flex justify-between items-start">
+                            <p className="text-white font-medium flex-1">{item.productName}</p>
+                            <span className="text-slate-300 ml-2 whitespace-nowrap">x{item.quantity}</span>
+                          </div>
+                          <p className="text-slate-400 text-xs mt-1">
+                            {(item.price * item.quantity).toLocaleString()} so'm
+                            {item.selectedColor && <span> • {item.selectedColor}</span>}
+                            {item.selectedSize && <span> • {item.selectedSize}</span>}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-slate-400 text-sm">Mahsulot ma'lumotlari yo'q</p>
+                    )}
+                  </div>
+                </div>
+                <div className="border-t border-slate-700 pt-3">
                   <p className="text-slate-400 text-sm">Jami summa</p>
                   <p className="text-white font-bold text-lg">{total.toLocaleString()} so'm</p>
                 </div>
