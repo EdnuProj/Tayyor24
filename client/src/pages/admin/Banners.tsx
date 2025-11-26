@@ -79,7 +79,7 @@ export default function AdminBanners() {
 
   const createMutation = useMutation({
     mutationFn: async (data: BannerForm) => {
-      return apiRequest("POST", "/api/advertisements", data);
+      return apiRequest("POST", "/api/admin/advertisements", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/advertisements"] });
@@ -96,7 +96,7 @@ export default function AdminBanners() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: BannerForm & { id: string }) => {
-      return apiRequest("PATCH", `/api/advertisements/${data.id}`, data);
+      return apiRequest("PATCH", `/api/admin/advertisements/${data.id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/advertisements"] });
@@ -114,7 +114,7 @@ export default function AdminBanners() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest("DELETE", `/api/advertisements/${id}`);
+      return apiRequest("DELETE", `/api/admin/advertisements/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/advertisements"] });
