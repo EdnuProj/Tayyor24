@@ -1317,19 +1317,11 @@ Sababu: Redd etilgan
         return res.status(404).json({ error: "Order not found" });
       }
 
-      // Get the accepted assignment to find the courier
-      const assignments = await storage.getCourierAssignments();
-      const acceptedAssignment = assignments.find((a) => a.orderId === orderId && a.status === "accepted");
-      const courier = acceptedAssignment && acceptedAssignment.courierId
-        ? await storage.getCourier(acceptedAssignment.courierId)
-        : null;
-
-      // Send notifications to both customer and courier
+      // Send notifications only to customer
       const settings = await storage.getSettings();
-      if (settings.telegramBotToken && order) {
+      if (settings.telegramBotToken && order && order.customerTelegramId) {
         const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
         let messageToCustomer = "";
-        let messageToCourier = "";
         
         if (status === "accepted") {
           messageToCustomer = `
@@ -1343,18 +1335,6 @@ Kuryer tez orada yetkazib beradi.
 
 Biron vaqtda ijobiy yangiliklarning kutmoqdamiz!
           `.trim();
-          messageToCourier = `
-⏳ *BUYURTMA JARAYONDA*
-
-Buyurtma raqam: #${order.orderNumber}
-👤 Mijoz: ${order.customerName}
-📞 Telefon: ${order.customerPhone}
-
-📍 Manzil: ${order.customerAddress}
-💰 Jami: ${order.total} so'm
-
-Tezda yetkazib bering! ⚡
-          `.trim();
         } else if (status === "shipping") {
           messageToCustomer = `
 🚗 *BUYURTMA YO'LDA*
@@ -1366,17 +1346,6 @@ Kuryer sizga olib kelmoqda!
 ⏱️ Tez keling, jisham shahar bo'ylab yo'lda!
 
 Rahmalingiz uchun!
-          `.trim();
-          messageToCourier = `
-🚗 *BUYURTMA YO'LDA*
-
-Buyurtma raqam: #${order.orderNumber}
-👤 Mijoz: ${order.customerName}
-📞 Telefon: ${order.customerPhone}
-
-📍 Manzil: ${order.customerAddress}
-
-Manzilga tezda yetib boring! 🏃
           `.trim();
         } else if (status === "delivered") {
           const currentTime = new Date().toLocaleString('uz-UZ', { 
@@ -1401,20 +1370,10 @@ Tabriklaymiz! Sizning buyurtma #${order.orderNumber} muvaffaqiyatli yetkazildi.
 Xizmatdan foydalanganingiz uchun rahmat! 🙏
 Do'kon-da xarid qilib davomi bering!
           `.trim();
-          messageToCourier = `
-✅ *BUYURTMA YETKAZILDI*
-
-Buyurtma raqam: #${order.orderNumber}
-👤 Mijoz: ${order.customerName}
-📍 Manzil: ${order.customerAddress}
-💰 Yetkazish haqi: 2000 so'm
-
-✨ Yaxshi ish! Keyingi buyurtmani kutmoqdamiz! 🚀
-          `.trim();
         }
 
-        // Send to customer if messageToCustomer exists
-        if (messageToCustomer && order.customerTelegramId) {
+        // Send ONLY to customer if messageToCustomer exists
+        if (messageToCustomer) {
           try {
             await fetch(telegramUrl, {
               method: "POST",
@@ -1428,24 +1387,6 @@ Buyurtma raqam: #${order.orderNumber}
             console.log(`Customer notification sent to ${order.customerTelegramId} for order ${order.orderNumber} - status: ${status}`);
           } catch (error) {
             console.error("Failed to send customer notification:", error);
-          }
-        }
-
-        // Send to courier if messageToCourier exists
-        if (messageToCourier && courier) {
-          try {
-            await fetch(telegramUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                chat_id: courier.telegramId,
-                text: messageToCourier,
-                parse_mode: "Markdown",
-              }),
-            });
-            console.log(`Courier notification sent to ${courier.telegramId} for order ${order.orderNumber} - status: ${status}`);
-          } catch (error) {
-            console.error("Failed to send courier notification:", error);
           }
         }
       }
