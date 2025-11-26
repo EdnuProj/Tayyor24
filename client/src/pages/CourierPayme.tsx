@@ -624,17 +624,7 @@ export default function CourierPayme() {
 
           return (
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSelectedOrder(null)}
-                  data-testid="button-back-orders"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <h2 className="text-xl font-bold">Buyurtma Tafsilotlari</h2>
-              </div>
+              <h2 className="text-xl font-bold">Buyurtma Tafsilotlari</h2>
               <Card className="bg-slate-800 border-slate-700 p-4 space-y-3">
                 <div>
                   <p className="text-slate-400 text-sm">Buyurtma ID</p>
@@ -688,6 +678,14 @@ export default function CourierPayme() {
                     style={{ borderRadius: "8px" }}
                   ></iframe>
                 </div>
+                <div className="border-t border-slate-700 pt-3 space-y-2">
+                  <p className="text-slate-400 text-sm">📊 Holati</p>
+                  <div className="flex gap-2">
+                    <span className={`px-3 py-1 rounded text-sm font-medium ${!isAccepted ? "bg-yellow-500/20 text-yellow-400" : !isShipping ? "bg-blue-500/20 text-blue-400" : !isDelivered ? "bg-purple-500/20 text-purple-400" : "bg-green-500/20 text-green-400"}`}>
+                      {!isAccepted ? "Yangi" : !isShipping ? "Qabul qilgan" : !isDelivered ? "Yo'lda" : "Yetkazildi"}
+                    </span>
+                  </div>
+                </div>
               </Card>
               <div className="flex gap-2">
                 {!isDelivered && (
@@ -717,6 +715,14 @@ export default function CourierPayme() {
                     ✅ Yetkazildi
                   </Button>
                 )}
+                <Button
+                  onClick={() => setSelectedOrder(null)}
+                  variant="outline"
+                  className="flex-1"
+                  data-testid="button-close-detail"
+                >
+                  ❌ Tafsilotdan Chiqish
+                </Button>
               </div>
             </div>
           );
