@@ -1,0 +1,160 @@
+1. Asosiy funksiyalar (Frontend)
+🛍 Mahsulotlar bo‘limi
+
+Mahsulot rasmlari (galereya)
+
+Narx / chegirma / eski narx
+
+Tavsif (description)
+
+Xususiyatlar (rang, o‘lcham, variantlar)
+
+“Savatchaga qo‘shish”
+
+“Bir bosishda xarid”
+
+🔎 Qidiruv va filtrlar
+
+Tez qidiruv
+
+Kategoriya bo‘yicha filtr
+
+Narx oralig‘i (min–max)
+
+Brend bo‘yicha filtr
+
+Ommabop / yangilar / arzon–qimmat saralash
+
+🛒 Savatcha
+
+Miqdor o‘zgartirish
+
+Yetkazib berish narxini ko‘rsatish
+
+Promokod qo‘llash
+
+Yakuniy summa hisoblash
+
+📦 Buyurtma berish (Checkout)
+
+Ism / telefon / manzil
+
+Yetkazib berish turi (kuryer, olib ketish)
+
+To‘lov turi (naqd, karta)
+
+Buyurtma raqami generatsiyasi
+
+✅ 2. Admin panel funksiyalari (Backend)
+📦 Mahsulot boshqaruvi
+
+Mahsulot qo‘shish / o‘chirish / tahrirlash
+
+Mahsulot kategoriyalari
+
+Ombor (stok) miqdorini boshqarish
+
+Variatsiyalar (rang, o‘lcham)
+
+📚 Buyurtmalar boshqaruvi
+
+Yangi buyurtmalar ro‘yxati
+
+Buyurtma holati (Yangi → Yo‘lda → Yetkazildi)
+
+Mijoz bilan aloqa qilish tugmasi
+
+Yetkazib berish narxi va umumiy summa
+
+👥 Mijozlar boshqaruvi
+
+Mijozlar ro‘yxati
+
+Qayta xaridlar statistikasi
+
+Mijozga xabar yuborish
+
+📊 Statistika paneli
+
+Sotuvlar diagrammasi
+
+Kunlik / haftalik / oylik buyurtmalar
+
+Eng ko‘p sotilgan mahsulotlar
+
+🎛 Sayt sozlamalari
+
+Logotip yuklash
+
+Ranglar va dizayn
+
+Domen ulash
+
+Telegram bot bilan ulash
+
+✅ 3. Qo‘shimcha kuchli funksiyalar
+🤖 Telegram Shop Bot integratsiyasi
+
+Buyurtmalarni TG botga yuborish
+
+Adminlarga real-time xabar
+
+Mijozga buyurtma holati haqida avtomatik xabar
+
+💳 To‘lov tizimlari
+
+Payme
+
+Click
+
+Uzum Pay
+
+Payze (ixtiyoriy)
+
+🚚 Yetkazib berish tizimi
+
+Kuryerlar paneli
+
+Kuryer uchun alohida login
+
+Xarita orqali manzil ko‘rish
+
+⭐ Mahsulot sharhlari
+
+Fikr qoldirish
+
+Reyting qo‘yish
+
+📨 SMS / Telegram bildirishnomalar
+
+Buyurtma qabul qilindi
+
+Kuryer yo‘lga chiqdi
+
+Yetkazib berildi
+
+✅ 4. Marketing funksiyalari
+
+Promokodlar yaratish
+
+Chegirmalar
+
+Banner joylash
+
+Push xabarlar (agar PWA bo‘lsa)
+
+SEO optimizatsiya (Google uchun)
+
+Mahsulot tavsifida kalit so‘zlar
+
+❗ 5. Texnik funksiyalar
+
+Mobil uchun 100% moslashuvchan dizayn (Responsive)
+
+Tez yuklanish (Lightweight dizayn)
+
+Admin autentifikatsiya (JWT / Session)
+
+Xavfsiz API
+
+Ma’lumotlar bazasi (PostgreSQL/Mongo/MySQL)
