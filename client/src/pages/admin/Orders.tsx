@@ -9,6 +9,8 @@ import {
   Package,
   ChevronDown,
   Filter,
+  Plus,
+  Minus,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -53,7 +55,7 @@ import {
   paymentTypeLabels,
 } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Order, OrderItem, Category } from "@shared/schema";
+import type { Order, OrderItem, Category, Product } from "@shared/schema";
 
 const statusOptions = [
   { value: "new", label: "Yangi" },
