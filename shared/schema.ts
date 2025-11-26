@@ -218,6 +218,18 @@ export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({ 
 export type InsertSiteSettings = z.infer<typeof insertSiteSettingsSchema>;
 export type SiteSettings = typeof siteSettings.$inferSelect;
 
+// Telegram Users (Bot users)
+export const telegramUsers = pgTable("telegram_users", {
+  id: varchar("id").primaryKey(),
+  telegramId: text("telegram_id").notNull().unique(),
+  firstName: text("first_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTelegramUserSchema = createInsertSchema(telegramUsers).omit({ id: true, createdAt: true });
+export type InsertTelegramUser = z.infer<typeof insertTelegramUserSchema>;
+export type TelegramUser = typeof telegramUsers.$inferSelect;
+
 // Users (Admin)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey(),
