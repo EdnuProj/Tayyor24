@@ -70,6 +70,14 @@ export default function AdminOrders() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [productSearch, setProductSearch] = useState("");
+  const [selectedItems, setSelectedItems] = useState<Array<{ product: Product; quantity: number }>>([]);
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [deliveryType, setDeliveryType] = useState("courier");
+  const [paymentType, setPaymentType] = useState("cash");
 
   const { data: orders = [], isLoading } = useQuery<Order[]>({
     queryKey: ["/api/orders"],
@@ -77,6 +85,10 @@ export default function AdminOrders() {
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
+  });
+
+  const { data: products = [] } = useQuery<Product[]>({
+    queryKey: ["/api/products"],
   });
 
   const categoryMap = useMemo(() => {
@@ -99,6 +111,55 @@ export default function AdminOrders() {
       toast({ title: "Xatolik yuz berdi", variant: "destructive" });
     },
   });
+
+  const createOrderMutation = useMutation({
+    mutationFn: async () => {
+      const subtotal = selectedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+      const deliveryPrice = deliveryType === "courier" ? 15000 : 0;
+      const total = subtotal + deliveryPrice;
+
+      const orderItems: OrderItem[] = selectedItems.map((item) => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        productImage: item.product.images[0] || "",
+        price: item.product.price,
+        quantity: item.quantity,
+        categoryId: item.product.categoryId,
+      }));
+
+      return apiRequest("POST", "/api/orders", {
+        customerName,
+        customerPhone,
+        customerAddress,
+        deliveryType,
+        paymentType,
+        status: "new",
+        subtotal,
+        deliveryPrice,
+        discount: 0,
+        total,
+        items: JSON.stringify(orderItems),
+        categoryId: "elektronika",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      toast({ title: "Buyurtma muvaffaqiyatli yaratildi" });
+      setIsCreateOpen(false);
+      setSelectedItems([]);
+      setCustomerName("");
+      setCustomerPhone("");
+      setCustomerAddress("");
+      setProductSearch("");
+    },
+    onError: () => {
+      toast({ title: "Xatolik yuz berdi", variant: "destructive" });
+    },
+  });
+
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(productSearch.toLowerCase())
+  );
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
