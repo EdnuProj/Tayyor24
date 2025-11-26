@@ -275,6 +275,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send Telegram notification to group
       const settings = await storage.getSettings();
       if (settings.telegramBotToken && settings.telegramGroupId) {
+        const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+        
+        // Send to group
         const orderItems = JSON.parse(data.items || "[]");
         const itemsList = orderItems
           .map((item: any) => `• ${item.productName} x${item.quantity}`)
@@ -299,7 +302,6 @@ ${itemsList}
         `.trim();
 
         try {
-          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
           await fetch(telegramUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
