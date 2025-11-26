@@ -165,6 +165,7 @@ export type Newsletter = typeof newsletters.$inferSelect;
 export const siteSettings = pgTable("site_settings", {
   id: varchar("id").primaryKey(),
   logoUrl: text("logo_url"),
+  heroImageUrl: text("hero_image_url"),
   siteName: text("site_name").notNull().default("Do'kon"),
   primaryColor: text("primary_color").default("#7c3aed"),
   deliveryPrice: real("delivery_price").notNull().default(15000),

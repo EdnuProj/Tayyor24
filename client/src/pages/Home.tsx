@@ -7,7 +7,7 @@ import { ProductGrid } from "@/components/products/ProductGrid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { Product, Category, Advertisement } from "@shared/schema";
+import type { Product, Category, Advertisement, SiteSettings } from "@shared/schema";
 
 export default function Home() {
   const [adIndex, setAdIndex] = useState(0);
@@ -26,6 +26,10 @@ export default function Home() {
 
   const { data: advertisements = [] } = useQuery<Advertisement[]>({
     queryKey: ["/api/advertisements"],
+  });
+
+  const { data: settings } = useQuery<SiteSettings>({
+    queryKey: ["/api/settings"],
   });
 
   useEffect(() => {
@@ -59,31 +63,50 @@ export default function Home() {
     },
   ];
 
+  const heroImage = settings?.heroImageUrl;
+  const primaryColor = settings?.primaryColor || "#8B5CF6";
+
   return (
     <StoreLayout>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary/10 via-background to-accent/20 py-12 sm:py-16 md:py-24 overflow-hidden">
-        <div className="container mx-auto px-4">
+      <section 
+        className="relative py-12 sm:py-16 md:py-24 overflow-hidden"
+        style={{
+          backgroundImage: heroImage ? `linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%), url('${heroImage}')` : undefined,
+          backgroundSize: heroImage ? "cover" : undefined,
+          backgroundPosition: heroImage ? "center" : undefined,
+          backgroundColor: heroImage ? undefined : `rgb(139, 92, 246, 0.1)`,
+        }}
+      >
+        {!heroImage && (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/20" />
+        )}
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-2xl mx-auto text-center space-y-4 sm:space-y-6">
             <Badge variant="secondary" className="inline-block mb-2 sm:mb-4">
               Yangi kolleksiya keldi
             </Badge>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight text-white drop-shadow-lg">
               Sifatli mahsulotlar{" "}
-              <span className="text-primary">eng yaxshi narxlarda</span>
+              <span style={{ color: primaryColor }}>eng yaxshi narxlarda</span>
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
+            <p className="text-base sm:text-lg text-white/90 max-w-xl mx-auto drop-shadow">
               Turli xil toifadagi mahsulotlarimiz bilan tanishing. Bepul yetkazib berish va ishonchli xarid tajribasi.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-2">
               <Link href="/products" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full" data-testid="button-hero-shop">
+                <Button 
+                  size="lg" 
+                  className="w-full" 
+                  data-testid="button-hero-shop"
+                  style={{ backgroundColor: primaryColor }}
+                >
                   Xarid qilish
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
               <Link href="/categories" className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" className="w-full" data-testid="button-hero-categories">
+                <Button size="lg" variant="outline" className="w-full bg-white/20 border-white/40 text-white hover:bg-white/30" data-testid="button-hero-categories">
                   Kategoriyalar
                 </Button>
               </Link>
@@ -92,8 +115,12 @@ export default function Home() {
         </div>
 
         {/* Decorative Elements - Hidden on mobile to reduce clutter */}
-        <div className="hidden sm:block absolute top-0 left-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="hidden sm:block absolute bottom-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
+        {!heroImage && (
+          <>
+            <div className="hidden sm:block absolute top-0 left-0 w-72 h-72 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" style={{ backgroundColor: `rgba(139, 92, 246, 0.1)` }} />
+            <div className="hidden sm:block absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" style={{ backgroundColor: `rgba(139, 92, 246, 0.05)` }} />
+          </>
+        )}
       </section>
 
       {/* Advertisements Carousel */}

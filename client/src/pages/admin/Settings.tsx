@@ -2,7 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Settings, Truck, Palette, MessageCircle, Loader2, Save, Plus, Trash2, Edit2 } from "lucide-react";
+import { Settings, Truck, Palette, MessageCircle, Loader2, Save, Plus, Trash2, Edit2, Upload, X } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ import { useState } from "react";
 const settingsSchema = z.object({
   siteName: z.string().min(1, "Sayt nomini kiriting"),
   logoUrl: z.string().optional(),
+  heroImageUrl: z.string().optional(),
   primaryColor: z.string().optional(),
   deliveryPrice: z.coerce.number().min(0),
   freeDeliveryThreshold: z.coerce.number().min(0).optional(),
@@ -63,6 +64,7 @@ export default function AdminSettings() {
   const { toast } = useToast();
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [heroPreview, setHeroPreview] = useState<string | null>(null);
 
   const { data: settings, isLoading } = useQuery<SiteSettings>({
     queryKey: ["/api/settings"],
@@ -77,6 +79,7 @@ export default function AdminSettings() {
     values: settings ? {
       siteName: settings.siteName,
       logoUrl: settings.logoUrl || "",
+      heroImageUrl: settings.heroImageUrl || "",
       primaryColor: settings.primaryColor || "#7c3aed",
       deliveryPrice: settings.deliveryPrice,
       freeDeliveryThreshold: settings.freeDeliveryThreshold || 500000,
@@ -84,6 +87,25 @@ export default function AdminSettings() {
       telegramChatId: settings.telegramChatId || "",
     } : undefined,
   });
+
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      form.setValue("heroImageUrl", base64);
+      setHeroPreview(base64);
+      toast({ title: "Rasm yuklandi" });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleClearHeroImage = () => {
+    form.setValue("heroImageUrl", "");
+    setHeroPreview(null);
+  };
 
   const categoryForm = useForm<CategoryForm>({
     resolver: zodResolver(categorySchema),
@@ -246,16 +268,66 @@ export default function AdminSettings() {
 
                   <FormField
                     control={form.control}
+                    name="heroImageUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hero rasm</FormLabel>
+                        <div className="space-y-3">
+                          {(heroPreview || field.value) && (
+                            <div className="relative rounded-lg overflow-hidden bg-muted h-40">
+                              <img
+                                src={heroPreview || field.value}
+                                alt="Hero preview"
+                                className="w-full h-full object-cover"
+                              />
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="destructive"
+                                className="absolute top-2 right-2"
+                                onClick={handleClearHeroImage}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                          <div className="flex gap-2">
+                            <label className="flex-1">
+                              <FormControl>
+                                <Input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleHeroImageUpload}
+                                  className="cursor-pointer"
+                                  data-testid="input-hero-image"
+                                />
+                              </FormControl>
+                            </label>
+                          </div>
+                          <FormDescription>
+                            Bosh sahifadagi hero rasm. Rasm fayli yuklang (PNG, JPG)
+                          </FormDescription>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="primaryColor"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Asosiy rang</FormLabel>
+                        <FormLabel>Asosiy rang (ixtiyoriy)</FormLabel>
                         <div className="flex gap-2">
                           <FormControl>
-                            <Input type="color" {...field} className="w-12 h-9 p-1" />
+                            <Input type="color" {...field} className="w-12 h-9 p-1" data-testid="input-primary-color" />
                           </FormControl>
                           <Input value={field.value} onChange={field.onChange} className="flex-1" />
                         </div>
+                        <FormDescription>
+                          Bo'sh qolsa, standart rang ishlatiladi
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
