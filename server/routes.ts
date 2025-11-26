@@ -307,12 +307,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get main category name (available for both group and courier messages)
       const allCategories = await storage.getCategories();
+      const allProducts = await storage.getProducts();
+      
+      let categoryName = "Noma'lum";
+      
+      // Try to find category by direct ID match
       let category = allCategories.find(c => c.id === order.categoryId);
-      // If it's a subcategory, get the parent category instead
+      
+      // If it's a subcategory (has parentId), get the parent category instead
       if (category?.parentId) {
-        category = allCategories.find(c => c.id === category.parentId);
+        const parentCategory = allCategories.find(c => c.id === category.parentId);
+        if (parentCategory?.name) {
+          categoryName = parentCategory.name;
+        }
+      } else if (category?.name) {
+        // Direct main category found
+        categoryName = category.name;
+      } else {
+        // Fallback: find from order items
+        const orderItems = JSON.parse(data.items || "[]");
+        if (orderItems.length > 0) {
+          const firstProduct = allProducts.find(p => p.id === orderItems[0].productId);
+          if (firstProduct?.categoryId) {
+            const itemCategory = allCategories.find(c => c.id === firstProduct.categoryId);
+            if (itemCategory?.parentId) {
+              const parentCategory = allCategories.find(c => c.id === itemCategory.parentId);
+              if (parentCategory?.name) {
+                categoryName = parentCategory.name;
+              }
+            } else if (itemCategory?.name) {
+              categoryName = itemCategory.name;
+            }
+          }
+        }
       }
-      const categoryName = category?.name || "Noma'lum";
 
       // Send Telegram notification to group
       const settings = await storage.getSettings();
