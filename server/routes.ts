@@ -1113,6 +1113,61 @@ Buyurtma: #${order.orderNumber}
     }
   });
 
+  app.post("/api/courier/reject-order", async (req, res) => {
+    try {
+      const { orderId, assignmentId, telegramId } = req.body;
+      if (!orderId || !assignmentId || !telegramId) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Get courier info
+      const courier = await storage.getCourierByTelegramId(telegramId);
+      if (!courier) {
+        return res.status(404).json({ error: "Courier not found" });
+      }
+
+      // Update assignment to rejected
+      await storage.updateAssignment(assignmentId, {
+        status: "rejected",
+      });
+
+      // Update order status to rejected
+      const order = await storage.updateOrder(orderId, { status: "rejected" });
+
+      // Send notification to group
+      const settings = await storage.getSettings();
+      if (settings.telegramBotToken && settings.telegramGroupId && order) {
+        const message = `
+❌ *BUYURTMA BEKOR QILINGAN*
+
+Buyurtma: #${order.orderNumber}
+👤 Kuryer: ${courier.name}
+Sababu: Redd etilgan
+        `.trim();
+
+        try {
+          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+          await fetch(telegramUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: settings.telegramGroupId,
+              text: message,
+              parse_mode: "Markdown",
+            }),
+          });
+        } catch (telegramError) {
+          console.error("Telegram notification failed:", telegramError);
+        }
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Reject order error:", error);
+      res.status(500).json({ error: "Failed to reject order" });
+    }
+  });
+
   app.post("/api/courier/update-order-status", async (req, res) => {
     try {
       const { orderId, status } = req.body;
@@ -1129,8 +1184,13 @@ Buyurtma: #${order.orderNumber}
       // Send notification to group
       const settings = await storage.getSettings();
       if (settings.telegramBotToken && settings.telegramGroupId) {
-        const statusText = status === "shipping" ? "🚗 YO'LDA" : "✅ YETKAZILDI";
-        const message = `
+        let statusText = "";
+        if (status === "accepted") statusText = "⏳ JARAYONDA";
+        else if (status === "shipping") statusText = "🚗 YO'LDA";
+        else if (status === "delivered") statusText = "✅ YETKAZILDI";
+
+        if (statusText) {
+          const message = `
 ${statusText}
 
 Buyurtma: #${order.orderNumber}
@@ -1138,21 +1198,22 @@ Mijoz: ${order.customerName}
 📞 ${order.customerPhone}
 
 Jami: ${order.total} so'm
-        `.trim();
+          `.trim();
 
-        try {
-          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
-          await fetch(telegramUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: settings.telegramGroupId,
-              text: message,
-              parse_mode: "Markdown",
-            }),
-          });
-        } catch (telegramError) {
-          console.error("Telegram notification failed:", telegramError);
+          try {
+            const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+            await fetch(telegramUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: settings.telegramGroupId,
+                text: message,
+                parse_mode: "Markdown",
+              }),
+            });
+          } catch (telegramError) {
+            console.error("Telegram notification failed:", telegramError);
+          }
         }
       }
 

@@ -136,6 +136,7 @@ export default function CourierPayme() {
   const [acceptingOrderId, setAcceptingOrderId] = useState<string>("");
   const [selectedOrder, setSelectedOrder] = useState<Assignment | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [rejectingOrderId, setRejectingOrderId] = useState<string>("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -206,7 +207,7 @@ export default function CourierPayme() {
     }
   };
 
-  const handleUpdateOrderStatus = async (status: "shipping" | "delivered") => {
+  const handleUpdateOrderStatus = async (status: "accepted" | "shipping" | "delivered") => {
     if (!selectedOrder) return;
     setUpdatingStatus(true);
     try {
@@ -216,20 +217,18 @@ export default function CourierPayme() {
         body: JSON.stringify({
           orderId: selectedOrder.orderId,
           status,
-          courierName: "",
         }),
       });
 
       if (!res.ok) throw new Error("Failed to update status");
 
+      // Update selected order status locally
+      const newStatus = { ...selectedOrder, status };
+      setSelectedOrder(newStatus);
+
       toast({
         title: "✅ Holat yangilandi!",
-        description: status === "shipping" ? "Yo'lda" : "Yetkazildi",
       });
-
-      setSelectedOrder(null);
-      setActiveTab("orders");
-      setTimeout(() => fetchCourierData(telegramId), 500);
     } catch (error: any) {
       toast({
         title: "❌ Xatolik",
@@ -237,6 +236,38 @@ export default function CourierPayme() {
       });
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const handleRejectOrder = async (orderId: string, assignmentId: string) => {
+    setRejectingOrderId(orderId);
+    try {
+      const res = await fetch("/api/courier/reject-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          assignmentId,
+          telegramId,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to reject order");
+
+      toast({
+        title: "❌ Buyurtma bekor qilingan!",
+      });
+
+      // Refresh orders
+      setTimeout(() => fetchCourierData(telegramId), 500);
+    } catch (error: any) {
+      toast({
+        title: "❌ Xatolik",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setRejectingOrderId("");
     }
   };
 
@@ -526,6 +557,10 @@ export default function CourierPayme() {
 
       case "orders":
         if (selectedOrder) {
+          const isAccepted = selectedOrder.status === "accepted" || selectedOrder.status === "shipping" || selectedOrder.status === "delivered";
+          const isShipping = selectedOrder.status === "shipping" || selectedOrder.status === "delivered";
+          const isDelivered = selectedOrder.status === "delivered";
+
           return (
             <div className="space-y-4">
               <h2 className="text-xl font-bold">Buyurtma Tafsilotlari</h2>
@@ -558,22 +593,33 @@ export default function CourierPayme() {
                 </div>
               </Card>
               <div className="flex gap-2">
-                <Button
-                  onClick={() => handleUpdateOrderStatus("shipping")}
-                  disabled={updatingStatus}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  data-testid="button-yolda"
-                >
-                  🚗 Yo'lda
-                </Button>
-                <Button
-                  onClick={() => handleUpdateOrderStatus("delivered")}
-                  disabled={updatingStatus}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                  data-testid="button-delivered"
-                >
-                  ✅ Yetkazildi
-                </Button>
+                {!isDelivered && (
+                  <Button
+                    onClick={() => {
+                      if (!isAccepted) {
+                        handleUpdateOrderStatus("accepted");
+                      } else if (!isShipping) {
+                        handleUpdateOrderStatus("shipping");
+                      } else {
+                        handleUpdateOrderStatus("delivered");
+                      }
+                    }}
+                    disabled={updatingStatus}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    data-testid="button-progress"
+                  >
+                    {!isAccepted ? "⏳ Jarayonda" : !isShipping ? "🚗 Yo'lda" : "📍 Yetkazildi"}
+                  </Button>
+                )}
+                {isDelivered && (
+                  <Button
+                    disabled
+                    className="flex-1 bg-green-600"
+                    data-testid="button-delivered-final"
+                  >
+                    ✅ Yetkazildi
+                  </Button>
+                )}
               </div>
             </div>
           );
@@ -606,14 +652,25 @@ export default function CourierPayme() {
                     <p className="text-slate-200">Telefon: +998 33 020 60 00</p>
                     <p className="text-slate-300 text-sm mt-2">📍 Manzil</p>
                   </div>
-                  <Button
-                    onClick={() => handleAcceptOrder(assignment.orderId, assignment.id, assignment)}
-                    disabled={acceptingOrderId === assignment.orderId}
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    data-testid={`button-accept-order-${assignment.orderId}`}
-                  >
-                    {acceptingOrderId === assignment.orderId ? "Qabul qilinmoqda..." : "✅ Qabul Qilish"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleAcceptOrder(assignment.orderId, assignment.id, assignment)}
+                      disabled={acceptingOrderId === assignment.orderId}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      data-testid={`button-accept-order-${assignment.orderId}`}
+                    >
+                      {acceptingOrderId === assignment.orderId ? "Qabul qilinmoqda..." : "✅ Qabul Qilish"}
+                    </Button>
+                    <Button
+                      onClick={() => handleRejectOrder(assignment.orderId, assignment.id)}
+                      disabled={rejectingOrderId === assignment.orderId}
+                      variant="destructive"
+                      className="flex-1"
+                      data-testid={`button-reject-order-${assignment.orderId}`}
+                    >
+                      {rejectingOrderId === assignment.orderId ? "Bekor qilinmoqda..." : "❌ Bekor Qilish"}
+                    </Button>
+                  </div>
                 </Card>
               ))
             )}
