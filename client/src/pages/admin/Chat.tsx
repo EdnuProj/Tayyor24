@@ -40,15 +40,58 @@ export default function AdminChat() {
         senderType: "admin",
       });
     },
-    onSuccess: () => {
+    onMutate: async (text: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: ["/api/chat", selectedPhone],
+      });
+
+      // Snapshot the previous value
+      const previousMessages = queryClient.getQueryData<ChatMessage[]>([
+        "/api/chat",
+        selectedPhone,
+      ]);
+
+      // Optimistically update to the new value
+      const optimisticMessage: ChatMessage = {
+        id: Math.random().toString(),
+        customerPhone: selectedPhone || "",
+        customerName: rooms.find(r => r.customerPhone === selectedPhone)?.customerName || "Berilmagan",
+        message: text,
+        senderType: "admin",
+        isRead: false,
+        createdAt: new Date(),
+      };
+
+      queryClient.setQueryData(
+        ["/api/chat", selectedPhone],
+        (old: ChatMessage[] | undefined) => [
+          ...(old || []),
+          optimisticMessage,
+        ]
+      );
+
       setMessage("");
-      queryClient.invalidateQueries({ queryKey: selectedPhone ? ["/api/chat", selectedPhone] : null });
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/rooms"] });
       setTimeout(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-      }, 100);
+      }, 0);
+
+      return { previousMessages };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: selectedPhone ? ["/api/chat", selectedPhone] : null });
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/rooms"] });
+    },
+    onError: (err, newTodo, context: any) => {
+      // Rollback on error
+      if (context?.previousMessages) {
+        queryClient.setQueryData(
+          ["/api/chat", selectedPhone],
+          context.previousMessages
+        );
+      }
     },
   });
 

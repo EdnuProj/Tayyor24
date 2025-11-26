@@ -33,16 +33,59 @@ export default function Chat() {
         senderType: "customer",
       });
     },
-    onSuccess: () => {
-      setMessage("");
-      queryClient.invalidateQueries({
+    onMutate: async (text: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({
         queryKey: ["/api/chat", customerPhone],
       });
+
+      // Snapshot the previous value
+      const previousMessages = queryClient.getQueryData<ChatMessage[]>([
+        "/api/chat",
+        customerPhone,
+      ]);
+
+      // Optimistically update to the new value
+      const optimisticMessage: ChatMessage = {
+        id: Math.random().toString(),
+        customerPhone,
+        customerName,
+        message: text,
+        senderType: "customer",
+        isRead: false,
+        createdAt: new Date(),
+      };
+
+      queryClient.setQueryData(
+        ["/api/chat", customerPhone],
+        (old: ChatMessage[] | undefined) => [
+          ...(old || []),
+          optimisticMessage,
+        ]
+      );
+
+      setMessage("");
       setTimeout(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-      }, 100);
+      }, 0);
+
+      return { previousMessages };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["/api/chat", customerPhone],
+      });
+    },
+    onError: (err, newTodo, context: any) => {
+      // Rollback on error
+      if (context?.previousMessages) {
+        queryClient.setQueryData(
+          ["/api/chat", customerPhone],
+          context.previousMessages
+        );
+      }
     },
   });
 
