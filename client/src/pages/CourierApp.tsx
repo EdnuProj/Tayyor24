@@ -82,7 +82,7 @@ export default function CourierApp() {
     );
   }
 
-  const { courier, transactions } = data;
+  const { courier, transactions = [] } = data;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4">
