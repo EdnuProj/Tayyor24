@@ -114,6 +114,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== COURIER TRANSACTIONS ==========
+  app.get("/api/courier-transactions", async (req, res) => {
+    try {
+      const transactions = Array.from(storage.courierTransactions.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+  });
+
   // ========== CATEGORIES ==========
   app.get("/api/categories", async (_req, res) => {
     try {

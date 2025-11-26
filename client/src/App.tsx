@@ -31,6 +31,7 @@ import AdminRassilka from "@/pages/admin/Rassilka";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminCouriers from "@/pages/admin/Couriers";
 import AdminBanners from "@/pages/admin/Banners";
+import AdminPayments from "@/pages/admin/Payments";
 
 import NotFound from "@/pages/not-found";
 
@@ -129,6 +130,14 @@ function Router() {
         component={() => (
           <AdminGuard>
             <AdminSettings />
+          </AdminGuard>
+        )}
+      />
+      <Route
+        path="/admin/payments"
+        component={() => (
+          <AdminGuard>
+            <AdminPayments />
           </AdminGuard>
         )}
       />
