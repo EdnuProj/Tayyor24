@@ -15,6 +15,7 @@ import {
   Truck,
   Image,
   DollarSign,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -31,6 +32,7 @@ const navItems = [
   { href: "/admin/products", icon: Package, label: "Mahsulotlar" },
   { href: "/admin/orders", icon: ShoppingCart, label: "Buyurtmalar" },
   { href: "/admin/customers", icon: Users, label: "Mijozlar" },
+  { href: "/admin/chat", icon: MessageCircle, label: "Chat" },
   { href: "/admin/couriers", icon: Truck, label: "Kuryerlar" },
   { href: "/admin/categories", icon: Tag, label: "Kategoriyalar" },
   { href: "/admin/payments", icon: DollarSign, label: "Pul" },

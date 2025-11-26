@@ -14,6 +14,7 @@ import {
   insertNewsletterSchema,
   insertCourierSchema,
   insertCourierAssignmentSchema,
+  insertChatMessageSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1715,6 +1716,52 @@ ${message}
       res.json({ success: true, message: `Rassilka ${activeCouriers.length} ta kuryerga yuborildi` });
     } catch (error) {
       res.status(500).json({ error: "Failed to send courier rassilka" });
+    }
+  });
+
+  // ========== CHAT MESSAGES ==========
+  app.post("/api/chat/send", async (req, res) => {
+    try {
+      const { customerPhone, customerName, message, senderType } = req.body;
+      
+      if (!customerPhone || !customerName || !message || !senderType) {
+        return res.status(400).json({ error: "Barcha maydonlar to'ldirilishi kerak" });
+      }
+
+      const data = insertChatMessageSchema.parse({
+        customerPhone,
+        customerName,
+        message,
+        senderType,
+        isRead: false,
+      });
+
+      const chatMessage = await (storage as any).sendChatMessage(data);
+      res.status(201).json(chatMessage);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Xabar yuborishda xatolik" });
+    }
+  });
+
+  app.get("/api/chat/rooms", async (req, res) => {
+    try {
+      const rooms = await (storage as any).getAllChatRooms();
+      res.json(rooms);
+    } catch (error) {
+      res.status(500).json({ error: "Chatlarni olishda xatolik" });
+    }
+  });
+
+  app.get("/api/chat/:phone", async (req, res) => {
+    try {
+      const { phone } = req.params;
+      const messages = await (storage as any).getChatMessages(phone);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ error: "Xabarlarni olishda xatolik" });
     }
   });
 

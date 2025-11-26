@@ -34,6 +34,7 @@ import AdminBanners from "@/pages/admin/Banners";
 import AdminPayments from "@/pages/admin/Payments";
 import AdminCategories from "@/pages/admin/Categories";
 import CategoryProducts from "@/pages/admin/CategoryProducts";
+import AdminChat from "@/pages/admin/Chat";
 
 import NotFound from "@/pages/not-found";
 
@@ -156,6 +157,14 @@ function Router() {
         component={() => (
           <AdminGuard>
             <CategoryProducts />
+          </AdminGuard>
+        )}
+      />
+      <Route
+        path="/admin/chat"
+        component={() => (
+          <AdminGuard>
+            <AdminChat />
           </AdminGuard>
         )}
       />
