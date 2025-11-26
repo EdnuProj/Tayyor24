@@ -476,6 +476,76 @@ Qabul qilamizmi?
     }
   });
 
+  // Setup Telegram Bot Webhook
+  app.post("/api/admin/setup-telegram-webhook", async (req, res) => {
+    try {
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      if (!botToken) {
+        return res.status(400).json({ error: "Telegram bot token not configured" });
+      }
+
+      const webhookUrl = `https://${process.env.REPLIT_DOMAINS || 'localhost'}/api/telegram-webhook`;
+      
+      // Set webhook
+      const setWebhookUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;
+      const webhookResponse = await fetch(setWebhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: webhookUrl,
+          drop_pending_updates: false,
+        }),
+      });
+      
+      const webhookData = await webhookResponse.json();
+      
+      // Set bot commands
+      const commandsUrl = `https://api.telegram.org/bot${botToken}/setMyCommands`;
+      await fetch(commandsUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          commands: [
+            { command: "start", description: "Do'konni Ochish" },
+            { command: "help", description: "Yordam" },
+          ],
+        }),
+      });
+
+      // Set bot info
+      const botInfoUrl = `https://api.telegram.org/bot${botToken}/setMyDefaultAdministratorRights`;
+      await fetch(botInfoUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rights: {
+            is_anonymous: false,
+            can_manage_chat: false,
+            can_delete_messages: false,
+            can_manage_voice_chats: false,
+            can_restrict_members: false,
+            can_promote_members: false,
+            can_change_info: false,
+            can_invite_users: true,
+            can_pin_messages: false,
+            can_manage_topics: false,
+          },
+          for_channels: false,
+        }),
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Telegram bot webhook configured successfully",
+        webhookUrl,
+        details: webhookData,
+      });
+    } catch (error) {
+      console.error("Webhook setup error:", error);
+      res.status(500).json({ error: "Failed to setup webhook" });
+    }
+  });
+
   // Telegram Webhook - Receives messages and callbacks from Telegram
   app.post("/api/telegram-webhook", async (req, res) => {
     try {
@@ -518,18 +588,20 @@ Qabul qilamizmi?
         // Handle /start command
         if (text === "/start") {
           const categories = await storage.getCategories();
-          const siteUrl = process.env.SITE_URL || "https://do-kon.replit.dev";
+          const siteUrl = process.env.REPLIT_DOMAINS 
+            ? `https://${process.env.REPLIT_DOMAINS}`
+            : "https://do-kon.replit.dev";
           
           const inlineKeyboard = {
             inline_keyboard: [
-              [{ text: "Saytni Ochish", url: siteUrl }],
+              [{ text: "📱 Do'kon Ochish", web_app: { url: siteUrl } }],
               ...categories.slice(0, 4).map((cat) => [
                 {
-                  text: `${cat.name}`,
+                  text: `${cat.icon || '📦'} ${cat.name}`,
                   callback_data: `cat_${cat.id}`,
                 },
               ]),
-              [{ text: "Biz bilan Bog'lanish", callback_data: "contact" }],
+              [{ text: "📞 Bog'lanish", callback_data: "contact" }],
             ],
           };
 
@@ -539,7 +611,8 @@ Qabul qilamizmi?
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               chat_id: chatId,
-              text: "Do'kon-ga Xush Kelibsiz!\n\nMahsulotlarni ko'ring va buyurtma bering:",
+              text: "*Do'kon-ga Xush Kelibsiz!* 🛍️\n\nMahsulotlarni ko'ring va buyurtma bering.",
+              parse_mode: "Markdown",
               reply_markup: inlineKeyboard,
             }),
           });
@@ -597,18 +670,20 @@ Qabul qilamizmi?
 
         // Fallback - show menu for any other message
         const categories = await storage.getCategories();
-        const siteUrl = process.env.SITE_URL || "https://do-kon.replit.dev";
+        const siteUrl = process.env.REPLIT_DOMAINS 
+          ? `https://${process.env.REPLIT_DOMAINS}`
+          : "https://do-kon.replit.dev";
         
         const inlineKeyboard = {
           inline_keyboard: [
-            [{ text: "Saytni Ochish", url: siteUrl }],
+            [{ text: "📱 Do'kon Ochish", web_app: { url: siteUrl } }],
             ...categories.slice(0, 4).map((cat) => [
               {
-                text: `${cat.name}`,
+                text: `${cat.icon || '📦'} ${cat.name}`,
                 callback_data: `cat_${cat.id}`,
               },
             ]),
-            [{ text: "Biz bilan Bog'lanish", callback_data: "contact" }],
+            [{ text: "📞 Bog'lanish", callback_data: "contact" }],
           ],
         };
 
@@ -618,7 +693,8 @@ Qabul qilamizmi?
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: chatId,
-            text: "Do'kon-ga Xush Kelibsiz!\n\nMahsulotlarni ko'ring va buyurtma bering:",
+            text: "*Do'kon-ga Xush Kelibsiz!* 🛍️\n\nMahsulotlarni ko'ring va buyurtma bering.",
+            parse_mode: "Markdown",
             reply_markup: inlineKeyboard,
           }),
         });
