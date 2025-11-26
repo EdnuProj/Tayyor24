@@ -24,6 +24,7 @@ import AdminCustomers from "@/pages/admin/Customers";
 import AdminPromoCodes from "@/pages/admin/PromoCodes";
 import AdminRassilka from "@/pages/admin/Rassilka";
 import AdminSettings from "@/pages/admin/Settings";
+import AdminCouriers from "@/pages/admin/Couriers";
 
 import NotFound from "@/pages/not-found";
 
@@ -101,6 +102,14 @@ function Router() {
         component={() => (
           <AdminGuard>
             <AdminSettings />
+          </AdminGuard>
+        )}
+      />
+      <Route
+        path="/admin/couriers"
+        component={() => (
+          <AdminGuard>
+            <AdminCouriers />
           </AdminGuard>
         )}
       />

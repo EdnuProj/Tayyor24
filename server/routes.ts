@@ -246,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertOrderSchema.parse(req.body);
       const order = await storage.createOrder(data);
 
-      // Send Telegram notification
+      // Send Telegram notification to admin and find couriers
       const settings = await storage.getSettings();
       if (settings.telegramBotToken && settings.telegramChatId) {
         const orderItems = JSON.parse(data.items || "[]");
@@ -285,6 +285,76 @@ Holati: Yangi
           });
         } catch (telegramError) {
           console.error("Telegram notification failed:", telegramError);
+        }
+
+        // Send to eligible couriers if delivery is courier
+        if (order.deliveryType === "courier") {
+          try {
+            const couriers = await storage.getCouriers(order.categoryId);
+            const activeCouriers = couriers.filter((c) => c.isActive && c.telegramId);
+
+            if (activeCouriers.length > 0) {
+              // Create assignment
+              const assignment = await storage.createAssignment({
+                orderId: order.id,
+                status: "pending",
+              });
+
+              // Send messages to couriers with buttons
+              for (const courier of activeCouriers) {
+                const courierMessage = `
+🎯 *Yangi Buyurtma Mavjud*
+
+📋 #${order.orderNumber}
+👤 ${order.customerName} - ${order.customerPhone}
+📍 ${order.customerAddress}
+
+💰 ${order.total} so'm
+
+Qabul qilamizmi?
+                `.trim();
+
+                const keyboard = {
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "✅ Qabul qilish",
+                        callback_data: `courier_accept_${order.id}_${courier.id}`,
+                      },
+                      {
+                        text: "❌ Rad etish",
+                        callback_data: `courier_reject_${order.id}_${courier.id}`,
+                      },
+                    ],
+                  ],
+                };
+
+                await fetch(telegramUrl, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    chat_id: courier.telegramId,
+                    text: courierMessage,
+                    reply_markup: keyboard,
+                    parse_mode: "Markdown",
+                  }),
+                });
+              }
+
+              // Set 15-second auto-assign timer
+              setTimeout(async () => {
+                const currentAssignment = await storage.getAssignment(order.id);
+                if (currentAssignment && currentAssignment.status === "pending") {
+                  await storage.updateAssignment(assignment.id, {
+                    status: "auto_assigned",
+                  });
+                  console.log(`Auto-assigned order ${order.orderNumber}`);
+                }
+              }, 15000);
+            }
+          } catch (courierError) {
+            console.error("Failed to send courier notifications:", courierError);
+          }
         }
       }
 
@@ -373,27 +443,40 @@ Holati: Yangi
     }
   });
 
-  // Courier Assignment Callback (Telegram webhook)
-  app.post("/api/courier-callback", async (req, res) => {
+  // Courier Assignment Callback (Telegram inline button callback)
+  app.post("/api/telegram-callback", async (req, res) => {
     try {
-      const { orderId, courierId, action } = req.body;
-      const assignment = await storage.getAssignment(orderId);
-      if (!assignment) {
-        return res.status(404).json({ error: "Assignment not found" });
+      const { callback_query } = req.body;
+      if (!callback_query) {
+        return res.json({ ok: true }); // Telegram requires ok response
       }
 
-      if (action === "accept") {
-        await storage.updateAssignment(assignment.id, { 
-          courierId, 
-          status: "accepted" 
-        });
-      } else if (action === "reject") {
-        await storage.updateAssignment(assignment.id, { status: "rejected" });
+      const { data, from } = callback_query;
+      const telegramId = from?.id?.toString();
+
+      // Parse callback data: courier_accept_orderId_courierId or courier_reject_orderId_courierId
+      if (data?.startsWith("courier_")) {
+        const [action, orderId, courierId] = data.replace("courier_", "").split("_");
+
+        const assignment = await storage.getAssignment(orderId);
+        if (assignment && assignment.status === "pending") {
+          if (action === "accept") {
+            await storage.updateAssignment(assignment.id, {
+              courierId,
+              status: "accepted",
+            });
+          } else if (action === "reject") {
+            await storage.updateAssignment(assignment.id, {
+              status: "rejected",
+            });
+          }
+        }
       }
 
-      res.json({ success: true });
+      res.json({ ok: true });
     } catch (error) {
-      res.status(500).json({ error: "Failed to process callback" });
+      console.error("Telegram callback error:", error);
+      res.json({ ok: true });
     }
   });
 
