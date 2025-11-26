@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, ShoppingCart, Menu, X, Sun, Moon, User } from "lucide-react";
+import { Search, ShoppingCart, Menu, X, Sun, Moon, User, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCart } from "@/contexts/CartContext";
+import { ChatWidget } from "@/components/support/ChatWidget";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -77,6 +78,9 @@ export function Header({ onSearch }: HeaderProps) {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 ml-auto">
+            {/* Chat */}
+            <ChatWidget showTriggerOnly={true} />
+
             {/* Theme Toggle */}
             <Button
               variant="ghost"

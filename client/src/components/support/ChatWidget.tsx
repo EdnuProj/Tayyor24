@@ -8,7 +8,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ChatMessage } from "@shared/schema";
 
-export function ChatWidget() {
+interface ChatWidgetProps {
+  showTriggerOnly?: boolean;
+}
+
+export function ChatWidget({ showTriggerOnly = false }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -63,6 +67,18 @@ export function ChatWidget() {
   }, [messages]);
 
   if (!isOpen) {
+    if (showTriggerOnly) {
+      return (
+        <Button
+          onClick={() => setIsOpen(true)}
+          variant="ghost"
+          size="icon"
+          data-testid="button-open-chat"
+        >
+          <MessageCircle className="h-5 w-5" />
+        </Button>
+      );
+    }
     return (
       <Button
         onClick={() => setIsOpen(true)}
@@ -76,7 +92,7 @@ export function ChatWidget() {
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 max-h-96 shadow-xl z-40 flex flex-col">
+    <Card className={`${showTriggerOnly ? "fixed bottom-6 right-6 w-96 max-h-96" : "fixed bottom-6 right-6 w-96 max-h-96"} shadow-xl z-40 flex flex-col`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b">
         <CardTitle className="text-base">Qo'llab-quvvatlash</CardTitle>
         <Button
