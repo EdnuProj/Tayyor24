@@ -466,19 +466,6 @@ export default function CourierPayme() {
             {/* Quick Actions */}
             <div className="grid grid-cols-4 gap-2">
               <button
-                onClick={() => setActiveTab("nearby")}
-                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition relative"
-                data-testid="button-quick-nearby"
-              >
-                <MapPin className="w-5 h-5 mx-auto mb-1" />
-                Yaqin
-                {nearbyOrders.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                    {nearbyOrders.length}
-                  </span>
-                )}
-              </button>
-              <button
                 onClick={() => setActiveTab("orders")}
                 className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition relative"
                 data-testid="button-quick-orders"
