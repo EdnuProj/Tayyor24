@@ -32,9 +32,19 @@ export default function Products() {
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [searchInput, setSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const paginationRef = useRef<HTMLDivElement>(null);
 
   const ITEMS_PER_PAGE = 12;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Parse URL params on mount
   useEffect(() => {
@@ -205,7 +215,10 @@ export default function Products() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-12 flex items-center justify-center gap-2 flex-wrap">
+            <div 
+              ref={paginationRef}
+              className="mt-12 flex items-center justify-center gap-2 flex-wrap relative group"
+            >
               <Button
                 variant="outline"
                 size="sm"
@@ -243,7 +256,39 @@ export default function Products() {
                 Keyingi
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
+
+              {/* Scroll to Top Button - Shows on hover */}
+              <Button
+                size="icon"
+                variant="default"
+                onClick={() => {
+                  if (containerRef.current) {
+                    containerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}
+                className="absolute -right-16 opacity-0 group-hover:opacity-100 group-hover:right-0 transition-all duration-300"
+                data-testid="button-scroll-to-top"
+                title="Tepaga ko'tar"
+              >
+                <ChevronLeft className="h-4 w-4 rotate-90" />
+              </Button>
             </div>
+          )}
+
+          {/* Floating Scroll to Top - Shows when scrolled down */}
+          {showScrollTop && (
+            <button
+              onClick={() => {
+                if (containerRef.current) {
+                  containerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+              className="fixed bottom-8 right-8 z-40 bg-primary text-primary-foreground p-3 rounded-full shadow-lg hover-elevate"
+              data-testid="button-floating-scroll-top"
+              title="Tepaga ko'tar"
+            >
+              <ChevronLeft className="h-5 w-5 rotate-90" />
+            </button>
           )}
         </div>
       </div>
