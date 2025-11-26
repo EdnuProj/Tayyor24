@@ -43,6 +43,7 @@ export default function AdminCategories() {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
+  const [showLocationInput, setShowLocationInput] = useState(false);
 
   const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -172,6 +173,7 @@ export default function AdminCategories() {
           onClick={() => {
             setEditingCategory(null);
             form.reset();
+            setShowLocationInput(false);
             setDialogOpen(true);
           }}
           data-testid="button-add-category"
@@ -307,43 +309,55 @@ export default function AdminCategories() {
               
               {!selectedParentId && (
                 <>
-                  <FormLabel className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    Joylashuv (Ixtiyoriy)
-                  </FormLabel>
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="latitude"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Kenglik (Latitude)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="41.2995" type="number" step="0.0001" {...field} data-testid="input-category-latitude" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="longitude"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Uzunlik (Longitude)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="69.2401" type="number" step="0.0001" {...field} data-testid="input-category-longitude" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    <a href="https://yandex.uz/maps/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                      Yandex Maps
-                    </a> da joylashuvga click qilib koordinatalarni oling va yuqoriga kiriting
-                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowLocationInput(!showLocationInput)}
+                    className="w-full justify-start"
+                    data-testid="button-toggle-location"
+                  >
+                    <MapPin className="w-4 h-4 mr-2" />
+                    {showLocationInput ? "Joylashuvni Yashirish" : "Joylashuv Qo'shish"}
+                  </Button>
+                  
+                  {showLocationInput && (
+                    <div className="space-y-3 pt-2 border-t">
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField
+                          control={form.control}
+                          name="latitude"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Kenglik (Latitude)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="41.2995" type="number" step="0.0001" {...field} data-testid="input-category-latitude" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="longitude"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Uzunlik (Longitude)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="69.2401" type="number" step="0.0001" {...field} data-testid="input-category-longitude" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        <a href="https://yandex.uz/maps/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                          Yandex Maps
+                        </a> da joylashuvga click qilib koordinatalarni oling va yuqoriga kiriting
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
               
