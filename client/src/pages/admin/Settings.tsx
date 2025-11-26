@@ -105,10 +105,15 @@ export default function AdminSettings() {
     reader.readAsDataURL(file);
   };
 
-  const handleClearHeroImage = () => {
+  const handleClearHeroImage = async () => {
     form.setValue("heroImageUrl", "");
     setHeroPreview(null);
     if (heroInputRef.current) heroInputRef.current.value = "";
+    // Immediately save after clearing
+    setTimeout(() => {
+      const currentData = form.getValues();
+      updateSettingsMutation.mutate(currentData);
+    }, 100);
   };
 
   const handleLogoImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,10 +130,15 @@ export default function AdminSettings() {
     reader.readAsDataURL(file);
   };
 
-  const handleClearLogo = () => {
+  const handleClearLogo = async () => {
     form.setValue("logoUrl", "");
     setLogoPreview(null);
     if (logoInputRef.current) logoInputRef.current.value = "";
+    // Immediately save after clearing
+    setTimeout(() => {
+      const currentData = form.getValues();
+      updateSettingsMutation.mutate(currentData);
+    }, 100);
   };
 
   const categoryForm = useForm<CategoryForm>({
@@ -284,21 +294,33 @@ export default function AdminSettings() {
                         <FormLabel>Logo</FormLabel>
                         <div className="space-y-3">
                           {(logoPreview || field.value) && (
-                            <div className="relative rounded-lg overflow-hidden bg-muted h-24 w-24 group">
-                              <img
-                                src={logoPreview || field.value}
-                                alt="Logo preview"
-                                className="w-full h-full object-cover"
-                              />
+                            <div className="space-y-2">
+                              <div className="relative rounded-lg overflow-hidden bg-muted h-24 w-24 group">
+                                <img
+                                  src={logoPreview || field.value}
+                                  alt="Logo preview"
+                                  className="w-full h-full object-cover"
+                                />
+                                <Button
+                                  type="button"
+                                  size="icon"
+                                  variant="destructive"
+                                  className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={handleClearLogo}
+                                  data-testid="button-clear-logo-hover"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
                               <Button
                                 type="button"
-                                size="icon"
                                 variant="destructive"
-                                className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                size="sm"
                                 onClick={handleClearLogo}
-                                data-testid="button-clear-logo"
+                                data-testid="button-delete-logo"
                               >
-                                <X className="h-3 w-3" />
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                O'chirish
                               </Button>
                             </div>
                           )}
@@ -333,21 +355,33 @@ export default function AdminSettings() {
                         <FormLabel>Hero rasm</FormLabel>
                         <div className="space-y-3">
                           {(heroPreview || field.value) && (
-                            <div className="relative rounded-lg overflow-hidden bg-muted h-40 group">
-                              <img
-                                src={heroPreview || field.value}
-                                alt="Hero preview"
-                                className="w-full h-full object-cover"
-                              />
+                            <div className="space-y-2">
+                              <div className="relative rounded-lg overflow-hidden bg-muted h-40 group">
+                                <img
+                                  src={heroPreview || field.value}
+                                  alt="Hero preview"
+                                  className="w-full h-full object-cover"
+                                />
+                                <Button
+                                  type="button"
+                                  size="icon"
+                                  variant="destructive"
+                                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={handleClearHeroImage}
+                                  data-testid="button-clear-hero-hover"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
                               <Button
                                 type="button"
-                                size="icon"
                                 variant="destructive"
-                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                size="sm"
                                 onClick={handleClearHeroImage}
-                                data-testid="button-clear-hero"
+                                data-testid="button-delete-hero"
                               >
-                                <X className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                O'chirish
                               </Button>
                             </div>
                           )}
