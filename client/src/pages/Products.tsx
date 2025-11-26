@@ -36,6 +36,17 @@ export default function Products() {
   const containerRef = useRef<HTMLDivElement>(null);
   const paginationRef = useRef<HTMLDivElement>(null);
 
+  // Query data first
+  const { data: products = [], isLoading: loadingProducts } = useQuery<Product[]>({
+    queryKey: ["/api/products"],
+  });
+
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
+
+  const ITEMS_PER_PAGE = 12;
+
   // Get parent category if subcategory is selected
   const getParentCategory = (categoryId: string | null) => {
     if (!categoryId) return null;
@@ -57,8 +68,6 @@ export default function Products() {
 
   const parentCategoryId = filters.categoryId ? getParentCategory(filters.categoryId) : null;
   const subcategories = parentCategoryId ? categories.filter(c => c.parentId === parentCategoryId) : [];
-
-  const ITEMS_PER_PAGE = 12;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -84,14 +93,6 @@ export default function Products() {
       setFilters((prev) => ({ ...prev, isNew: true }));
     }
   }, [location]);
-
-  const { data: products = [], isLoading: loadingProducts } = useQuery<Product[]>({
-    queryKey: ["/api/products"],
-  });
-
-  const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
-  });
 
   // Extract unique brands from products
   const brands = useMemo(() => {
