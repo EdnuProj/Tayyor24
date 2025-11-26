@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { AdminGuard } from "@/components/admin/AdminGuard";
+import { ChatWidget } from "@/components/support/ChatWidget";
 
 // Store Pages
 import Home from "@/pages/Home";
@@ -183,6 +184,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <ChatWidget />
           </TooltipProvider>
         </CartProvider>
       </ThemeProvider>
@@ -191,3 +193,4 @@ function App() {
 }
 
 export default App;
+// force rebuild

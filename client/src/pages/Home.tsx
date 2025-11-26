@@ -7,7 +7,6 @@ import { ProductGrid } from "@/components/products/ProductGrid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChatWidget } from "@/components/support/ChatWidget";
 import type { Product, Category, Advertisement, SiteSettings } from "@shared/schema";
 
 export default function Home() {
@@ -318,8 +317,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <ChatWidget />
     </StoreLayout>
   );
 }
