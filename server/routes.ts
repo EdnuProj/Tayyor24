@@ -594,6 +594,36 @@ Qabul qilamizmi?
 
           return res.json({ ok: true });
         }
+
+        // Fallback - show menu for any other message
+        const categories = await storage.getCategories();
+        const siteUrl = process.env.SITE_URL || "https://do-kon.replit.dev";
+        
+        const inlineKeyboard = {
+          inline_keyboard: [
+            [{ text: "Saytni Ochish", url: siteUrl }],
+            ...categories.slice(0, 4).map((cat) => [
+              {
+                text: `${cat.name}`,
+                callback_data: `cat_${cat.id}`,
+              },
+            ]),
+            [{ text: "Biz bilan Bog'lanish", callback_data: "contact" }],
+          ],
+        };
+
+        const botUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        await fetch(botUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: "Do'kon-ga Xush Kelibsiz!\n\nMahsulotlarni ko'ring va buyurtma bering:",
+            reply_markup: inlineKeyboard,
+          }),
+        });
+
+        return res.json({ ok: true });
       }
 
       res.json({ ok: true });
