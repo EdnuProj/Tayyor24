@@ -1168,9 +1168,11 @@ Buyurtma: #${order.orderNumber}
       // Get order info
       const order = await storage.getOrder(orderId);
 
+      console.log(`Accept order: orderId=${orderId}, customerTelegramId=${order?.customerTelegramId}`);
+
       // Send notifications only to customer
       const settings = await storage.getSettings();
-      if (settings.telegramBotToken && order && order.customerTelegramId) {
+      if (settings.telegramBotToken && order) {
         const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
         
         // Message to customer (direct)
@@ -1190,17 +1192,22 @@ Rahmalingiz uchun! 🙏
         `.trim();
 
         try {
-          // Send ONLY to customer
-          await fetch(telegramUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: order.customerTelegramId,
-              text: messageToCustomer,
-              parse_mode: "Markdown",
-            }),
-          });
-          console.log(`Customer notification sent to ${order.customerTelegramId}`);
+          // Send to customer if telegramId exists
+          if (order.customerTelegramId) {
+            console.log(`Sending customer notification to ${order.customerTelegramId}`);
+            await fetch(telegramUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: order.customerTelegramId,
+                text: messageToCustomer,
+                parse_mode: "Markdown",
+              }),
+            });
+            console.log(`Customer notification sent to ${order.customerTelegramId}`);
+          } else {
+            console.log(`No customerTelegramId for order ${order.orderNumber}`);
+          }
         } catch (telegramError) {
           console.error("Telegram notification failed:", telegramError);
         }
