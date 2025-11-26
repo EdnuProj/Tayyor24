@@ -49,7 +49,7 @@ const settingsSchema = z.object({
   deliveryPrice: z.coerce.number().min(0),
   freeDeliveryThreshold: z.coerce.number().min(0).optional(),
   telegramBotToken: z.string().optional(),
-  telegramChatId: z.string().optional(),
+  telegramGroupId: z.string().optional(),
 });
 
 const categorySchema = z.object({
@@ -84,7 +84,7 @@ export default function AdminSettings() {
       deliveryPrice: settings.deliveryPrice,
       freeDeliveryThreshold: settings.freeDeliveryThreshold || 500000,
       telegramBotToken: settings.telegramBotToken || "",
-      telegramChatId: settings.telegramChatId || "",
+      telegramGroupId: settings.telegramGroupId || "",
     } : undefined,
   });
 

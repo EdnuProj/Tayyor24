@@ -209,7 +209,7 @@ export const siteSettings = pgTable("site_settings", {
   deliveryPrice: real("delivery_price").notNull().default(15000),
   freeDeliveryThreshold: real("free_delivery_threshold").default(500000),
   telegramBotToken: text("telegram_bot_token"),
-  telegramChatId: text("telegram_chat_id"),
+  telegramGroupId: text("telegram_group_id"),
 });
 
 export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({ id: true });
