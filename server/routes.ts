@@ -385,6 +385,34 @@ Qabul qilamizmi?
                   status: "auto_assigned",
                 });
                 console.log(`Auto-assigned order ${order.orderNumber}`);
+                
+                // Send notification to group about auto-assignment
+                try {
+                  const autoAssignMessage = `
+🤖 *AVTOMATIK TAQSIMOT*
+
+Buyurtma: #${order.orderNumber}
+👤 Mijoz: ${order.customerName}
+📞 Tel: ${order.customerPhone}
+📍 Manzil: ${order.customerAddress}
+
+💰 Jami: ${order.total} so'm
+
+⚠️ 15 soniyada hech kim qabul qilmadi, avtomatik taqsimot amalga oshdi
+                  `.trim();
+                  
+                  await fetch(telegramUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      chat_id: settings.telegramGroupId,
+                      text: autoAssignMessage,
+                      parse_mode: "Markdown",
+                    }),
+                  });
+                } catch (autoAssignError) {
+                  console.error("Failed to send auto-assign notification:", autoAssignError);
+                }
               }
             }, 15000);
           } catch (courierError) {
