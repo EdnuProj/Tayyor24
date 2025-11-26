@@ -1050,17 +1050,24 @@ Buyurtma: #${order.orderNumber}
       // Get all assignments - both pending (not assigned to any courier yet) and those assigned to this courier
       const allAssignments = Array.from((storage as any).assignments?.values?.() || []) as any[];
       
+      console.log(`Dashboard: Got ${allAssignments.length} total assignments`);
+      console.log(`Dashboard: Courier ID = ${courier.id}`);
+      
       const assignments = allAssignments.filter((a) => {
         // Show pending assignments (not yet accepted by any courier)
         if (a.status === "pending" && !a.courierId) {
+          console.log(`Dashboard: Including pending assignment ${a.id}`);
           return true;
         }
         // Show assignments accepted by this courier
         if (a.courierId === courier.id) {
+          console.log(`Dashboard: Including courier's assignment ${a.id}`);
           return true;
         }
         return false;
       });
+
+      console.log(`Dashboard: Filtered to ${assignments.length} assignments for courier`);
 
       const transactions = await (storage as any).getCourierTransactions(courier.id);
 
