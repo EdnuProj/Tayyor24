@@ -705,10 +705,10 @@ export default function CourierPayme() {
               orders.map((assignment) => {
                 const isAccepted = assignment.courierId !== undefined && assignment.courierId !== null;
                 const statusLabel = assignment.status === "pending" ? "Yangi" : 
-                                   assignment.status === "accepted" ? "⏳ Jarayonda" :
-                                   assignment.status === "shipping" ? "🚗 Yo'lda" :
-                                   assignment.status === "delivered" ? "✅ Yetkazildi" :
-                                   assignment.status === "rejected" ? "❌ Rad etilgan" : assignment.status;
+                                   assignment.status === "accepted" ? "Qabul qilgan" :
+                                   assignment.status === "shipping" ? "Yo'lda" :
+                                   assignment.status === "delivered" ? "Yetkazildi" :
+                                   assignment.status === "rejected" ? "Rad etilgan" : assignment.status;
                 
                 const statusColor = assignment.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
                                    assignment.status === "accepted" ? "bg-blue-500/20 text-blue-400" :
