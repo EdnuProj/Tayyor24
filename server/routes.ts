@@ -401,7 +401,8 @@ Buyurtma: #${order.orderNumber}
 ⚠️ 15 soniyada hech kim qabul qilmadi, avtomatik taqsimot amalga oshdi
                   `.trim();
                   
-                  await fetch(telegramUrl, {
+                  console.log("Sending auto-assign notification to group...");
+                  const telegramResponse = await fetch(telegramUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -410,6 +411,12 @@ Buyurtma: #${order.orderNumber}
                       parse_mode: "Markdown",
                     }),
                   });
+                  
+                  if (telegramResponse.ok) {
+                    console.log("✅ Auto-assign notification sent to group successfully");
+                  } else {
+                    console.error("Auto-assign notification failed:", telegramResponse.status);
+                  }
                 } catch (autoAssignError) {
                   console.error("Failed to send auto-assign notification:", autoAssignError);
                 }
