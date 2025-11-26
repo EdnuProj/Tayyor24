@@ -45,3 +45,8 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_mem_db:1.0.0"]
+
+[userenv]
+
+[userenv.shared]
+TELEGRAM_BOT_TOKEN = "7728103760:AAF3yGuebypNhVk23hzlYjKD1-HSSzVknaM"

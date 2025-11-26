@@ -509,9 +509,9 @@ Qabul qilamizmi?
       if (update.message) {
         const { text, chat } = update.message;
         const chatId = chat?.id?.toString();
-        const settings = await storage.getSettings();
+        const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
-        if (!settings.telegramBotToken) {
+        if (!botToken) {
           return res.json({ ok: true });
         }
 
@@ -533,7 +533,7 @@ Qabul qilamizmi?
             ],
           };
 
-          const botUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+          const botUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
           await fetch(botUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -553,7 +553,7 @@ Qabul qilamizmi?
           const products = await storage.getProducts({ categoryId });
 
           if (products.length === 0) {
-            const botUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+            const botUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
             await fetch(botUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -580,7 +580,7 @@ Qabul qilamizmi?
               ],
             };
 
-            const botUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+            const botUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
             await fetch(botUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
