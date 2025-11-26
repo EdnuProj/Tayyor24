@@ -134,6 +134,8 @@ export class MemStorage implements IStorage {
   private reviews: Map<string, Review>;
   private advertisements: Map<string, Advertisement>;
   private newsletters: Map<string, Newsletter>;
+  private couriers: Map<string, Courier>;
+  private assignments: Map<string, CourierAssignment>;
   private settings: SiteSettings;
 
   constructor() {
@@ -147,9 +149,12 @@ export class MemStorage implements IStorage {
     this.reviews = new Map();
     this.advertisements = new Map();
     this.newsletters = new Map();
+    this.couriers = new Map();
+    this.assignments = new Map();
     this.settings = {
       id: "default",
       logoUrl: null,
+      heroImageUrl: null,
       siteName: "Do'kon",
       primaryColor: "#7c3aed",
       deliveryPrice: 15000,
@@ -775,6 +780,62 @@ export class MemStorage implements IStorage {
   async updateSettings(data: Partial<InsertSiteSettings>): Promise<SiteSettings> {
     this.settings = { ...this.settings, ...data };
     return this.settings;
+  }
+
+  // Couriers
+  async getCouriers(categoryId?: string): Promise<Courier[]> {
+    const couriers = Array.from(this.couriers.values());
+    if (categoryId) {
+      return couriers.filter((c) => c.categoryId === categoryId);
+    }
+    return couriers;
+  }
+
+  async getCourier(id: string): Promise<Courier | undefined> {
+    return this.couriers.get(id);
+  }
+
+  async getCourierByTelegramId(telegramId: string): Promise<Courier | undefined> {
+    return Array.from(this.couriers.values()).find((c) => c.telegramId === telegramId);
+  }
+
+  async createCourier(courier: InsertCourier): Promise<Courier> {
+    const id = randomUUID();
+    const newCourier: Courier = { ...courier, id, createdAt: new Date() } as Courier;
+    this.couriers.set(id, newCourier);
+    return newCourier;
+  }
+
+  async updateCourier(id: string, data: Partial<InsertCourier>): Promise<Courier | undefined> {
+    const courier = this.couriers.get(id);
+    if (!courier) return undefined;
+    const updated = { ...courier, ...data };
+    this.couriers.set(id, updated);
+    return updated;
+  }
+
+  async deleteCourier(id: string): Promise<boolean> {
+    return this.couriers.delete(id);
+  }
+
+  // Courier Assignments
+  async createAssignment(assignment: InsertCourierAssignment): Promise<CourierAssignment> {
+    const id = randomUUID();
+    const newAssignment: CourierAssignment = { ...assignment, id, assignedAt: new Date() } as CourierAssignment;
+    this.assignments.set(id, newAssignment);
+    return newAssignment;
+  }
+
+  async getAssignment(orderId: string): Promise<CourierAssignment | undefined> {
+    return Array.from(this.assignments.values()).find((a) => a.orderId === orderId);
+  }
+
+  async updateAssignment(id: string, data: Partial<InsertCourierAssignment>): Promise<CourierAssignment | undefined> {
+    const assignment = this.assignments.get(id);
+    if (!assignment) return undefined;
+    const updated = { ...assignment, ...data };
+    this.assignments.set(id, updated);
+    return updated;
   }
 
   // Dashboard Stats

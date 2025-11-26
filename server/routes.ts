@@ -12,6 +12,8 @@ import {
   insertSiteSettingsSchema,
   insertAdvertisementSchema,
   insertNewsletterSchema,
+  insertCourierSchema,
+  insertCourierAssignmentSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -305,6 +307,93 @@ Holati: Yangi
       res.json(order);
     } catch (error) {
       res.status(500).json({ error: "Failed to update order" });
+    }
+  });
+
+  // ========== COURIERS ==========
+  app.get("/api/couriers", async (req, res) => {
+    try {
+      const { categoryId } = req.query;
+      const couriers = await storage.getCouriers(categoryId as string);
+      res.json(couriers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch couriers" });
+    }
+  });
+
+  app.get("/api/couriers/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const courier = await storage.getCourier(id);
+      if (!courier) {
+        return res.status(404).json({ error: "Courier not found" });
+      }
+      res.json(courier);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch courier" });
+    }
+  });
+
+  app.post("/api/couriers", async (req, res) => {
+    try {
+      const data = insertCourierSchema.parse(req.body);
+      const courier = await storage.createCourier(data);
+      res.status(201).json(courier);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create courier" });
+    }
+  });
+
+  app.patch("/api/couriers/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const courier = await storage.updateCourier(id, req.body);
+      if (!courier) {
+        return res.status(404).json({ error: "Courier not found" });
+      }
+      res.json(courier);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update courier" });
+    }
+  });
+
+  app.delete("/api/couriers/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCourier(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Courier not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete courier" });
+    }
+  });
+
+  // Courier Assignment Callback (Telegram webhook)
+  app.post("/api/courier-callback", async (req, res) => {
+    try {
+      const { orderId, courierId, action } = req.body;
+      const assignment = await storage.getAssignment(orderId);
+      if (!assignment) {
+        return res.status(404).json({ error: "Assignment not found" });
+      }
+
+      if (action === "accept") {
+        await storage.updateAssignment(assignment.id, { 
+          courierId, 
+          status: "accepted" 
+        });
+      } else if (action === "reject") {
+        await storage.updateAssignment(assignment.id, { status: "rejected" });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to process callback" });
     }
   });
 
