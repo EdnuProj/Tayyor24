@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,9 +43,6 @@ export default function AdminCategories() {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
-  const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const mapRef = useRef<any>(null);
-  const mapInstanceRef = useRef<any>(null);
 
   const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -64,31 +61,6 @@ export default function AdminCategories() {
     },
   });
 
-  // Initialize Yandex Map
-  useEffect(() => {
-    if (dialogOpen && mapRef.current && !mapInstanceRef.current && !selectedParentId && typeof window !== 'undefined' && (window as any).ymaps) {
-      (window as any).ymaps.ready(() => {
-        mapInstanceRef.current = new (window as any).ymaps.Map(mapRef.current, {
-          center: [41.2995, 69.2401], // Tashkent center
-          zoom: 12,
-        });
-
-        mapInstanceRef.current.events.add('click', (e: any) => {
-          const coords = e.get('coordPosition');
-          setMapCoords({ lat: coords[0], lng: coords[1] });
-          form.setValue('latitude', coords[0]);
-          form.setValue('longitude', coords[1]);
-        });
-      });
-    }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.destroy();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, [dialogOpen, selectedParentId, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: CategoryForm) => {
@@ -338,21 +310,47 @@ export default function AdminCategories() {
                 <>
                   <FormLabel className="flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
-                    Joylashuv (Yandex Maps)
+                    Joylashuv (Ixtiyoriy)
                   </FormLabel>
-                  <div ref={mapRef} className="h-64 border rounded-md w-full" data-testid="map-container" />
-                  {mapCoords && (
-                    <p className="text-sm text-muted-foreground">
-                      Tanlangan joylashuv: {mapCoords.lat.toFixed(4)}, {mapCoords.lng.toFixed(4)}
-                    </p>
-                  )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="latitude"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Kenglik (Latitude)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="41.2995" type="number" step="0.0001" {...field} data-testid="input-category-latitude" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="longitude"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Uzunlik (Longitude)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="69.2401" type="number" step="0.0001" {...field} data-testid="input-category-longitude" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    <a href="https://yandex.uz/maps/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                      Yandex Maps
+                    </a> da joylashuvga click qilib koordinatalarni oling va yuqoriga kiriting
+                  </p>
                 </>
               )}
               
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => {
                   setDialogOpen(false);
-                  setMapCoords(null);
                 }}>
                   Bekor qilish
                 </Button>
