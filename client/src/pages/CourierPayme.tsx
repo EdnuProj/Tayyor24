@@ -1,0 +1,312 @@
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Wallet,
+  ArrowRightLeft,
+  Zap,
+  BarChart3,
+  QrCode,
+  Repeat2,
+  Lock,
+  FileText,
+  CreditCard,
+  ChevronRight,
+  ArrowLeft,
+} from "lucide-react";
+
+type TabType = "home" | "transfer" | "payments" | "qr" | "history" | "settings";
+
+const features = [
+  {
+    id: "balance",
+    icon: Wallet,
+    title: "Balansni Ko'rish",
+    description: "UzCard, Humo, Visa, Mastercard",
+    color: "from-blue-500 to-blue-600",
+  },
+  {
+    id: "transfer",
+    icon: ArrowRightLeft,
+    title: "Pul O'tkazmalar",
+    description: "Karta → Karta, Payme ID orqali",
+    color: "from-purple-500 to-purple-600",
+  },
+  {
+    id: "payments",
+    icon: Zap,
+    title: "To'lovlar",
+    description: "Elektr, gaz, suv, internet, mobil",
+    color: "from-yellow-500 to-yellow-600",
+  },
+  {
+    id: "business",
+    icon: BarChart3,
+    title: "Payme Business",
+    description: "QR, terminali, invoice",
+    color: "from-green-500 to-green-600",
+  },
+  {
+    id: "qr",
+    icon: QrCode,
+    title: "QR orqali To'lov",
+    description: "Scan & Pay",
+    color: "from-pink-500 to-pink-600",
+  },
+  {
+    id: "autopay",
+    icon: Repeat2,
+    title: "Avtomatik To'lovlar",
+    description: "Oylik va haftalik to'lovlar",
+    color: "from-cyan-500 to-cyan-600",
+  },
+  {
+    id: "security",
+    icon: Lock,
+    title: "Xavfsizlik",
+    description: "Fingerprint, Face ID, 3D Secure",
+    color: "from-red-500 to-red-600",
+  },
+  {
+    id: "history",
+    icon: FileText,
+    title: "To'lov Tarixi",
+    description: "Kvitansiya va ma'lumotlar",
+    color: "from-indigo-500 to-indigo-600",
+  },
+  {
+    id: "subscriptions",
+    icon: CreditCard,
+    title: "Obunalar",
+    description: "Netflix, YouTube va boshqalar",
+    color: "from-orange-500 to-orange-600",
+  },
+  {
+    id: "credit",
+    icon: CreditCard,
+    title: "Kredit To'lovlari",
+    description: "Bank, mikroqarz, lizing",
+    color: "from-teal-500 to-teal-600",
+  },
+];
+
+export default function CourierPayme() {
+  const [activeTab, setActiveTab] = useState<TabType>("home");
+  const [selectedBalance] = useState("125,500");
+  const [selectedCard] = useState("UzCard • 9860 ****");
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "home":
+        return (
+          <div className="space-y-4">
+            {/* Balance Card */}
+            <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 border-0 text-white p-6">
+              <p className="text-emerald-100 text-sm mb-2">Joriy Balans</p>
+              <p className="text-4xl font-bold">{selectedBalance}</p>
+              <p className="text-emerald-100 text-sm mt-2">{selectedCard}</p>
+            </Card>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => setActiveTab("transfer")}
+                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition"
+                data-testid="button-quick-transfer"
+              >
+                <ArrowRightLeft className="w-5 h-5 mx-auto mb-1" />
+                O'tkazma
+              </button>
+              <button
+                onClick={() => setActiveTab("payments")}
+                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition"
+                data-testid="button-quick-payment"
+              >
+                <Zap className="w-5 h-5 mx-auto mb-1" />
+                To'lov
+              </button>
+              <button
+                onClick={() => setActiveTab("qr")}
+                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition"
+                data-testid="button-quick-qr"
+              >
+                <QrCode className="w-5 h-5 mx-auto mb-1" />
+                QR
+              </button>
+            </div>
+
+            {/* All Features */}
+            <div>
+              <h2 className="text-lg font-semibold mb-3">Xizmatlar</h2>
+              <div className="grid grid-cols-2 gap-2">
+                {features.map((feature) => {
+                  const Icon = feature.icon;
+                  return (
+                    <button
+                      key={feature.id}
+                      onClick={() =>
+                        setActiveTab(
+                          feature.id as TabType | "home" | "transfer" | "payments" | "qr" | "history" | "settings"
+                        )
+                      }
+                      className={`bg-gradient-to-br ${feature.color} text-white p-4 rounded-lg hover:shadow-lg transition text-left`}
+                      data-testid={`button-feature-${feature.id}`}
+                    >
+                      <Icon className="w-6 h-6 mb-2" />
+                      <p className="font-medium text-sm">{feature.title}</p>
+                      <p className="text-xs opacity-90">{feature.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+
+      case "transfer":
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Pul O'tkazmalar</h2>
+            <Card className="bg-slate-800 border-slate-700 p-4 space-y-3">
+              <div>
+                <label className="text-sm text-slate-300">Karta raqami yoki Payme ID</label>
+                <input
+                  type="text"
+                  placeholder="9860 1234 5678 9012"
+                  className="w-full bg-slate-700 border-slate-600 text-white p-2 rounded mt-1"
+                  data-testid="input-transfer-account"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-slate-300">Miqdor</label>
+                <input
+                  type="number"
+                  placeholder="10,000"
+                  className="w-full bg-slate-700 border-slate-600 text-white p-2 rounded mt-1"
+                  data-testid="input-transfer-amount"
+                />
+              </div>
+              <Button className="w-full bg-blue-600 hover:bg-blue-700" data-testid="button-send-transfer">
+                <ArrowRightLeft className="w-4 h-4 mr-2" />
+                O'tkazish
+              </Button>
+            </Card>
+          </div>
+        );
+
+      case "payments":
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Utilities & Services</h2>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                "⚡ Elektr",
+                "🔥 Gaz",
+                "💧 Suv",
+                "🌐 Internet",
+                "📱 Mobil",
+                "🚗 GIBDD",
+                "🏛️ Soliq",
+                "👨‍🎓 Ta'lim",
+                "🎮 Steam/Pubg",
+                "📺 Netflix",
+              ].map((service) => (
+                <button
+                  key={service}
+                  className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg transition"
+                  data-testid={`button-service-${service}`}
+                >
+                  {service}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+
+      case "qr":
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">QR orqali To'lov</h2>
+            <Card className="bg-slate-800 border-slate-700 p-8 text-center">
+              <QrCode className="w-32 h-32 mx-auto text-slate-400 mb-4" />
+              <p className="text-slate-300 mb-4">QR kodini skanerlash uchun kamera ishga tushiladi</p>
+              <Button className="w-full bg-purple-600 hover:bg-purple-700" data-testid="button-open-camera">
+                Kamera Ochish
+              </Button>
+            </Card>
+          </div>
+        );
+
+      case "history":
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">To'lov Tarixi</h2>
+            {[
+              { date: "26-noyabr", desc: "Transfer to Shahzod", amount: "-50,000", status: "✓" },
+              { date: "25-noyabr", desc: "Elektr to'lovi", amount: "-25,000", status: "✓" },
+              { date: "24-noyabr", desc: "Internet to'lovi", amount: "-15,000", status: "✓" },
+            ].map((tx, idx) => (
+              <Card key={idx} className="bg-slate-800 border-slate-700 p-3 flex justify-between items-center">
+                <div className="text-sm">
+                  <p className="font-medium">{tx.desc}</p>
+                  <p className="text-xs text-slate-400">{tx.date}</p>
+                </div>
+                <p className="text-red-400 font-medium">{tx.amount}</p>
+              </Card>
+            ))}
+          </div>
+        );
+
+      case "settings":
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Sozlamalar</h2>
+            <Card className="bg-slate-800 border-slate-700 p-4 space-y-3">
+              <div className="flex justify-between items-center p-3 hover:bg-slate-700 rounded cursor-pointer">
+                <span>Biometric Security (Fingerprint)</span>
+                <input type="checkbox" defaultChecked className="w-4 h-4" />
+              </div>
+              <div className="flex justify-between items-center p-3 hover:bg-slate-700 rounded cursor-pointer">
+                <span>Face ID</span>
+                <input type="checkbox" className="w-4 h-4" />
+              </div>
+              <div className="flex justify-between items-center p-3 hover:bg-slate-700 rounded cursor-pointer">
+                <span>3D Secure</span>
+                <input type="checkbox" defaultChecked className="w-4 h-4" />
+              </div>
+              <div className="flex justify-between items-center p-3 hover:bg-slate-700 rounded cursor-pointer">
+                <span>Daily Limit</span>
+                <span className="text-sm text-slate-400">500,000 so'm</span>
+              </div>
+            </Card>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        {activeTab !== "home" && (
+          <button
+            onClick={() => setActiveTab("home")}
+            className="p-2 hover:bg-slate-700 rounded-lg transition"
+            data-testid="button-back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        )}
+        {activeTab === "home" && <div />}
+        <h1 className="text-xl font-bold">Payme</h1>
+        <div />
+      </div>
+
+      {/* Content */}
+      {renderContent()}
+    </div>
+  );
+}

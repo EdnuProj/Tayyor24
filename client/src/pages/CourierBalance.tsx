@@ -74,6 +74,24 @@ export default function CourierBalance() {
           <p className="text-emerald-100 text-lg">so'm</p>
         </div>
 
+        {/* Quick Links */}
+        <div className="grid grid-cols-2 gap-3 mt-8">
+          <button
+            onClick={() => (window.location.href = "/courier/dashboard")}
+            className="bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 rounded-lg p-4 text-center transition"
+            data-testid="button-go-dashboard"
+          >
+            <p className="text-sm font-medium">📊 Panel</p>
+          </button>
+          <button
+            onClick={() => (window.location.href = "/courier/payme")}
+            className="bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 rounded-lg p-4 text-center transition"
+            data-testid="button-go-payme"
+          >
+            <p className="text-sm font-medium">💳 Payme</p>
+          </button>
+        </div>
+
         {/* Footer */}
         <div className="text-center mt-12 text-emerald-100 text-xs">
           <p>Do'kon Delivery System</p>

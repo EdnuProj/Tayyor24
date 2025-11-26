@@ -18,6 +18,7 @@ import Checkout from "@/pages/Checkout";
 // Courier App
 import CourierApp from "@/pages/CourierApp";
 import CourierBalance from "@/pages/CourierBalance";
+import CourierPayme from "@/pages/CourierPayme";
 
 // Admin Pages
 import Admin from "@/pages/Admin";
@@ -39,6 +40,7 @@ function Router() {
       {/* Courier Routes */}
       <Route path="/courier" component={CourierBalance} />
       <Route path="/courier/dashboard" component={CourierApp} />
+      <Route path="/courier/payme" component={CourierPayme} />
 
       {/* Store Routes */}
       <Route path="/" component={Home} />
