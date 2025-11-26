@@ -25,6 +25,7 @@ import AdminPromoCodes from "@/pages/admin/PromoCodes";
 import AdminRassilka from "@/pages/admin/Rassilka";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminCouriers from "@/pages/admin/Couriers";
+import AdminBanners from "@/pages/admin/Banners";
 
 import NotFound from "@/pages/not-found";
 
