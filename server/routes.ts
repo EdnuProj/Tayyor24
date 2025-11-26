@@ -1106,6 +1106,56 @@ Buyurtma: #${order.orderNumber}
     }
   });
 
+  app.post("/api/courier/update-order-status", async (req, res) => {
+    try {
+      const { orderId, status } = req.body;
+      if (!orderId || !status) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Update order status
+      const order = await storage.updateOrder(orderId, { status });
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      // Send notification to group
+      const settings = await storage.getSettings();
+      if (settings.telegramBotToken && settings.telegramGroupId) {
+        const statusText = status === "shipping" ? "🚗 YO'LDA" : "✅ YETKAZILDI";
+        const message = `
+${statusText}
+
+Buyurtma: #${order.orderNumber}
+Mijoz: ${order.customerName}
+📞 ${order.customerPhone}
+
+Jami: ${order.total} so'm
+        `.trim();
+
+        try {
+          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+          await fetch(telegramUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: settings.telegramGroupId,
+              text: message,
+              parse_mode: "Markdown",
+            }),
+          });
+        } catch (telegramError) {
+          console.error("Telegram notification failed:", telegramError);
+        }
+      }
+
+      res.json({ success: true, order });
+    } catch (error) {
+      console.error("Update order status error:", error);
+      res.status(500).json({ error: "Failed to update order status" });
+    }
+  });
+
   app.post("/api/courier/transfer", async (req, res) => {
     try {
       const { fromTelegramId, toCardNumber, amount } = req.body;

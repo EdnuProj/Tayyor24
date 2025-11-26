@@ -134,6 +134,8 @@ export default function CourierPayme() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [orders, setOrders] = useState<Assignment[]>([]);
   const [acceptingOrderId, setAcceptingOrderId] = useState<string>("");
+  const [selectedOrder, setSelectedOrder] = useState<Assignment | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -165,7 +167,7 @@ export default function CourierPayme() {
     }
   };
 
-  const handleAcceptOrder = async (orderId: string, assignmentId: string) => {
+  const handleAcceptOrder = async (orderId: string, assignmentId: string, assignment: Assignment) => {
     setAcceptingOrderId(orderId);
     try {
       const res = await fetch("/api/courier/accept-order", {
@@ -185,10 +187,13 @@ export default function CourierPayme() {
 
       toast({
         title: "✅ Buyurtma qabul qilindi!",
-        description: "Guruhda siz buyurtmani oldingiz deya xabar yuborildi",
       });
 
-      // Refresh orders - pending orders will be filtered
+      // Set selected order and show detail view
+      setSelectedOrder(assignment);
+      setActiveTab("orders");
+      
+      // Refresh orders
       setTimeout(() => fetchCourierData(telegramId), 500);
     } catch (error: any) {
       toast({
@@ -198,6 +203,40 @@ export default function CourierPayme() {
       });
     } finally {
       setAcceptingOrderId("");
+    }
+  };
+
+  const handleUpdateOrderStatus = async (status: "shipping" | "delivered") => {
+    if (!selectedOrder) return;
+    setUpdatingStatus(true);
+    try {
+      const res = await fetch("/api/courier/update-order-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: selectedOrder.orderId,
+          status,
+          courierName: "",
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update status");
+
+      toast({
+        title: "✅ Holat yangilandi!",
+        description: status === "shipping" ? "Yo'lda" : "Yetkazildi",
+      });
+
+      setSelectedOrder(null);
+      setActiveTab("orders");
+      setTimeout(() => fetchCourierData(telegramId), 500);
+    } catch (error: any) {
+      toast({
+        title: "❌ Xatolik",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -486,6 +525,59 @@ export default function CourierPayme() {
         );
 
       case "orders":
+        if (selectedOrder) {
+          return (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">Buyurtma Tafsilotlari</h2>
+              <Card className="bg-slate-800 border-slate-700 p-4 space-y-3">
+                <div>
+                  <p className="text-slate-400 text-sm">Buyurtma ID</p>
+                  <p className="text-white font-bold text-lg">#{selectedOrder.orderId?.substring(0, 8)}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 text-sm">Mijoz</p>
+                  <p className="text-white">Sarvar</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 text-sm">Telefon</p>
+                  <p className="text-white">+998 99 907 07 02</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 text-sm">Jami summa</p>
+                  <p className="text-white font-bold text-lg">141,282 UZS</p>
+                </div>
+                <div className="bg-slate-700 p-3 rounded">
+                  <p className="text-slate-400 text-xs mb-2">📍 Manzil</p>
+                  <iframe
+                    src="https://yandex.uz/map-widget/v1/?ll=69.240073,41.299496&z=15&pt=69.240073,41.299496,pm2pm0"
+                    width="100%"
+                    height="250"
+                    frameBorder="0"
+                    style={{ borderRadius: "8px" }}
+                  ></iframe>
+                </div>
+              </Card>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleUpdateOrderStatus("shipping")}
+                  disabled={updatingStatus}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  data-testid="button-yolda"
+                >
+                  🚗 Yo'lda
+                </Button>
+                <Button
+                  onClick={() => handleUpdateOrderStatus("delivered")}
+                  disabled={updatingStatus}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  data-testid="button-delivered"
+                >
+                  ✅ Yetkazildi
+                </Button>
+              </div>
+            </div>
+          );
+        }
         return (
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Buyurtmalar</h2>
@@ -515,7 +607,7 @@ export default function CourierPayme() {
                     <p className="text-slate-300 text-sm mt-2">📍 Manzil</p>
                   </div>
                   <Button
-                    onClick={() => handleAcceptOrder(assignment.orderId, assignment.id)}
+                    onClick={() => handleAcceptOrder(assignment.orderId, assignment.id, assignment)}
                     disabled={acceptingOrderId === assignment.orderId}
                     className="w-full bg-green-600 hover:bg-green-700"
                     data-testid={`button-accept-order-${assignment.orderId}`}
