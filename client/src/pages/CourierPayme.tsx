@@ -759,25 +759,28 @@ export default function CourierPayme() {
                     ) : (
                       <div className="flex gap-2">
                         <Button
-                          onClick={() => {
-                            if (assignment.status === "accepted") {
-                              handleUpdateOrderStatus("shipping");
-                            } else if (assignment.status === "shipping") {
-                              handleUpdateOrderStatus("delivered");
-                            }
-                          }}
+                          onClick={() => handleUpdateOrderStatus("accepted")}
                           disabled={updatingStatus}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700"
-                          data-testid={`button-progress-${assignment.orderId}`}
+                          className={`flex-1 ${assignment.status === "accepted" ? "bg-green-600 hover:bg-green-700" : "bg-slate-600 hover:bg-slate-700"}`}
+                          data-testid={`button-status-jarayonda-${assignment.orderId}`}
                         >
-                          {updatingStatus ? "Yangilanmoqda..." : assignment.status === "accepted" ? "Yo'lda" : assignment.status === "shipping" ? "Yetkazildi" : "Tafsilotni Ko'rish"}
+                          ⏳ Jarayonda
                         </Button>
                         <Button
-                          onClick={() => setSelectedOrder(assignment)}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700"
-                          data-testid={`button-view-order-${assignment.orderId}`}
+                          onClick={() => handleUpdateOrderStatus("shipping")}
+                          disabled={updatingStatus}
+                          className={`flex-1 ${assignment.status === "shipping" ? "bg-blue-600 hover:bg-blue-700" : "bg-slate-600 hover:bg-slate-700"}`}
+                          data-testid={`button-status-yolda-${assignment.orderId}`}
                         >
-                          📋 Tafsilotlarni Ko'rish
+                          🚗 Yo'lda
+                        </Button>
+                        <Button
+                          onClick={() => handleUpdateOrderStatus("delivered")}
+                          disabled={updatingStatus}
+                          className={`flex-1 ${assignment.status === "delivered" ? "bg-green-600 hover:bg-green-700" : "bg-slate-600 hover:bg-slate-700"}`}
+                          data-testid={`button-status-yetkazildi-${assignment.orderId}`}
+                        >
+                          ✅ Yetkazildi
                         </Button>
                       </div>
                     )}
