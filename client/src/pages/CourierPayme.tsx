@@ -683,36 +683,14 @@ export default function CourierPayme() {
                   </div>
                 </div>
               </Card>
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  {!isDelivered && (
-                    <Button
-                      onClick={() => {
-                        if (!isAccepted) {
-                          handleUpdateOrderStatus("accepted");
-                        } else if (!isShipping) {
-                          handleUpdateOrderStatus("shipping");
-                        } else {
-                          handleUpdateOrderStatus("delivered");
-                        }
-                      }}
-                      disabled={updatingStatus}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700"
-                      data-testid="button-progress"
-                    >
-                      {updatingStatus ? "⏳ Yangilanmoqda..." : !isAccepted ? "⏳ Jarayonda" : !isShipping ? "🚗 Yo'lda" : "📍 Yetkazildi"}
-                    </Button>
-                  )}
-                </div>
-                <Button
-                  onClick={() => setSelectedOrder(null)}
-                  variant="outline"
-                  className="w-full"
-                  data-testid="button-close-detail"
-                >
-                  ❌ Tafsilotdan Chiqish
-                </Button>
-              </div>
+              <Button
+                onClick={() => setSelectedOrder(null)}
+                variant="outline"
+                className="w-full"
+                data-testid="button-close-detail"
+              >
+                ❌ Tafsilotdan Chiqish
+              </Button>
             </div>
           );
         }
