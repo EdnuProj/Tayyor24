@@ -1,7 +1,7 @@
- import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import { StoreLayout } from "@/components/layout/StoreLayout";
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { ProductFilters, type FilterState } from "@/components/products/ProductFilters";
@@ -31,6 +31,10 @@ export default function Products() {
   const [location] = useLocation();
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [searchInput, setSearchInput] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const ITEMS_PER_PAGE = 12;
 
   // Parse URL params on mount
   useEffect(() => {
@@ -130,11 +134,24 @@ export default function Products() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setFilters((prev) => ({ ...prev, search: searchInput }));
+    setCurrentPage(1);
+  };
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(startIdx, endIdx);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    if (containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   return (
     <StoreLayout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8" ref={containerRef}>
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Mahsulotlar</h1>
@@ -164,9 +181,10 @@ export default function Products() {
 
           <Select
             value={filters.sortBy}
-            onValueChange={(value: FilterState["sortBy"]) =>
-              setFilters((prev) => ({ ...prev, sortBy: value }))
-            }
+            onValueChange={(value: FilterState["sortBy"]) => {
+              setFilters((prev) => ({ ...prev, sortBy: value }));
+              setCurrentPage(1);
+            }}
           >
             <SelectTrigger className="w-[180px]" data-testid="select-sort">
               <SelectValue placeholder="Saralash" />
@@ -183,7 +201,50 @@ export default function Products() {
         {/* Main Content */}
         <div>
           {/* Product Grid */}
-          <ProductGrid products={filteredProducts} isLoading={loadingProducts} />
+          <ProductGrid products={paginatedProducts} isLoading={loadingProducts} />
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-12 flex items-center justify-center gap-2 flex-wrap">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                data-testid="button-prev-page-products"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Orqasi
+              </Button>
+
+              <div className="flex gap-1 flex-wrap justify-center">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .slice(Math.max(0, currentPage - 2), Math.min(totalPages, currentPage + 1))
+                  .map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePageChange(page)}
+                      data-testid={`button-page-products-${page}`}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                data-testid="button-next-page-products"
+              >
+                Keyingi
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </StoreLayout>
