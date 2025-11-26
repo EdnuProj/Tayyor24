@@ -816,6 +816,38 @@ Buyurtma: #${order.orderNumber}
         return res.json({ ok: true });
       }
 
+      // Handle location messages
+      if (update.message?.location) {
+        const { location, chat, from } = update.message;
+        const chatId = chat?.id?.toString();
+        const botToken = process.env.TELEGRAM_BOT_TOKEN;
+        
+        if (chatId && location?.latitude && location?.longitude) {
+          // Find courier and update their location
+          const courier = await storage.getCourierByTelegramId(chatId);
+          if (courier) {
+            await storage.updateCourier(courier.id, {
+              latitude: location.latitude,
+              longitude: location.longitude,
+            });
+            
+            // Confirm location saved
+            const botUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            await fetch(botUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: "✅ Joylashuvingiz saqlandi! Yaqin buyurtmalarni qabul qila olasiz.",
+                reply_markup: { remove_keyboard: true },
+              }),
+            });
+          }
+        }
+        
+        return res.json({ ok: true });
+      }
+
       // Handle text messages
       if (update.message) {
         const { text, chat, from } = update.message;
@@ -858,6 +890,23 @@ Buyurtma: #${order.orderNumber}
                 text: "*Xush Kelibsiz, Kuryer!* 🚚\n\nYour delivery dashboard",
                 parse_mode: "Markdown",
                 reply_markup: inlineKeyboard,
+              }),
+            });
+
+            // Ask for location
+            await fetch(botUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: "📍 Iltimos, joylashuvingizni ulashing. Bu yaqin buyurtmalarni topish uchun zarur.",
+                reply_markup: {
+                  keyboard: [
+                    [{ text: "📍 Joylashuvni Ulashing", request_location: true }],
+                  ],
+                  one_time_keyboard: true,
+                  resize_keyboard: true,
+                },
               }),
             });
           } else {
