@@ -132,8 +132,13 @@ export default function CourierPayme() {
     }
     
     const amount = parseInt(transferAmount);
-    if (amount <= 0 || amount > courierBalance) {
+    if (amount <= 0) {
       toast({ title: "❌ Noto'g'ri miqdor", variant: "destructive" });
+      return;
+    }
+
+    if (amount > courierBalance) {
+      toast({ title: "❌ Balans yetarli emas", description: `Sizda ${courierBalance} so'm bor`, variant: "destructive" });
       return;
     }
 
@@ -149,25 +154,26 @@ export default function CourierPayme() {
         }),
       });
       
-      if (!res.ok) throw new Error("Transfer failed");
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Transfer failed");
+      }
       
       const data = await res.json();
       toast({ 
-        title: "✅ O'tkazma muvaffaqiyatli amalga oshdi!",
-        description: `${amount} so'm ${transferCard} ga yuborildi`
+        title: "✅ O'tkazma muvaffaqiyatli!",
+        description: `${amount.toLocaleString()} so'm yuborildi. Yangi balans: ${(courierBalance - amount).toLocaleString()} so'm`
       });
       
-      setCourierBalance(courierBalance - amount);
       setTransferCard("");
       setTransferAmount("");
-      setActiveTab("history");
       
-      // Refresh data after 1 second
-      setTimeout(() => fetchCourierData(telegramId), 1000);
-    } catch (error) {
+      // Refresh data immediately
+      fetchCourierData(telegramId);
+    } catch (error: any) {
       toast({ 
         title: "❌ Xatolik", 
-        description: "O'tkazma amalga oshirilmadi",
+        description: error.message || "O'tkazma amalga oshirilmadi",
         variant: "destructive"
       });
     } finally {

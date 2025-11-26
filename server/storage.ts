@@ -895,15 +895,6 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const transaction = { id, courierId, amount, type, description, orderId: orderId || null, createdAt: new Date() };
     this.courierTransactions.set(id, transaction);
-    
-    // Update courier balance
-    if (type === "order_debit") {
-      const courier = this.couriers.get(courierId);
-      if (courier) {
-        courier.balance = (courier.balance || 0) + amount; // amount is negative
-        this.couriers.set(courierId, courier);
-      }
-    }
     return transaction;
   }
 
