@@ -145,7 +145,7 @@ export default function Products() {
 
         {/* Search and Sort Bar */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <form onSubmit={handleSearch} className="flex gap-2" style={{ maxWidth: "320px" }}>
+          <form onSubmit={handleSearch} className="flex-1 flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -157,7 +157,7 @@ export default function Products() {
                 data-testid="input-product-search"
               />
             </div>
-            <Button type="submit" data-testid="button-search" size="sm">
+            <Button type="submit" data-testid="button-search">
               Qidirish
             </Button>
           </form>
