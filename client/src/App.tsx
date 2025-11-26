@@ -33,6 +33,7 @@ import AdminCouriers from "@/pages/admin/Couriers";
 import AdminBanners from "@/pages/admin/Banners";
 import AdminPayments from "@/pages/admin/Payments";
 import AdminCategories from "@/pages/admin/Categories";
+import CategoryProducts from "@/pages/admin/CategoryProducts";
 
 import NotFound from "@/pages/not-found";
 
@@ -147,6 +148,14 @@ function Router() {
         component={() => (
           <AdminGuard>
             <AdminCategories />
+          </AdminGuard>
+        )}
+      />
+      <Route
+        path="/admin/categories/:categoryId/products"
+        component={() => (
+          <AdminGuard>
+            <CategoryProducts />
           </AdminGuard>
         )}
       />

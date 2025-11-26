@@ -3,7 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, GripVertical, Loader2, ChevronLeft, ArrowRight } from "lucide-react";
+import { useNavigate } from "wouter";
+import { Plus, Trash2, GripVertical, Loader2, ChevronLeft, ArrowRight, Package } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ const categorySchema = z.object({
 type CategoryForm = z.infer<typeof categorySchema>;
 
 export default function AdminCategories() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
@@ -222,14 +224,25 @@ export default function AdminCategories() {
                     <p className="text-sm text-muted-foreground">{category.slug}</p>
                   </div>
                   {!selectedParentId && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedParentId(category.id)}
-                      data-testid={`button-view-subcategories-${category.id}`}
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/admin/categories/${category.id}/products`)}
+                        data-testid={`button-view-products-${category.id}`}
+                        title="Mahsulotlar"
+                      >
+                        <Package className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedParentId(category.id)}
+                        data-testid={`button-view-subcategories-${category.id}`}
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </>
                   )}
                   <Button
                     variant="ghost"
