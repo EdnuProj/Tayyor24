@@ -235,7 +235,7 @@ export default function AdminBanners() {
                               onClick={() => {
                                 setEditingBanner(banner);
                                 form.reset(banner);
-                                setImageInput("");
+                                setImageInput(banner.imageUrl);
                                 setDialogOpen(true);
                               }}
                             >
