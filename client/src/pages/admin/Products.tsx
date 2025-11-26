@@ -75,6 +75,7 @@ const productSchema = z.object({
   sizes: z.array(z.string()).optional(),
   containers: z.array(z.string()).optional(),
   stock: z.coerce.number().min(0).default(0),
+  sold: z.coerce.number().min(0).default(0),
   isPopular: z.boolean().default(false),
   isNew: z.boolean().default(true),
 });
@@ -132,6 +133,7 @@ export default function AdminProducts() {
       sizes: [],
       containers: [],
       stock: 0,
+      sold: 0,
       isPopular: false,
       isNew: true,
     },

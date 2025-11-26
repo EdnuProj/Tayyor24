@@ -33,6 +33,7 @@ export const products = pgTable("products", {
   sizes: text("sizes").array(),
   containers: text("containers").array(),
   stock: integer("stock").notNull().default(0),
+  sold: integer("sold").notNull().default(0),
   rating: real("rating").default(0),
   reviewCount: integer("review_count").default(0),
   isPopular: boolean("is_popular").default(false),
