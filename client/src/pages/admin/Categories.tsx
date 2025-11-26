@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useNavigate } from "wouter";
 import { Plus, Trash2, GripVertical, Loader2, ChevronLeft, ArrowRight, Package } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,6 @@ const categorySchema = z.object({
 type CategoryForm = z.infer<typeof categorySchema>;
 
 export default function AdminCategories() {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
@@ -228,7 +226,7 @@ export default function AdminCategories() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(`/admin/categories/${category.id}/products`)}
+                        onClick={() => window.location.href = `/admin/categories/${category.id}/products`}
                         data-testid={`button-view-products-${category.id}`}
                         title="Mahsulotlar"
                       >
