@@ -7,6 +7,8 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { MapPicker } from "@/components/MapPicker";
+import { useState as useStateX } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Form,
@@ -68,6 +70,7 @@ export default function AdminSettings() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [showMapPicker, setShowMapPicker] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
 
@@ -678,53 +681,50 @@ export default function AdminSettings() {
 
               <div>
                 <FormLabel>Joylashuv (Opsional)</FormLabel>
-                <FormDescription>Google Maps-dan koordinatalarni kiriting</FormDescription>
+                <FormDescription>Xaritadan joylashuvni tanlang</FormDescription>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={categoryForm.control}
-                  name="latitude"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Latitude</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type="number"
-                          step="0.000001"
-                          placeholder="41.2995"
-                          data-testid="input-category-latitude"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={categoryForm.control}
-                  name="longitude"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Longitude</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field}
-                          type="number"
-                          step="0.000001"
-                          placeholder="69.2401"
-                          data-testid="input-category-longitude"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {!showMapPicker ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowMapPicker(true)}
+                  data-testid="button-open-map"
+                >
+                  🗺️ Xaritadan tanlash
+                </Button>
+              ) : (
+                <>
+                  <MapPicker
+                    latitude={categoryForm.watch('latitude')}
+                    longitude={categoryForm.watch('longitude')}
+                    onLocationSelect={(lat, lng) => {
+                      categoryForm.setValue('latitude', lat);
+                      categoryForm.setValue('longitude', lng);
+                      setShowMapPicker(false);
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setShowMapPicker(false)}
+                    data-testid="button-close-map"
+                  >
+                    Yopish
+                  </Button>
+                </>
+              )}
 
-              <p className="text-xs text-muted-foreground">
-                🗺️ Google Maps-dan koordinatalarni topish uchun: Maps-ni oching, joylashuvga bosing va koordinatalarni ko'ching.
-              </p>
+              {categoryForm.watch('latitude') && categoryForm.watch('longitude') && (
+                <div className="bg-muted p-3 rounded-md">
+                  <p className="text-sm font-semibold">Tanlangan joylashuv:</p>
+                  <p className="text-xs text-muted-foreground">
+                    Lat: {categoryForm.watch('latitude')?.toFixed(6)} | Lng: {categoryForm.watch('longitude')?.toFixed(6)}
+                  </p>
+                </div>
+              )}
 
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setCategoryDialogOpen(false)}>
