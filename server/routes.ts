@@ -1271,33 +1271,56 @@ Sababu: Redd etilgan
         return res.status(404).json({ error: "Order not found" });
       }
 
-      // Send notification to group
+      // Send notifications
       const settings = await storage.getSettings();
-      if (settings.telegramBotToken && settings.telegramGroupId) {
+      if (settings.telegramBotToken) {
+        const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
         let statusText = "";
-        let messageToGroup = "";
         let messageToCustomer = "";
+        let messageToGroup = "";
         
         if (status === "accepted") {
           statusText = "⏳ JARAYONDA";
+          messageToCustomer = `
+⏳ *SIZNING BUYURTMA JARAYONDA*
+
+Buyurtma raqam: #${order.orderNumber}
+Kuryer tez orada yetkazib beradi.
+
+📍 Manzil: ${order.customerAddress}
+💰 Jami: ${order.total} so'm
+
+Biron vaqtda ijobiy yangiliklarning kutmoqdamiz!
+          `.trim();
+          
           messageToGroup = `
 ${statusText}
 
 Buyurtma: #${order.orderNumber}
 Mijoz: ${order.customerName}
 📞 ${order.customerPhone}
-
 Jami: ${order.total} so'm
           `.trim();
         } else if (status === "shipping") {
           statusText = "🚗 YO'LDA";
+          messageToCustomer = `
+🚗 *BUYURTMA YO'LDA*
+
+Buyurtma raqam: #${order.orderNumber}
+Kuryer sizga olib kelmoqda!
+
+📍 Manzil: ${order.customerAddress}
+⏱️ Tez keling, jisham shahar bo'ylab yo'lda!
+
+Rahmalingiz uchun!
+          `.trim();
+          
           messageToGroup = `
 ${statusText}
 
 Buyurtma: #${order.orderNumber}
 Mijoz: ${order.customerName}
 📞 ${order.customerPhone}
-
 Jami: ${order.total} so'm
           `.trim();
         } else if (status === "delivered") {
@@ -1311,6 +1334,20 @@ Jami: ${order.total} so'm
             second: '2-digit'
           });
           
+          messageToCustomer = `
+✅ *BUYURTMA MUVAFFAQIYATLI YETKAZILDI!*
+
+Tabriklaymiz! Sizning buyurtma #${order.orderNumber} muvaffaqiyatli yetkazildi.
+
+📋 Buyurtma Tafsilotlari:
+• Jami narx: ${order.total} so'm
+• Manzil: ${order.customerAddress}
+• Yetkazish vaqti: ${currentTime}
+
+Xizmatdan foydalanganingiz uchun rahmat! 🙏
+Do'kon-da xarid qilib davomi bering!
+          `.trim();
+
           messageToGroup = `
 ${statusText}
 
@@ -1318,31 +1355,32 @@ Buyurtma: #${order.orderNumber}
 Mijoz: ${order.customerName}
 📞 ${order.customerPhone}
 📍 Manzil: ${order.customerAddress}
-
 Jami: ${order.total} so'm
 ⏰ Vaqt: ${currentTime}
           `.trim();
-
-          // Customer notification (send to group where customer can see it)
-          messageToCustomer = `
-✅ *SIZNING BUYURTMA YETKAZILDI!*
-
-Tabriklaymiz! Sizning buyurtma raqam #${order.orderNumber} muvaffaqiyatli yetkazildi.
-
-📋 Buyurtma Tafsilotlari:
-• Jami narx: ${order.total} so'm
-• Manzil: ${order.customerAddress}
-
-📞 Agar savollar bo'lsa: ${order.customerPhone}
-
-Xizmatdan foydalanganingiz uchun rahmat! 🙏
-          `.trim();
         }
 
-        if (messageToGroup) {
+        // Send to customer directly if telegramId exists
+        if (order.customerTelegramId && messageToCustomer) {
           try {
-            const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
-            // Send to group
+            await fetch(telegramUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: order.customerTelegramId,
+                text: messageToCustomer,
+                parse_mode: "Markdown",
+              }),
+            });
+            console.log(`Customer notification sent to ${order.customerTelegramId} for order ${order.orderNumber}`);
+          } catch (error) {
+            console.error("Failed to send customer notification:", error);
+          }
+        }
+
+        // Send to group
+        if (settings.telegramGroupId && messageToGroup) {
+          try {
             await fetch(telegramUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -1352,19 +1390,6 @@ Xizmatdan foydalanganingiz uchun rahmat! 🙏
                 parse_mode: "Markdown",
               }),
             });
-
-            // If delivered, also send customer confirmation to group
-            if (status === "delivered" && messageToCustomer) {
-              await fetch(telegramUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  chat_id: settings.telegramGroupId,
-                  text: messageToCustomer,
-                  parse_mode: "Markdown",
-                }),
-              });
-            }
           } catch (telegramError) {
             console.error("Telegram notification failed:", telegramError);
           }

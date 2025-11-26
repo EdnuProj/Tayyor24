@@ -101,6 +101,10 @@ export default function Checkout() {
         categoryId: item.product.categoryId,
       }));
 
+      // Try to get customer's telegram ID from URL params if available
+      const params = new URLSearchParams(window.location.search);
+      const customerTelegramId = params.get("telegramId") || params.get("telegram_id");
+
       const orderData = {
         orderNumber,
         customerName: data.customerName,
@@ -116,6 +120,7 @@ export default function Checkout() {
         deliveryType: data.deliveryType,
         paymentType: data.paymentType,
         status: "new",
+        customerTelegramId,
       };
 
       const res = await apiRequest("POST", "/api/orders", orderData);

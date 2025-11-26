@@ -108,6 +108,7 @@ export const orders = pgTable("orders", {
   promoCode: text("promo_code"),
   items: text("items").notNull(), // JSON string of order items
   categoryId: varchar("category_id"),
+  customerTelegramId: text("customer_telegram_id"), // Customer's Telegram ID for direct messages
   createdAt: timestamp("created_at").defaultNow(),
 });
 
