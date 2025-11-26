@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import QRCode from "qrcode";
 import {
   insertProductSchema,
   insertCategorySchema,
@@ -270,7 +271,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/orders", async (req, res) => {
     try {
       const data = insertOrderSchema.parse(req.body);
-      const order = await storage.createOrder(data);
+      
+      // Generate QR code
+      let qrCodeDataUrl = "";
+      try {
+        qrCodeDataUrl = await QRCode.toDataURL(data.id || `order_${Date.now()}`, {
+          errorCorrectionLevel: "H",
+          type: "image/jpeg",
+          quality: 0.95,
+          margin: 1,
+          width: 300,
+        });
+      } catch (qrError) {
+        console.error("QR code generation failed:", qrError);
+      }
+
+      // Create order with QR code
+      const orderData = {
+        ...data,
+        qrCode: qrCodeDataUrl,
+      };
+      const order = await storage.createOrder(orderData);
 
       // Send Telegram notification to group
       const settings = await storage.getSettings();
@@ -281,33 +302,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .join("\n");
 
         const message = `
-Yangi Buyurtma
+📦 *YANGI BUYURTMA*
 
 Raqam: #${order.orderNumber}
-Mijoz: ${order.customerName}
-Tel: ${order.customerPhone}
-Manzil: ${order.customerAddress}
+👤 Mijoz: ${order.customerName}
+📞 Tel: ${order.customerPhone}
+📍 Manzil: ${order.customerAddress}
 
-Mahsulotlar:
+🛍️ *Mahsulotlar:*
 ${itemsList}
 
-Jami: ${order.total} so'm
-To'lov: ${order.paymentType === "cash" ? "Naqd" : "Karta"}
-Yetkazish: ${order.deliveryType === "courier" ? "Kuryer" : "Olib ketish"}
+💰 Jami: ${order.total} so'm
+💳 To'lov: ${order.paymentType === "cash" ? "Naqd" : "Karta"}
+🚚 Yetkazish: ${order.deliveryType === "courier" ? "Kuryer" : "Olib ketish"}
 
-Holati: Yangi
+✅ Holati: Yangi
         `.trim();
 
         try {
-          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
-          await fetch(telegramUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: settings.telegramGroupId,
-              text: message,
-            }),
-          });
+          // Send QR code as photo to group if available
+          if (qrCodeDataUrl) {
+            const photoUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendPhoto`;
+            const base64Data = qrCodeDataUrl.split(",")[1];
+            const buffer = Buffer.from(base64Data, "base64");
+            const blob = new Blob([buffer], { type: "image/jpeg" });
+            
+            const formData = new FormData();
+            formData.append("chat_id", settings.telegramGroupId);
+            formData.append("caption", message);
+            formData.append("parse_mode", "Markdown");
+            formData.append("photo", blob, "qr.jpg");
+
+            await fetch(photoUrl, {
+              method: "POST",
+              body: formData,
+            });
+          } else {
+            // Fallback: send as text if QR generation failed
+            const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+            await fetch(telegramUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: settings.telegramGroupId,
+                text: message,
+                parse_mode: "Markdown",
+              }),
+            });
+          }
         } catch (telegramError) {
           console.error("Telegram notification failed:", telegramError);
         }
