@@ -146,6 +146,13 @@ export default function CourierPayme() {
     // Fetch courier data
     if (id) {
       fetchCourierData(id);
+      
+      // Auto-refresh every 5 seconds
+      const interval = setInterval(() => {
+        fetchCourierData(id);
+      }, 5000);
+      
+      return () => clearInterval(interval);
     }
   }, []);
 
