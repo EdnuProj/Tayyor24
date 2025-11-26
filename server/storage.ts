@@ -19,6 +19,10 @@ import {
   type InsertSiteSettings,
   type CartItemWithProduct,
   type DashboardStats,
+  type Advertisement,
+  type InsertAdvertisement,
+  type Newsletter,
+  type InsertNewsletter,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -83,6 +87,17 @@ export interface IStorage {
   getReviews(productId: string): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
 
+  // Advertisements
+  getAdvertisements(): Promise<Advertisement[]>;
+  getAdvertisement(id: string): Promise<Advertisement | undefined>;
+  createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement>;
+  updateAdvertisement(id: string, data: Partial<InsertAdvertisement>): Promise<Advertisement | undefined>;
+  deleteAdvertisement(id: string): Promise<boolean>;
+
+  // Newsletters
+  getNewsletters(): Promise<Newsletter[]>;
+  createNewsletter(newsletter: InsertNewsletter): Promise<Newsletter>;
+
   // Settings
   getSettings(): Promise<SiteSettings>;
   updateSettings(data: Partial<InsertSiteSettings>): Promise<SiteSettings>;
@@ -100,6 +115,8 @@ export class MemStorage implements IStorage {
   private customers: Map<string, Customer>;
   private promoCodes: Map<string, PromoCode>;
   private reviews: Map<string, Review>;
+  private advertisements: Map<string, Advertisement>;
+  private newsletters: Map<string, Newsletter>;
   private settings: SiteSettings;
 
   constructor() {
@@ -111,6 +128,8 @@ export class MemStorage implements IStorage {
     this.customers = new Map();
     this.promoCodes = new Map();
     this.reviews = new Map();
+    this.advertisements = new Map();
+    this.newsletters = new Map();
     this.settings = {
       id: "default",
       logoUrl: null,
