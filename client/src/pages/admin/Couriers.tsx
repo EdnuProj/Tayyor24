@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -9,8 +9,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { useToast } from "@/hooks/use-toast";
 import { insertCourierSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { Trash2, Plus, MapPin, DollarSign } from "lucide-react";
+import { Trash2, Plus, MapPin, DollarSign, Truck } from "lucide-react";
 import { useState } from "react";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import {
   Select,
   SelectContent,
@@ -98,13 +99,49 @@ export default function AdminCouriers() {
     },
   });
 
+  const stats = {
+    total: couriers.length,
+    active: couriers.filter((c: any) => c.isActive).length,
+    totalBalance: couriers.reduce((sum: number, c: any) => sum + c.balance, 0),
+  };
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold" data-testid="heading-couriers">
-          Kuryerlar Boshqaruvi
-        </h1>
-        <p className="text-secondary mt-2">Kuryerlarni qo'shish, o'zgartirish va boshqarish</p>
+    <AdminLayout title="Kuryerlar Boshqaruvi">
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card>
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <Truck className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-sm text-muted-foreground">Jami kuryerlar</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
+              <Truck className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{stats.active}</p>
+              <p className="text-sm text-muted-foreground">Faol kuryerlar</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{(stats.totalBalance / 1000).toFixed(0)}k</p>
+              <p className="text-sm text-muted-foreground">Jami balans</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Add Courier Form */}
@@ -356,6 +393,6 @@ export default function AdminCouriers() {
           </div>
         </Card>
       )}
-    </div>
+    </AdminLayout>
   );
 }
