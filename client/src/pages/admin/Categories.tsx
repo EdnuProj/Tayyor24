@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, GripVertical, Loader2, ChevronLeft, ArrowRight, Package } from "lucide-react";
+import { Plus, Trash2, GripVertical, Loader2, ChevronLeft, ArrowRight, Package, MapPin } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,8 @@ import type { Category } from "@shared/schema";
 const categorySchema = z.object({
   name: z.string().min(2, "Kamida 2 ta belgi"),
   icon: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 type CategoryForm = z.infer<typeof categorySchema>;
@@ -41,6 +43,9 @@ export default function AdminCategories() {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
+  const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const mapRef = useRef<any>(null);
+  const mapInstanceRef = useRef<any>(null);
 
   const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -54,8 +59,36 @@ export default function AdminCategories() {
     defaultValues: {
       name: "",
       icon: "",
+      latitude: undefined,
+      longitude: undefined,
     },
   });
+
+  // Initialize Yandex Map
+  useEffect(() => {
+    if (dialogOpen && mapRef.current && !mapInstanceRef.current && !selectedParentId && typeof window !== 'undefined' && (window as any).ymaps) {
+      (window as any).ymaps.ready(() => {
+        mapInstanceRef.current = new (window as any).ymaps.Map(mapRef.current, {
+          center: [41.2995, 69.2401], // Tashkent center
+          zoom: 12,
+        });
+
+        mapInstanceRef.current.events.add('click', (e: any) => {
+          const coords = e.get('coordPosition');
+          setMapCoords({ lat: coords[0], lng: coords[1] });
+          form.setValue('latitude', coords[0]);
+          form.setValue('longitude', coords[1]);
+        });
+      });
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.destroy();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [dialogOpen, selectedParentId, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: CategoryForm) => {
@@ -65,6 +98,8 @@ export default function AdminCategories() {
         icon: data.icon || "📦",
         order: selectedParentId ? subcategories.length : parentCategories.length,
         parentId: selectedParentId || null,
+        latitude: data.latitude,
+        longitude: data.longitude,
       });
       return response.json();
     },
@@ -73,6 +108,7 @@ export default function AdminCategories() {
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       form.reset();
       setDialogOpen(false);
+      setMapCoords(null);
     },
     onError: () => {
       toast({ title: "Xato yuz berdi", variant: "destructive" });
@@ -263,7 +299,7 @@ export default function AdminCategories() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className={!selectedParentId ? "max-w-2xl max-h-[90vh] overflow-y-auto" : ""}>
           <DialogHeader>
             <DialogTitle>
               {editingCategory ? "Kategoriyani tahrirlash" : "Yangi kategoriya"}
@@ -297,8 +333,27 @@ export default function AdminCategories() {
                   </FormItem>
                 )}
               />
+              
+              {!selectedParentId && (
+                <>
+                  <FormLabel className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Joylashuv (Yandex Maps)
+                  </FormLabel>
+                  <div ref={mapRef} className="h-64 border rounded-md w-full" data-testid="map-container" />
+                  {mapCoords && (
+                    <p className="text-sm text-muted-foreground">
+                      Tanlangan joylashuv: {mapCoords.lat.toFixed(4)}, {mapCoords.lng.toFixed(4)}
+                    </p>
+                  )}
+                </>
+              )}
+              
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => {
+                  setDialogOpen(false);
+                  setMapCoords(null);
+                }}>
                   Bekor qilish
                 </Button>
                 <Button type="submit" disabled={createMutation.isPending} data-testid="button-save-category">
