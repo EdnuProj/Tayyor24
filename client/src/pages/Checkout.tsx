@@ -47,21 +47,14 @@ export default function Checkout() {
   const [geoLoading, setGeoLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: settings } = useQuery<SiteSettings>({
-    queryKey: ["/api/settings"],
-  });
-
   const ITEMS_PER_PAGE = 10;
   const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIdx = startIdx + ITEMS_PER_PAGE;
   const paginatedItems = items.slice(startIdx, endIdx);
 
-  const deliveryPrice = settings?.deliveryPrice || 15000;
-  const freeDeliveryThreshold = settings?.freeDeliveryThreshold || 500000;
-  const isFreeDelivery = subtotal >= freeDeliveryThreshold;
-  const actualDeliveryPrice = isFreeDelivery ? 0 : deliveryPrice;
-  const total = subtotal + actualDeliveryPrice;
+  const deliveryPrice = 15000;
+  const total = subtotal + deliveryPrice;
 
   // Get telegramId from localStorage (saved from URL params in Home.tsx)
   const storedTelegramId = typeof window !== "undefined" ? localStorage.getItem("customerTelegramId") || "" : "";

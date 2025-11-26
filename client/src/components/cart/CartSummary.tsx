@@ -13,22 +13,18 @@ import { useToast } from "@/hooks/use-toast";
 
 interface CartSummaryProps {
   deliveryPrice?: number;
-  freeDeliveryThreshold?: number;
 }
 
 export function CartSummary({
   deliveryPrice = 15000,
-  freeDeliveryThreshold = 500000,
 }: CartSummaryProps) {
   const { subtotal, itemCount } = useCart();
   const { toast } = useToast();
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number } | null>(null);
 
-  const isFreeDelivery = subtotal >= freeDeliveryThreshold;
-  const actualDeliveryPrice = isFreeDelivery ? 0 : deliveryPrice;
   const discountAmount = appliedPromo ? (subtotal * appliedPromo.discount) / 100 : 0;
-  const total = subtotal + actualDeliveryPrice - discountAmount;
+  const total = subtotal + deliveryPrice - discountAmount;
 
   const promoMutation = useMutation({
     mutationFn: async (code: string) => {
@@ -76,27 +72,6 @@ export function CartSummary({
         <CardTitle className="text-lg">Buyurtma xulosasi</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Free Delivery Progress */}
-        {!isFreeDelivery && (
-          <div className="space-y-2 p-3 rounded-md bg-muted/50">
-            <div className="flex items-center gap-2 text-sm">
-              <Truck className="h-4 w-4 text-primary" />
-              <span>
-                Bepul yetkazib berish uchun yana{" "}
-                <span className="font-semibold text-primary">
-                  {formatPrice(freeDeliveryThreshold - subtotal)}
-                </span>
-              </span>
-            </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary transition-all"
-                style={{ width: `${Math.min((subtotal / freeDeliveryThreshold) * 100, 100)}%` }}
-              />
-            </div>
-          </div>
-        )}
-
         {/* Promo Code */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm font-medium">
@@ -161,9 +136,7 @@ export function CartSummary({
 
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Yetkazib berish</span>
-            <span className={isFreeDelivery ? "text-green-600" : ""}>
-              {isFreeDelivery ? "Bepul" : formatPrice(actualDeliveryPrice)}
-            </span>
+            <span>{formatPrice(deliveryPrice)}</span>
           </div>
         </div>
 
