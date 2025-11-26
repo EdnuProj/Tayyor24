@@ -17,6 +17,32 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auto-setup Telegram webhook on server start
+  const setupTelegramWebhook = async () => {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!botToken) return;
+    
+    try {
+      const webhookUrl = `https://${process.env.REPLIT_DOMAINS || 'localhost'}/api/telegram-webhook`;
+      const setWebhookUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;
+      
+      const response = await fetch(setWebhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: webhookUrl, drop_pending_updates: false }),
+      });
+      
+      if (response.ok) {
+        console.log("✅ Telegram webhook configured at startup");
+      }
+    } catch (error) {
+      console.log("ℹ️ Telegram webhook setup skipped at startup");
+    }
+  };
+
+  // Setup webhook after a short delay
+  setTimeout(setupTelegramWebhook, 2000);
+
   // ========== PRODUCTS ==========
   app.get("/api/products", async (req, res) => {
     try {
