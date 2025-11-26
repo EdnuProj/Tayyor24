@@ -13,6 +13,7 @@ import {
   LogOut,
   Send,
   Truck,
+  Image,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -32,6 +33,7 @@ const navItems = [
   { href: "/admin/couriers", icon: Truck, label: "Kuryerlar" },
   { href: "/admin/promo-codes", icon: Tag, label: "Promokodlar" },
   { href: "/admin/rassilka", icon: Send, label: "Rassilka" },
+  { href: "/admin/banners", icon: Image, label: "Reklamalar" },
   { href: "/admin/settings", icon: Settings, label: "Sozlamalar" },
 ];
 
