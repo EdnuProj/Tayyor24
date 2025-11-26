@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,7 +24,7 @@ import { formatPrice, generateOrderNumber, getSessionId } from "@/lib/utils";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { OrderItem } from "@shared/schema";
+import type { OrderItem, SiteSettings } from "@shared/schema";
 
 const checkoutSchema = z.object({
   customerName: z.string().min(2, "Ism kamida 2 ta belgi bo'lishi kerak"),
@@ -47,14 +47,18 @@ export default function Checkout() {
   const [geoLoading, setGeoLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const { data: settings } = useQuery<SiteSettings>({
+    queryKey: ["/api/settings"],
+  });
+
   const ITEMS_PER_PAGE = 10;
   const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIdx = startIdx + ITEMS_PER_PAGE;
   const paginatedItems = items.slice(startIdx, endIdx);
 
-  const deliveryPrice = 15000;
-  const freeDeliveryThreshold = 500000;
+  const deliveryPrice = settings?.deliveryPrice || 15000;
+  const freeDeliveryThreshold = settings?.freeDeliveryThreshold || 500000;
   const isFreeDelivery = subtotal >= freeDeliveryThreshold;
   const actualDeliveryPrice = isFreeDelivery ? 0 : deliveryPrice;
   const total = subtotal + actualDeliveryPrice;
