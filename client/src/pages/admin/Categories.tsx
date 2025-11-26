@@ -44,6 +44,29 @@ export default function AdminCategories() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [showLocationInput, setShowLocationInput] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
+
+  const handleSelectLocation = () => {
+    setGettingLocation(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          form.setValue('latitude', latitude.toString());
+          form.setValue('longitude', longitude.toString());
+          toast({ title: "Joylashuv olingan ✓", description: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` });
+          setGettingLocation(false);
+        },
+        (error) => {
+          toast({ title: "Xato", description: "Joylashuvni ololmasdim. Yandex Maps dan qo'l bilan kiriting", variant: "destructive" });
+          setGettingLocation(false);
+        }
+      );
+    } else {
+      toast({ title: "Xato", description: "Geolocation qo'llab-quvvatlanmaydi", variant: "destructive" });
+      setGettingLocation(false);
+    }
+  };
 
   const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -327,12 +350,13 @@ export default function AdminCategories() {
                         type="button"
                         variant="secondary"
                         size="sm"
-                        onClick={() => window.open('https://yandex.uz/maps/', '_blank', 'width=800,height=600')}
+                        onClick={handleSelectLocation}
+                        disabled={gettingLocation}
                         className="w-full"
                         data-testid="button-open-yandex-map"
                       >
                         <MapPin className="w-4 h-4 mr-2" />
-                        Xaritadan Tanlash (Yandex Maps)
+                        {gettingLocation ? "Joylashuv olinmoqda..." : "Hozirgi Joylashuvni Tanlash"}
                       </Button>
                       
                       <div className="grid grid-cols-2 gap-3">
