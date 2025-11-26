@@ -188,6 +188,7 @@ export default function AdminProducts() {
       images: product.images,
       colors: product.colors || [],
       sizes: product.sizes || [],
+      containers: product.containers || [],
       stock: product.stock,
       isPopular: product.isPopular || false,
       isNew: product.isNew || false,
@@ -208,14 +209,6 @@ export default function AdminProducts() {
       const current = form.getValues("images");
       form.setValue("images", [...current, imageInput.trim()]);
       setImageInput("");
-    }
-  };
-
-  const handleSubmit = (data: ProductForm) => {
-    if (editingProduct) {
-      updateMutation.mutate({ ...data, id: editingProduct.id });
-    } else {
-      createMutation.mutate(data);
     }
   };
 
