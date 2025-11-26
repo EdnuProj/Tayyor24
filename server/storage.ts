@@ -119,6 +119,10 @@ export interface IStorage {
   getAssignment(orderId: string): Promise<CourierAssignment | undefined>;
   updateAssignment(id: string, data: Partial<InsertCourierAssignment>): Promise<CourierAssignment | undefined>;
 
+  // Courier Balance
+  debitCourierBalance(courierId: string, amount: number): Promise<Courier | undefined>;
+  creditCourierBalance(courierId: string, amount: number): Promise<Courier | undefined>;
+
   // Dashboard Stats
   getDashboardStats(): Promise<DashboardStats>;
 }
@@ -835,6 +839,23 @@ export class MemStorage implements IStorage {
     if (!assignment) return undefined;
     const updated = { ...assignment, ...data };
     this.assignments.set(id, updated);
+    return updated;
+  }
+
+  // Courier Balance
+  async debitCourierBalance(courierId: string, amount: number): Promise<Courier | undefined> {
+    const courier = this.couriers.get(courierId);
+    if (!courier) return undefined;
+    const updated = { ...courier, balance: courier.balance - amount };
+    this.couriers.set(courierId, updated);
+    return updated;
+  }
+
+  async creditCourierBalance(courierId: string, amount: number): Promise<Courier | undefined> {
+    const courier = this.couriers.get(courierId);
+    if (!courier) return undefined;
+    const updated = { ...courier, balance: courier.balance + amount };
+    this.couriers.set(courierId, updated);
     return updated;
   }
 

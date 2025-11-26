@@ -9,7 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { useToast } from "@/hooks/use-toast";
 import { insertCourierSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { Trash2, Plus, MapPin } from "lucide-react";
+import { Trash2, Plus, MapPin, DollarSign } from "lucide-react";
+import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,8 @@ import {
 export default function AdminCouriers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedCourier, setSelectedCourier] = useState<any>(null);
+  const [balanceAmount, setBalanceAmount] = useState<string>("");
 
   const { data: couriers = [], isLoading } = useQuery({
     queryKey: ["/api/couriers"],
@@ -70,6 +73,19 @@ export default function AdminCouriers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/couriers"] });
       toast({ title: "Kuryer o'chirildi" });
+    },
+  });
+
+  const balanceMutation = useMutation({
+    mutationFn: async ({ id, amount, type }: { id: string; amount: number; type: string }) => {
+      const res = await apiRequest("PATCH", `/api/couriers/${id}/balance`, { amount, type });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/couriers"] });
+      setSelectedCourier(null);
+      setBalanceAmount("");
+      toast({ title: "Balansi yangilandi" });
     },
   });
 
@@ -207,6 +223,9 @@ export default function AdminCouriers() {
                       >
                         {courier.isActive ? "Faol" : "Nofaol"}
                       </Badge>
+                      <Badge variant="outline" data-testid={`badge-courier-balance-${courier.id}`}>
+                        💰 {courier.balance?.toLocaleString() || 0} so'm
+                      </Badge>
                     </div>
 
                     <div className="space-y-1 text-sm text-secondary">
@@ -233,7 +252,16 @@ export default function AdminCouriers() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedCourier(courier)}
+                      data-testid={`button-manage-balance-${courier.id}`}
+                    >
+                      <DollarSign className="w-4 h-4 mr-1" />
+                      Balansi
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -262,6 +290,72 @@ export default function AdminCouriers() {
           </div>
         )}
       </div>
+
+      {/* Balance Management Modal */}
+      {selectedCourier && (
+        <Card className="p-6 fixed inset-0 m-4 max-w-md mx-auto top-1/2 -translate-y-1/2 z-50">
+          <h3 className="text-lg font-semibold mb-4">
+            Balansi Boshqarish: {selectedCourier.name}
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-secondary">Hozirgi Balansi</p>
+              <p className="text-2xl font-bold" data-testid="text-current-balance">
+                {selectedCourier.balance?.toLocaleString() || 0} so'm
+              </p>
+            </div>
+            <Input
+              type="number"
+              placeholder="Miqdor"
+              value={balanceAmount}
+              onChange={(e) => setBalanceAmount(e.target.value)}
+              data-testid="input-balance-amount"
+            />
+            <div className="flex gap-2">
+              <Button
+                className="flex-1"
+                onClick={() =>
+                  balanceMutation.mutate({
+                    id: selectedCourier.id,
+                    amount: parseInt(balanceAmount) || 0,
+                    type: "credit",
+                  })
+                }
+                disabled={balanceMutation.isPending || !balanceAmount}
+                data-testid="button-credit-balance"
+              >
+                ➕ Qo'shish
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={() =>
+                  balanceMutation.mutate({
+                    id: selectedCourier.id,
+                    amount: parseInt(balanceAmount) || 0,
+                    type: "debit",
+                  })
+                }
+                disabled={balanceMutation.isPending || !balanceAmount}
+                data-testid="button-debit-balance"
+              >
+                ➖ Yechish
+              </Button>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setSelectedCourier(null);
+                setBalanceAmount("");
+              }}
+              data-testid="button-close-balance-modal"
+            >
+              Yopish
+            </Button>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

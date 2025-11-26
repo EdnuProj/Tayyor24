@@ -64,6 +64,7 @@ export const couriers = pgTable("couriers", {
   latitude: real("latitude"),
   longitude: real("longitude"),
   categoryId: varchar("category_id"),
+  balance: real("balance").notNull().default(10000),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

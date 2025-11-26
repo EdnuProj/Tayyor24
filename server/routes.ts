@@ -443,6 +443,40 @@ Qabul qilamizmi?
     }
   });
 
+  app.patch("/api/couriers/:id/balance", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { amount, type } = req.body; // type: "credit" or "debit"
+      let courier;
+      if (type === "credit") {
+        courier = await storage.creditCourierBalance(id, amount);
+      } else if (type === "debit") {
+        courier = await storage.debitCourierBalance(id, amount);
+      }
+      if (!courier) {
+        return res.status(404).json({ error: "Courier not found" });
+      }
+      res.json(courier);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update balance" });
+    }
+  });
+
+  app.get("/api/courier-dashboard/:telegramId", async (req, res) => {
+    try {
+      const { telegramId } = req.params;
+      const courier = await storage.getCourierByTelegramId(telegramId);
+      if (!courier) {
+        return res.status(404).json({ error: "Courier not found" });
+      }
+      const assignments = Array.from((storage as any).assignments?.values() || [])
+        .filter((a: any) => a.courierId === courier.id);
+      res.json({ courier, assignments });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch dashboard" });
+    }
+  });
+
   // Courier Assignment Callback (Telegram inline button callback)
   app.post("/api/telegram-callback", async (req, res) => {
     try {
