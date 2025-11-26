@@ -60,6 +60,8 @@ export const orders = pgTable("orders", {
   customerName: text("customer_name").notNull(),
   customerPhone: text("customer_phone").notNull(),
   customerAddress: text("customer_address").notNull(),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
   deliveryType: text("delivery_type").notNull(), // courier, pickup
   paymentType: text("payment_type").notNull(), // cash, card
   status: text("status").notNull().default("new"), // new, processing, shipping, delivered, cancelled

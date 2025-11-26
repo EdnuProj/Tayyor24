@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Truck, Store, Banknote, CreditCard, Check, Loader2 } from "lucide-react";
+import { Truck, Store, Banknote, CreditCard, Check, Loader2, MapPin } from "lucide-react";
 import { StoreLayout } from "@/components/layout/StoreLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,8 @@ const checkoutSchema = z.object({
   customerName: z.string().min(2, "Ism kamida 2 ta belgi bo'lishi kerak"),
   customerPhone: z.string().min(9, "Telefon raqamini kiriting").regex(/^\+?[0-9]+$/, "Noto'g'ri telefon raqam"),
   customerAddress: z.string().min(5, "Manzilni kiriting"),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   deliveryType: z.enum(["courier", "pickup"]),
   paymentType: z.enum(["cash", "card"]),
 });
@@ -41,6 +43,7 @@ export default function Checkout() {
   const { items, subtotal, clearCart } = useCart();
   const { toast } = useToast();
   const [orderComplete, setOrderComplete] = useState<{ orderNumber: string } | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
 
   const deliveryPrice = 15000;
   const freeDeliveryThreshold = 500000;
@@ -54,10 +57,35 @@ export default function Checkout() {
       customerName: "",
       customerPhone: "+998",
       customerAddress: "",
+      latitude: undefined,
+      longitude: undefined,
       deliveryType: "courier",
       paymentType: "cash",
     },
   });
+
+  const handleGetLocation = () => {
+    setGeoLoading(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          form.setValue("latitude", latitude);
+          form.setValue("longitude", longitude);
+          form.setValue("customerAddress", `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+          setGeoLoading(false);
+          toast({ title: "📍 Joylashuvingiz aniqlab olindi" });
+        },
+        (error) => {
+          setGeoLoading(false);
+          toast({ title: "Xatolik", description: "Joyni aniqlab olib bo'lmadi", variant: "destructive" });
+        }
+      );
+    } else {
+      setGeoLoading(false);
+      toast({ title: "Xatolik", description: "Geo API brauzeringizda qo'llab-quvvatlanmaydi", variant: "destructive" });
+    }
+  };
 
   const createOrderMutation = useMutation({
     mutationFn: async (data: CheckoutForm) => {
@@ -74,12 +102,18 @@ export default function Checkout() {
 
       const orderData = {
         orderNumber,
-        ...data,
+        customerName: data.customerName,
+        customerPhone: data.customerPhone,
+        customerAddress: data.customerAddress,
+        latitude: data.latitude,
+        longitude: data.longitude,
         subtotal,
         deliveryPrice: data.deliveryType === "pickup" ? 0 : actualDeliveryPrice,
         discount: 0,
         total: data.deliveryType === "pickup" ? subtotal : total,
         items: JSON.stringify(orderItems),
+        deliveryType: data.deliveryType,
+        paymentType: data.paymentType,
         status: "new",
       };
 
@@ -186,7 +220,20 @@ export default function Checkout() {
                       name="customerAddress"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Manzil</FormLabel>
+                          <div className="flex items-center justify-between mb-2">
+                            <FormLabel>Manzil</FormLabel>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={handleGetLocation}
+                              disabled={geoLoading}
+                              data-testid="button-get-location"
+                            >
+                              <MapPin className="h-4 w-4 mr-2" />
+                              {geoLoading ? "Aniqlanmoqda..." : "Joyni aniqla"}
+                            </Button>
+                          </div>
                           <FormControl>
                             <Input placeholder="To'liq manzilingizni kiriting" {...field} data-testid="input-address" />
                           </FormControl>
