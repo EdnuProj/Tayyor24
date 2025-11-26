@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -273,6 +274,9 @@ export default function AdminBanners() {
             <DialogTitle>
               {editingBanner ? "Bannerni tahrirlash" : "Yangi banner"}
             </DialogTitle>
+            <DialogDescription>
+              Banner matn va rasmini o'zgarting
+            </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">

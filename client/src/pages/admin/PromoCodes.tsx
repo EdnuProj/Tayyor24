@@ -263,6 +263,9 @@ export default function AdminPromoCodes() {
             <DialogTitle>
               {editingCode ? "Promokodni tahrirlash" : "Yangi promokod"}
             </DialogTitle>
+            <DialogDescription>
+              Promokod bilan chegirma bering
+            </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
