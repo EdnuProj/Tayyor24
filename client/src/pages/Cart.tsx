@@ -73,9 +73,9 @@ export default function Cart() {
           </Button>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 min-w-0">
             <Card>
               <CardHeader className="border-b">
                 <CardTitle className="text-lg">Mahsulotlar</CardTitle>
@@ -94,9 +94,11 @@ export default function Cart() {
             </Link>
           </div>
 
-          {/* Summary */}
+          {/* Summary - Sticky on desktop, normal on mobile */}
           <div>
-            <CartSummary />
+            <div className="sticky top-20 lg:top-20">
+              <CartSummary />
+            </div>
           </div>
         </div>
       </div>

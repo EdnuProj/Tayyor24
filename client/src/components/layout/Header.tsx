@@ -60,8 +60,8 @@ export function Header({ onSearch }: HeaderProps) {
             ))}
           </nav>
 
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="hidden lg:flex mx-2" style={{ width: "180px" }}>
+          {/* Search Bar - Desktop only */}
+          <form onSubmit={handleSearch} className="hidden lg:flex mx-2 flex-1 max-w-xs">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input

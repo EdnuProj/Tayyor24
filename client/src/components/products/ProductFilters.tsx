@@ -109,7 +109,7 @@ export function ProductFilters({
 
       {/* Category Filter */}
       <Collapsible open={openSections.category} onOpenChange={() => toggleSection("category")}>
-        <CollapsibleTrigger className="flex w-full items-center justify-between py-2 font-medium hover-elevate rounded-md px-2">
+        <CollapsibleTrigger className="flex w-full items-center justify-between py-2 font-medium hover-elevate rounded-md px-2 min-h-10" data-testid="button-filter-category">
           Kategoriya
           <ChevronDown
             className={`h-4 w-4 transition-transform ${

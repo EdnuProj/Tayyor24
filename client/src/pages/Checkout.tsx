@@ -146,9 +146,9 @@ export default function Checkout() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
               {/* Checkout Form */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-4 lg:space-y-6">
                 {/* Contact Info */}
                 <Card>
                   <CardHeader>
@@ -322,7 +322,7 @@ export default function Checkout() {
 
               {/* Order Summary */}
               <div>
-                <Card className="sticky top-20">
+                <Card className="sticky top-20 lg:top-20">
                   <CardHeader>
                     <CardTitle className="text-lg">Buyurtma</CardTitle>
                   </CardHeader>

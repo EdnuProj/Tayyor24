@@ -190,17 +190,19 @@ export default function Products() {
         </div>
 
         {/* Main Content */}
-        <div className="flex gap-8">
-          {/* Desktop Filters Sidebar */}
-          <ProductFilters
-            categories={categories}
-            brands={brands}
-            filters={filters}
-            onFilterChange={setFilters}
-          />
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Desktop Filters Sidebar - Hidden on mobile */}
+          <div className="hidden lg:block">
+            <ProductFilters
+              categories={categories}
+              brands={brands}
+              filters={filters}
+              onFilterChange={setFilters}
+            />
+          </div>
 
           {/* Product Grid */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <ProductGrid products={filteredProducts} isLoading={loadingProducts} />
           </div>
         </div>

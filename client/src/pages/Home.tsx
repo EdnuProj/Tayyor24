@@ -99,10 +99,10 @@ export default function Home() {
 
       {/* Advertisements Carousel */}
       {advertisements.length > 0 && (
-        <section className="py-8 md:py-12">
+        <section className="py-6 md:py-12">
           <div className="container mx-auto px-4">
             <div className="relative rounded-lg overflow-hidden bg-gradient-to-r from-primary/10 to-accent/10">
-              <div className="relative h-48 md:h-64 lg:h-80">
+              <div className="relative h-40 sm:h-48 md:h-64 lg:h-80">
                 <img
                   src={advertisements[adIndex]?.imageUrl}
                   alt={advertisements[adIndex]?.businessName}
