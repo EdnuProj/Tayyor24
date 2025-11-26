@@ -1003,14 +1003,20 @@ Qabul qilamizmi?
         return res.status(404).json({ error: "Courier not found" });
       }
 
-      const assignments = await Promise.all(
-        Array.from({ length: 100 }, async (_, i) => {
-          const assignment = Array.from((storage as any).assignments?.values?.() || []).find(
-            (a: any) => a.courierId === courier.id
-          );
-          return assignment;
-        })
-      ).then(a => a.filter(Boolean));
+      // Get all assignments - both pending (not assigned to any courier yet) and those assigned to this courier
+      const allAssignments = Array.from((storage as any).assignments?.values?.() || []) as any[];
+      
+      const assignments = allAssignments.filter((a) => {
+        // Show pending assignments (not yet accepted by any courier)
+        if (a.status === "pending" && !a.courierId) {
+          return true;
+        }
+        // Show assignments accepted by this courier
+        if (a.courierId === courier.id) {
+          return true;
+        }
+        return false;
+      });
 
       const transactions = await (storage as any).getCourierTransactions(courier.id);
 
@@ -1020,6 +1026,7 @@ Qabul qilamizmi?
         transactions,
       });
     } catch (error) {
+      console.error("Dashboard fetch error:", error);
       res.status(500).json({ error: "Failed to fetch courier dashboard" });
     }
   });
