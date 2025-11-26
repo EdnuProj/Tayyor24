@@ -105,7 +105,9 @@ export default function AdminProducts() {
       const reader = new FileReader();
       reader.onload = (event) => {
         const base64 = event.target?.result as string;
-        setImageInput(base64);
+        const current = form.getValues("images") || [];
+        form.setValue("images", [...current, base64]);
+        e.target.value = "";
       };
       reader.readAsDataURL(file);
     }
@@ -504,7 +506,7 @@ export default function AdminProducts() {
 
                 {/* Images */}
                 <div className="col-span-2 space-y-2">
-                  <FormLabel>Rasmlar</FormLabel>
+                  <FormLabel>Rasmlar (Kamida 1 ta)</FormLabel>
                   <div className="flex gap-2">
                     <Input
                       type="file"
@@ -512,9 +514,6 @@ export default function AdminProducts() {
                       onChange={handleImageUpload}
                       data-testid="input-image-file"
                     />
-                    <Button type="button" variant="secondary" onClick={addImage}>
-                      <ImagePlus className="h-4 w-4" />
-                    </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {(form.watch("images") || []).map((img, i) => (
