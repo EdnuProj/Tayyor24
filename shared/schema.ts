@@ -130,6 +130,34 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({ id: true, c
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
 
+// Advertisements
+export const advertisements = pgTable("advertisements", {
+  id: varchar("id").primaryKey(),
+  businessName: text("business_name").notNull(),
+  description: text("description").notNull(),
+  imageUrl: text("image_url").notNull(),
+  contactPhone: text("contact_phone"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAdvertisementSchema = createInsertSchema(advertisements).omit({ id: true, createdAt: true });
+export type InsertAdvertisement = z.infer<typeof insertAdvertisementSchema>;
+export type Advertisement = typeof advertisements.$inferSelect;
+
+// Newsletter/Rassilka Messages
+export const newsletters = pgTable("newsletters", {
+  id: varchar("id").primaryKey(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  imageUrl: text("image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertNewsletterSchema = createInsertSchema(newsletters).omit({ id: true, createdAt: true });
+export type InsertNewsletter = z.infer<typeof insertNewsletterSchema>;
+export type Newsletter = typeof newsletters.$inferSelect;
+
 // Site Settings
 export const siteSettings = pgTable("site_settings", {
   id: varchar("id").primaryKey(),

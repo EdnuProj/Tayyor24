@@ -1,14 +1,17 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Truck, Shield, Clock, Gift, ChevronRight } from "lucide-react";
+import { ArrowRight, Truck, Shield, Clock, Gift, ChevronRight, ChevronLeft } from "lucide-react";
+import { useState, useEffect } from "react";
 import { StoreLayout } from "@/components/layout/StoreLayout";
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { Product, Category } from "@shared/schema";
+import type { Product, Category, Advertisement } from "@shared/schema";
 
 export default function Home() {
+  const [adIndex, setAdIndex] = useState(0);
+
   const { data: featuredProducts = [], isLoading: loadingProducts } = useQuery<Product[]>({
     queryKey: ["/api/products?popular=true&limit=8"],
   });
@@ -20,6 +23,18 @@ export default function Home() {
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
+
+  const { data: advertisements = [] } = useQuery<Advertisement[]>({
+    queryKey: ["/api/advertisements"],
+  });
+
+  useEffect(() => {
+    if (advertisements.length === 0) return;
+    const timer = setInterval(() => {
+      setAdIndex((prev) => (prev + 1) % advertisements.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [advertisements.length]);
 
   const features = [
     {
@@ -81,6 +96,70 @@ export default function Home() {
         <div className="absolute top-0 left-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
       </section>
+
+      {/* Advertisements Carousel */}
+      {advertisements.length > 0 && (
+        <section className="py-8 md:py-12">
+          <div className="container mx-auto px-4">
+            <div className="relative rounded-lg overflow-hidden bg-gradient-to-r from-primary/10 to-accent/10">
+              <div className="relative h-48 md:h-64 lg:h-80">
+                <img
+                  src={advertisements[adIndex]?.imageUrl}
+                  alt={advertisements[adIndex]?.businessName}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-6">
+                  <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
+                    {advertisements[adIndex]?.businessName}
+                  </h3>
+                  <p className="text-white/90 text-sm md:text-base mb-4 line-clamp-2">
+                    {advertisements[adIndex]?.description}
+                  </p>
+                  {advertisements[adIndex]?.contactPhone && (
+                    <p className="text-white text-sm font-medium">
+                      ☎️ {advertisements[adIndex]?.contactPhone}
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Navigation */}
+              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="bg-white/20 hover:bg-white/30 text-white"
+                  onClick={() => setAdIndex((prev) => (prev - 1 + advertisements.length) % advertisements.length)}
+                  data-testid="button-prev-ad"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex gap-2">
+                  {advertisements.map((_, idx) => (
+                    <button
+                      key={idx}
+                      className={`h-2 rounded-full transition-all ${
+                        idx === adIndex ? "bg-white w-6" : "bg-white/50 w-2"
+                      }`}
+                      onClick={() => setAdIndex(idx)}
+                      data-testid={`button-ad-${idx}`}
+                    />
+                  ))}
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="bg-white/20 hover:bg-white/30 text-white"
+                  onClick={() => setAdIndex((prev) => (prev + 1) % advertisements.length)}
+                  data-testid="button-next-ad"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Categories */}
       {categories.length > 0 && (
