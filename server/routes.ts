@@ -977,14 +977,14 @@ Qabul qilamizmi?
         return res.status(400).json({ error: "Title and message required" });
       }
 
-      const settings = await storage.getSettings();
-      if (!settings.telegramBotToken) {
-        return res.status(400).json({ error: "Telegram bot not configured" });
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      if (!botToken) {
+        return res.status(400).json({ error: "Telegram bot token not configured" });
       }
 
       const telegramUsers = await (storage as any).getTelegramUsers();
       if (telegramUsers.length === 0) {
-        return res.status(400).json({ error: "No users have started the bot" });
+        return res.status(400).json({ error: "No users have started the bot yet" });
       }
 
       const telegramMessage = `
@@ -993,8 +993,7 @@ ${title}
 ${message}
       `.trim();
 
-      const botToken = settings.telegramBotToken;
-
+      let sentCount = 0;
       for (const user of telegramUsers) {
         try {
           if (imageUrl) {
@@ -1013,13 +1012,14 @@ ${message}
               formData.append("photo", imageUrl);
             }
 
-            await fetch(photoUrl, {
+            const res = await fetch(photoUrl, {
               method: "POST",
               body: formData,
             });
+            if (res.ok) sentCount++;
           } else {
             const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
-            await fetch(telegramUrl, {
+            const res = await fetch(telegramUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -1028,6 +1028,7 @@ ${message}
                 parse_mode: "HTML",
               }),
             });
+            if (res.ok) sentCount++;
           }
         } catch (userError) {
           console.error(`Failed to send message to user ${user.telegramId}:`, userError);
@@ -1035,7 +1036,12 @@ ${message}
       }
 
       await storage.createNewsletter({ title, message, imageUrl: imageUrl || null });
-      res.json({ success: true, message: `Newsletter sent to ${telegramUsers.length} users` });
+      res.json({ 
+        success: true, 
+        message: `Newsletter sent to ${sentCount} out of ${telegramUsers.length} users`,
+        sentCount,
+        totalUsers: telegramUsers.length
+      });
     } catch (error) {
       res.status(500).json({ error: "Failed to send newsletter" });
     }
