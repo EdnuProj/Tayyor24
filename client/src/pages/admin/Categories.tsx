@@ -117,8 +117,8 @@ export default function AdminCategories() {
   const handleDrop = (targetId: string) => {
     if (!draggedItem || draggedItem === targetId) return;
 
-    // Sort by current order first
-    const sorted = [...categories].sort((a, b) => (a.order || 0) - (b.order || 0));
+    // Sort by current order first (only display categories)
+    const sorted = [...displayCategories].sort((a, b) => (a.order || 0) - (b.order || 0));
     
     const draggedIdx = sorted.findIndex((c) => c.id === draggedItem);
     const targetIdx = sorted.findIndex((c) => c.id === targetId);
