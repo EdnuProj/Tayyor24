@@ -1168,10 +1168,29 @@ Buyurtma: #${order.orderNumber}
       // Get order info
       const order = await storage.getOrder(orderId);
 
-      // Send notification to group
+      // Send notifications
       const settings = await storage.getSettings();
-      if (settings.telegramBotToken && settings.telegramGroupId && order) {
-        const message = `
+      if (settings.telegramBotToken && order) {
+        const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+        
+        // Message to customer (direct)
+        const messageToCustomer = `
+⏳ *SIZNING BUYURTMA JARAYONDA*
+
+Buyurtma raqam: #${order.orderNumber}
+👤 Kuryer: ${courier.name}
+📞 Kuryer telefon: ${courier.phone}
+
+Kuryer tez orada yetkazib beradi!
+
+📍 Manzil: ${order.customerAddress}
+💰 Jami: ${order.total} so'm
+
+Rahmalingiz uchun! 🙏
+        `.trim();
+        
+        // Message to group
+        const messageToGroup = `
 ✅ *BUYURTMA OLIB OLINDI*
 
 Buyurtma: #${order.orderNumber}
@@ -1181,16 +1200,32 @@ Buyurtma: #${order.orderNumber}
         `.trim();
 
         try {
-          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
-          await fetch(telegramUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: settings.telegramGroupId,
-              text: message,
-              parse_mode: "Markdown",
-            }),
-          });
+          // Send to customer if telegramId exists
+          if (order.customerTelegramId) {
+            await fetch(telegramUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: order.customerTelegramId,
+                text: messageToCustomer,
+                parse_mode: "Markdown",
+              }),
+            });
+            console.log(`Customer notification sent to ${order.customerTelegramId}`);
+          }
+
+          // Send to group
+          if (settings.telegramGroupId) {
+            await fetch(telegramUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: settings.telegramGroupId,
+                text: messageToGroup,
+                parse_mode: "Markdown",
+              }),
+            });
+          }
         } catch (telegramError) {
           console.error("Telegram notification failed:", telegramError);
         }
