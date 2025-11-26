@@ -295,7 +295,7 @@ export default function Checkout() {
                                   <div>
                                     <p className="font-medium">Kuryer orqali</p>
                                     <p className="text-sm text-muted-foreground">
-                                      {isFreeDelivery ? "Bepul" : formatPrice(deliveryPrice)}
+                                      {formatPrice(deliveryPrice)}
                                     </p>
                                   </div>
                                 </div>
