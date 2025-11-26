@@ -90,6 +90,7 @@ export default function AdminProducts() {
   const [colorInput, setColorInput] = useState("");
   const [sizeInput, setSizeInput] = useState("");
   const [containerInput, setContainerInput] = useState("");
+  const [selectedParentCategoryId, setSelectedParentCategoryId] = useState<string | null>(null);
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
@@ -98,6 +99,10 @@ export default function AdminProducts() {
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
+
+  // Organize categories: parent and subcategories
+  const parentCategories = categories.filter(c => !c.parentId);
+  const getSubcategories = (parentId: string) => categories.filter(c => c.parentId === parentId);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -180,6 +185,13 @@ export default function AdminProducts() {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
+    // Find parent category for this product's category
+    const selectedCat = categories.find(c => c.id === product.categoryId);
+    if (selectedCat?.parentId) {
+      setSelectedParentCategoryId(selectedCat.parentId);
+    } else {
+      setSelectedParentCategoryId(null);
+    }
     form.reset({
       name: product.name,
       description: product.description || "",
@@ -408,20 +420,39 @@ export default function AdminProducts() {
                   control={form.control}
                   name="categoryId"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="col-span-2">
                       <FormLabel>Kategoriya</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={(value) => {
+                        field.onChange(value);
+                        const selected = categories.find(c => c.id === value);
+                        if (selected?.parentId) {
+                          setSelectedParentCategoryId(selected.parentId);
+                        } else {
+                          setSelectedParentCategoryId(null);
+                        }
+                      }} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-category">
                             <SelectValue placeholder="Tanlang" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categories.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
+                          {/* Parent categories */}
+                          {parentCategories.map((cat) => {
+                            const subs = getSubcategories(cat.id);
+                            return (
+                              <div key={cat.id}>
+                                <SelectItem value={cat.id}>
+                                  {cat.name}
+                                </SelectItem>
+                                {subs.length > 0 && subs.map((sub) => (
+                                  <SelectItem key={sub.id} value={sub.id} className="pl-8">
+                                    └─ {sub.name}
+                                  </SelectItem>
+                                ))}
+                              </div>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                       <FormMessage />
