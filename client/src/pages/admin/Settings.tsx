@@ -284,7 +284,7 @@ export default function AdminSettings() {
                         <FormLabel>Logo</FormLabel>
                         <div className="space-y-3">
                           {(logoPreview || field.value) && (
-                            <div className="relative rounded-lg overflow-hidden bg-muted h-24 w-24">
+                            <div className="relative rounded-lg overflow-hidden bg-muted h-24 w-24 group">
                               <img
                                 src={logoPreview || field.value}
                                 alt="Logo preview"
@@ -294,7 +294,7 @@ export default function AdminSettings() {
                                 type="button"
                                 size="icon"
                                 variant="destructive"
-                                className="absolute top-1 right-1 h-7 w-7"
+                                className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={handleClearLogo}
                                 data-testid="button-clear-logo"
                               >
@@ -333,7 +333,7 @@ export default function AdminSettings() {
                         <FormLabel>Hero rasm</FormLabel>
                         <div className="space-y-3">
                           {(heroPreview || field.value) && (
-                            <div className="relative rounded-lg overflow-hidden bg-muted h-40">
+                            <div className="relative rounded-lg overflow-hidden bg-muted h-40 group">
                               <img
                                 src={heroPreview || field.value}
                                 alt="Hero preview"
@@ -343,8 +343,9 @@ export default function AdminSettings() {
                                 type="button"
                                 size="icon"
                                 variant="destructive"
-                                className="absolute top-2 right-2"
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={handleClearHeroImage}
+                                data-testid="button-clear-hero"
                               >
                                 <X className="h-4 w-4" />
                               </Button>
