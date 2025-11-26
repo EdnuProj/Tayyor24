@@ -55,13 +55,13 @@ export default function AdminCategories() {
 
   const createMutation = useMutation({
     mutationFn: async (data: CategoryForm) => {
-      const response = await apiRequest("/api/categories", "POST", {
+      const response = await apiRequest("POST", "/api/categories", {
         name: data.name,
         slug: generateSlug(data.name),
         icon: data.icon || "📦",
         order: categories.length,
       });
-      return response;
+      return response.json();
     },
     onSuccess: () => {
       toast({ title: "Kategoriya qo'shildi", variant: "default" });
@@ -76,7 +76,7 @@ export default function AdminCategories() {
 
   const deleteMutation = useMutation({
     mutationFn: async (categoryId: string) => {
-      await apiRequest(`/api/categories/${categoryId}`, "DELETE");
+      await apiRequest("DELETE", `/api/categories/${categoryId}`);
     },
     onSuccess: () => {
       toast({ title: "Kategoriya o'chirildi", variant: "default" });
@@ -89,7 +89,7 @@ export default function AdminCategories() {
 
   const reorderMutation = useMutation({
     mutationFn: async (reorderedCategories: Category[]) => {
-      await apiRequest("/api/categories/reorder", "POST", {
+      await apiRequest("POST", "/api/categories/reorder", {
         categories: reorderedCategories.map((c, idx) => ({
           id: c.id,
           order: idx,
