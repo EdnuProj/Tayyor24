@@ -215,14 +215,6 @@ export default function CourierPayme() {
             {/* Quick Actions */}
             <div className="grid grid-cols-3 gap-2">
               <button
-                onClick={() => setActiveTab("transfer")}
-                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition"
-                data-testid="button-quick-transfer"
-              >
-                <ArrowRightLeft className="w-5 h-5 mx-auto mb-1" />
-                O'tkazma
-              </button>
-              <button
                 onClick={() => setActiveTab("payments")}
                 className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition"
                 data-testid="button-quick-payment"
@@ -237,6 +229,14 @@ export default function CourierPayme() {
               >
                 <QrCode className="w-5 h-5 mx-auto mb-1" />
                 QR
+              </button>
+              <button
+                onClick={() => setActiveTab("transfer")}
+                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition"
+                data-testid="button-quick-transfer"
+              >
+                <ArrowRightLeft className="w-5 h-5 mx-auto mb-1" />
+                O'tkazma
               </button>
             </div>
 
