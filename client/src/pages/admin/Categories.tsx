@@ -31,6 +31,8 @@ import type { Category } from "@shared/schema";
 const categorySchema = z.object({
   name: z.string().min(2, "Kamida 2 ta belgi"),
   icon: z.string().optional(),
+  latitude: z.string().optional().transform(val => val ? parseFloat(val) : undefined),
+  longitude: z.string().optional().transform(val => val ? parseFloat(val) : undefined),
 });
 
 type CategoryForm = z.infer<typeof categorySchema>;
@@ -54,6 +56,8 @@ export default function AdminCategories() {
     defaultValues: {
       name: "",
       icon: "",
+      latitude: "",
+      longitude: "",
     },
   });
 
@@ -65,6 +69,8 @@ export default function AdminCategories() {
         icon: data.icon || "📦",
         order: selectedParentId ? subcategories.length : parentCategories.length,
         parentId: selectedParentId || null,
+        latitude: data.latitude,
+        longitude: data.longitude,
       });
       return response.json();
     },
@@ -297,6 +303,35 @@ export default function AdminCategories() {
                   </FormItem>
                 )}
               />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="latitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Kenglik (Latitude)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="masalan: 41.2995" type="number" step="0.0001" {...field} data-testid="input-category-latitude" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="longitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Uzunlik (Longitude)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="masalan: 69.2401" type="number" step="0.0001" {...field} data-testid="input-category-longitude" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Faqat katta kategoriyalar uchun: <a href="https://yandex.uz/maps/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Yandex Maps</a> dan joylashuvni topib koordinatalarni kiriting</p>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                   Bekor qilish
