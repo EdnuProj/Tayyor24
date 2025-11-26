@@ -151,24 +151,16 @@ export default function AdminRassilka() {
 
   return (
     <AdminLayout title="Rassilka - Newsletter">
-      <Tabs defaultValue="customers" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="customers" className="flex items-center gap-2" data-testid="tab-customers-rassilka">
-            <Users className="w-4 h-4" />
-            Mijozlarga
-          </TabsTrigger>
-          <TabsTrigger value="couriers" className="flex items-center gap-2" data-testid="tab-couriers-rassilka">
-            <Truck className="w-4 h-4" />
-            Kuryerlarga
-          </TabsTrigger>
-        </TabsList>
-
+      {/* Customers Rassilka */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <Users className="w-6 h-6" />
+          Mijozlarga Rassilka
+        </h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Customers Rassilka */}
-          <TabsContent value="customers" className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Mijozlarga rassilka</CardTitle>
+                <CardTitle>Yangi rassilka</CardTitle>
                 <CardDescription>
                   Barcha mijozlarimizga Telegram orqali reklama va yangiliklar jo'nating
                 </CardDescription>
@@ -176,7 +168,7 @@ export default function AdminRassilka() {
               <CardContent>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
+                    <FormField
                     control={form.control}
                     name="title"
                     render={({ field }) => (
@@ -277,126 +269,165 @@ export default function AdminRassilka() {
               </Form>
             </CardContent>
           </Card>
-          </TabsContent>
-
-          {/* Couriers Rassilka */}
-          <TabsContent value="couriers" className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Kuryerlarga rassilka</CardTitle>
-                <CardDescription>
-                  Barcha faol kuryerlarimizga Telegram orqali yangiliklar va buyurtmalar jo'nating
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Form {...courierForm}>
-                  <form onSubmit={courierForm.handleSubmit(onCourierSubmit)} className="space-y-6">
-                    <FormField
-                      control={courierForm.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Sarlavha</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Masalan: Yangi buyurtmalar mavjud!" {...field} data-testid="input-courier-title" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={courierForm.control}
-                      name="message"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Xabar matni</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Masalan: Yangi buyurtmalar sizni kutmoqda. App-ni ochasiz!"
-                              rows={6}
-                              {...field}
-                              data-testid="textarea-courier-message"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="space-y-3">
-                      <FormLabel>Rasm (ixtiyoriy)</FormLabel>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => courierFileInputRef.current?.click()}
-                          className="flex-1 border-2 border-dashed rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer text-sm text-muted-foreground hover:text-foreground"
-                          data-testid="button-upload-courier-image"
-                        >
-                          <Upload className="h-5 w-5 mx-auto mb-1" />
-                          Rasm yuklash
-                        </button>
-                        <input
-                          ref={courierFileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleCourierFileUpload}
-                          className="hidden"
-                          data-testid="input-file-upload-courier"
-                        />
-                        {courierPreviewImage && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setCourierPreviewImage("");
-                              courierForm.setValue("imageUrl", "");
-                              if (courierFileInputRef.current) courierFileInputRef.current.value = "";
-                            }}
-                            className="px-4 py-2 border rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
-                            data-testid="button-remove-courier-image"
-                          >
-                            <X className="h-5 w-5" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {courierPreviewImage && (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Rasm ko'rinishi:</p>
-                        <img
-                          src={courierPreviewImage}
-                          alt="Preview"
-                          className="w-full h-48 object-cover rounded-lg"
-                        />
-                      </div>
-                    )}
-
-                    <Button
-                      type="submit"
-                      disabled={sendCourierMutation.isPending}
-                      className="w-full"
-                      data-testid="button-send-courier-rassilka"
-                    >
-                      {sendCourierMutation.isPending ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Jo'natilmoqda...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Rassilka jo'natish
-                        </>
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* History */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Tarix</CardTitle>
+              <CardDescription>Oxirgi rassilkalar</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {newsletters.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Hali rassilka jo'natilmagan
+                  </p>
+                ) : (
+                  newsletters.slice(0, 10).map((newsletter) => (
+                    <div key={newsletter.id} className="p-3 border rounded-lg text-sm space-y-1">
+                      <p className="font-medium line-clamp-1">{newsletter.title}</p>
+                      <p className="text-muted-foreground line-clamp-2">{newsletter.message}</p>
+                      {newsletter.imageUrl && (
+                        <div className="flex items-center gap-1 text-xs text-primary">
+                          <ImageIcon className="h-3 w-3" />
+                          Rasm mavjud
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {newsletter.createdAt
+                          ? new Date(newsletter.createdAt).toLocaleDateString("uz-UZ")
+                          : ""}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Kuryerlarga Rassilka - Separate Section Below */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <Truck className="w-6 h-6" />
+          Kuryerlarga Rassilka
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Yangi rassilka</CardTitle>
+              <CardDescription>
+                Barcha faol kuryerlarimizga Telegram orqali yangiliklar va buyurtmalar jo'nating
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...courierForm}>
+                <form onSubmit={courierForm.handleSubmit(onCourierSubmit)} className="space-y-6">
+                  <FormField
+                    control={courierForm.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sarlavha</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Masalan: Yangi buyurtmalar mavjud!" {...field} data-testid="input-courier-title" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={courierForm.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Xabar matni</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Masalan: Yangi buyurtmalar sizni kutmoqda. App-ni ochasiz!"
+                            rows={6}
+                            {...field}
+                            data-testid="textarea-courier-message"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-3">
+                    <FormLabel>Rasm (ixtiyoriy)</FormLabel>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => courierFileInputRef.current?.click()}
+                        className="flex-1 border-2 border-dashed rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer text-sm text-muted-foreground hover:text-foreground"
+                        data-testid="button-upload-courier-image"
+                      >
+                        <Upload className="h-5 w-5 mx-auto mb-1" />
+                        Rasm yuklash
+                      </button>
+                      <input
+                        ref={courierFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCourierFileUpload}
+                        className="hidden"
+                        data-testid="input-file-upload-courier"
+                      />
+                      {courierPreviewImage && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCourierPreviewImage("");
+                            courierForm.setValue("imageUrl", "");
+                            if (courierFileInputRef.current) courierFileInputRef.current.value = "";
+                          }}
+                          className="px-4 py-2 border rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          data-testid="button-remove-courier-image"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {courierPreviewImage && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Rasm ko'rinishi:</p>
+                      <img
+                        src={courierPreviewImage}
+                        alt="Preview"
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    disabled={sendCourierMutation.isPending}
+                    className="w-full"
+                    data-testid="button-send-courier-rassilka"
+                  >
+                    {sendCourierMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Jo'natilmoqda...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Rassilka jo'natish
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Tarix</CardTitle>
