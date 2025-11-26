@@ -782,7 +782,12 @@ export class MemStorage implements IStorage {
 
   // Settings
   async getSettings(): Promise<SiteSettings> {
-    return this.settings;
+    // Merge environment variables with stored settings
+    return {
+      ...this.settings,
+      telegramGroupId: process.env.TELEGRAM_GROUP_ID || this.settings.telegramGroupId,
+      telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || this.settings.telegramBotToken,
+    };
   }
 
   async updateSettings(data: Partial<InsertSiteSettings>): Promise<SiteSettings> {
