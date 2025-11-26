@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Truck, Store, Banknote, CreditCard, Check, Loader2, MapPin } from "lucide-react";
+import { Truck, Store, Banknote, CreditCard, Check, Loader2, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { StoreLayout } from "@/components/layout/StoreLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,13 @@ export default function Checkout() {
   const { toast } = useToast();
   const [orderComplete, setOrderComplete] = useState<{ orderNumber: string } | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const paginatedItems = items.slice(startIdx, endIdx);
 
   const deliveryPrice = 15000;
   const freeDeliveryThreshold = 500000;
@@ -386,8 +393,8 @@ export default function Checkout() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {/* Items */}
-                    <div className="space-y-3 max-h-60 overflow-y-auto">
-                      {items.map((item) => (
+                    <div className="space-y-3">
+                      {paginatedItems.map((item) => (
                         <div key={item.id} className="flex gap-3">
                           <div className="w-14 h-14 rounded-md overflow-hidden bg-muted shrink-0">
                             <img
@@ -406,6 +413,52 @@ export default function Checkout() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between pt-3 border-t text-xs gap-2">
+                        <span className="text-muted-foreground">
+                          {startIdx + 1}-{Math.min(endIdx, items.length)} / {items.length}
+                        </span>
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            data-testid="button-prev-items"
+                          >
+                            <ChevronLeft className="h-3 w-3" />
+                          </Button>
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .slice(Math.max(0, currentPage - 2), Math.min(totalPages, currentPage + 1))
+                            .map((page) => (
+                              <Button
+                                key={page}
+                                type="button"
+                                variant={currentPage === page ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(page)}
+                                data-testid={`button-page-${page}`}
+                                className="h-7 w-7 p-0"
+                              >
+                                {page}
+                              </Button>
+                            ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            data-testid="button-next-items"
+                          >
+                            <ChevronRight className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
 
                     <Separator />
 
