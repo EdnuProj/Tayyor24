@@ -141,6 +141,7 @@ export class MemStorage implements IStorage {
   private couriers: Map<string, Courier>;
   private assignments: Map<string, CourierAssignment>;
   private settings: SiteSettings;
+  private telegramUsers: Map<string, any>;
 
   constructor() {
     this.users = new Map();
@@ -155,6 +156,7 @@ export class MemStorage implements IStorage {
     this.newsletters = new Map();
     this.couriers = new Map();
     this.assignments = new Map();
+    this.telegramUsers = new Map();
     this.settings = {
       id: "default",
       logoUrl: null,
@@ -857,6 +859,28 @@ export class MemStorage implements IStorage {
     const updated = { ...courier, balance: courier.balance + amount };
     this.couriers.set(courierId, updated);
     return updated;
+  }
+
+  // Telegram Users
+  async getTelegramUsers() {
+    return Array.from(this.telegramUsers.values());
+  }
+
+  async getTelegramUserByTelegramId(telegramId: string) {
+    for (const user of this.telegramUsers.values()) {
+      if (user.telegramId === telegramId) return user;
+    }
+    return undefined;
+  }
+
+  async createTelegramUser(data: { telegramId: string; firstName?: string }) {
+    const existingUser = await this.getTelegramUserByTelegramId(data.telegramId);
+    if (existingUser) return existingUser;
+    
+    const id = randomUUID();
+    const user = { id, telegramId: data.telegramId, firstName: data.firstName || null, createdAt: new Date() };
+    this.telegramUsers.set(id, user);
+    return user;
   }
 
   // Dashboard Stats

@@ -603,7 +603,7 @@ Qabul qilamizmi?
 
       // Handle text messages
       if (update.message) {
-        const { text, chat } = update.message;
+        const { text, chat, from } = update.message;
         const chatId = chat?.id?.toString();
         const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -613,6 +613,12 @@ Qabul qilamizmi?
 
         // Handle /start command
         if (text === "/start") {
+          // Save telegram user
+          await (storage as any).createTelegramUser({
+            telegramId: chatId,
+            firstName: from?.first_name,
+          });
+
           const siteUrl = process.env.REPLIT_DOMAINS 
             ? `https://${process.env.REPLIT_DOMAINS}`
             : "https://do-kon.replit.dev";
@@ -972,8 +978,13 @@ Qabul qilamizmi?
       }
 
       const settings = await storage.getSettings();
-      if (!settings.telegramBotToken || !settings.telegramGroupId) {
+      if (!settings.telegramBotToken) {
         return res.status(400).json({ error: "Telegram bot not configured" });
+      }
+
+      const telegramUsers = await (storage as any).getTelegramUsers();
+      if (telegramUsers.length === 0) {
+        return res.status(400).json({ error: "No users have started the bot" });
       }
 
       const telegramMessage = `
@@ -982,45 +993,49 @@ ${title}
 ${message}
       `.trim();
 
-      try {
-        if (imageUrl) {
-          const photoUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendPhoto`;
-          const formData = new FormData();
-          formData.append("chat_id", settings.telegramGroupId);
-          formData.append("caption", `${title}\n\n${message}`);
-          formData.append("parse_mode", "HTML");
+      const botToken = settings.telegramBotToken;
 
-          if (imageUrl.startsWith("data:")) {
-            const base64Data = imageUrl.split(",")[1];
-            const buffer = Buffer.from(base64Data, "base64");
-            const blob = new Blob([buffer], { type: "image/jpeg" });
-            formData.append("photo", blob, "image.jpg");
+      for (const user of telegramUsers) {
+        try {
+          if (imageUrl) {
+            const photoUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
+            const formData = new FormData();
+            formData.append("chat_id", user.telegramId);
+            formData.append("caption", `${title}\n\n${message}`);
+            formData.append("parse_mode", "HTML");
+
+            if (imageUrl.startsWith("data:")) {
+              const base64Data = imageUrl.split(",")[1];
+              const buffer = Buffer.from(base64Data, "base64");
+              const blob = new Blob([buffer], { type: "image/jpeg" });
+              formData.append("photo", blob, "image.jpg");
+            } else {
+              formData.append("photo", imageUrl);
+            }
+
+            await fetch(photoUrl, {
+              method: "POST",
+              body: formData,
+            });
           } else {
-            formData.append("photo", imageUrl);
+            const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            await fetch(telegramUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: user.telegramId,
+                text: telegramMessage,
+                parse_mode: "HTML",
+              }),
+            });
           }
-
-          await fetch(photoUrl, {
-            method: "POST",
-            body: formData,
-          });
-        } else {
-          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
-          await fetch(telegramUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: settings.telegramGroupId,
-              text: telegramMessage,
-              parse_mode: "HTML",
-            }),
-          });
+        } catch (userError) {
+          console.error(`Failed to send message to user ${user.telegramId}:`, userError);
         }
-      } catch (telegramError) {
-        console.error("Telegram notification failed:", telegramError);
       }
 
       await storage.createNewsletter({ title, message, imageUrl: imageUrl || null });
-      res.json({ success: true, message: "Newsletter sent successfully" });
+      res.json({ success: true, message: `Newsletter sent to ${telegramUsers.length} users` });
     } catch (error) {
       res.status(500).json({ error: "Failed to send newsletter" });
     }
