@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { AdminGuard } from "@/components/admin/AdminGuard";
 
 // Store Pages
 import Home from "@/pages/Home";
@@ -15,6 +16,7 @@ import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
 
 // Admin Pages
+import Admin from "@/pages/Admin";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminProducts from "@/pages/admin/Products";
 import AdminOrders from "@/pages/admin/Orders";
@@ -36,13 +38,63 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
 
       {/* Admin Routes */}
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/products" component={AdminProducts} />
-      <Route path="/admin/products/new" component={AdminProducts} />
-      <Route path="/admin/orders" component={AdminOrders} />
-      <Route path="/admin/customers" component={AdminCustomers} />
-      <Route path="/admin/promo-codes" component={AdminPromoCodes} />
-      <Route path="/admin/settings" component={AdminSettings} />
+      <Route path="/admin" component={Admin} />
+      <Route
+        path="/admin/dashboard"
+        component={() => (
+          <AdminGuard>
+            <AdminDashboard />
+          </AdminGuard>
+        )}
+      />
+      <Route
+        path="/admin/products"
+        component={() => (
+          <AdminGuard>
+            <AdminProducts />
+          </AdminGuard>
+        )}
+      />
+      <Route
+        path="/admin/products/new"
+        component={() => (
+          <AdminGuard>
+            <AdminProducts />
+          </AdminGuard>
+        )}
+      />
+      <Route
+        path="/admin/orders"
+        component={() => (
+          <AdminGuard>
+            <AdminOrders />
+          </AdminGuard>
+        )}
+      />
+      <Route
+        path="/admin/customers"
+        component={() => (
+          <AdminGuard>
+            <AdminCustomers />
+          </AdminGuard>
+        )}
+      />
+      <Route
+        path="/admin/promo-codes"
+        component={() => (
+          <AdminGuard>
+            <AdminPromoCodes />
+          </AdminGuard>
+        )}
+      />
+      <Route
+        path="/admin/settings"
+        component={() => (
+          <AdminGuard>
+            <AdminSettings />
+          </AdminGuard>
+        )}
+      />
 
       {/* Fallback to 404 */}
       <Route component={NotFound} />

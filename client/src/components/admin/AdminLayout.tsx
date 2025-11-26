@@ -10,6 +10,7 @@ import {
   Sun,
   Moon,
   Menu,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -74,13 +75,25 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
         <div className="flex-1 overflow-y-auto p-4">
           <Sidebar />
         </div>
-        <div className="border-t p-4">
+        <div className="border-t p-4 space-y-2">
           <Link href="/">
             <Button variant="outline" className="w-full" data-testid="button-back-to-store">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Do'konga qaytish
             </Button>
           </Link>
+          <Button
+            variant="outline"
+            className="w-full text-destructive hover:text-destructive"
+            onClick={() => {
+              localStorage.removeItem("admin_logged_in");
+              window.location.href = "/admin";
+            }}
+            data-testid="button-logout"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Chiqish
+          </Button>
         </div>
       </aside>
 
@@ -107,13 +120,24 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
               <div className="p-4">
                 <Sidebar />
               </div>
-              <div className="absolute bottom-4 left-4 right-4">
+              <div className="absolute bottom-4 left-4 right-4 space-y-2">
                 <Link href="/">
                   <Button variant="outline" className="w-full">
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Do'konga qaytish
                   </Button>
                 </Link>
+                <Button
+                  variant="outline"
+                  className="w-full text-destructive hover:text-destructive"
+                  onClick={() => {
+                    localStorage.removeItem("admin_logged_in");
+                    window.location.href = "/admin";
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Chiqish
+                </Button>
               </div>
             </SheetContent>
           </Sheet>

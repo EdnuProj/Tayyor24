@@ -241,6 +241,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const data = insertOrderSchema.parse(req.body);
       const order = await storage.createOrder(data);
+
+      // Send Telegram notification
+      const settings = await storage.getSettings();
+      if (settings.telegramBotToken && settings.telegramChatId) {
+        const orderItems = JSON.parse(data.items || "[]");
+        const itemsList = orderItems
+          .map((item: any) => `• ${item.productName} x${item.quantity}`)
+          .join("\n");
+
+        const message = `
+🆕 *Yangi Buyurtma*
+
+📋 Raqam: #${order.orderNumber}
+👤 Mijoz: ${order.customerName}
+📱 Tel: ${order.customerPhone}
+📍 Manzil: ${order.customerAddress}
+
+*Mahsulotlar:*
+${itemsList}
+
+💰 Jami: ${order.total} so'm
+💳 To'lov: ${order.paymentType === "cash" ? "Naqd" : "Karta"}
+🚚 Yetkazish: ${order.deliveryType === "courier" ? "Kuryer" : "Olib ketish"}
+
+Holati: Yangi
+        `.trim();
+
+        try {
+          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+          await fetch(telegramUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: settings.telegramChatId,
+              text: message,
+              parse_mode: "Markdown",
+            }),
+          });
+        } catch (telegramError) {
+          console.error("Telegram notification failed:", telegramError);
+        }
+      }
+
       res.status(201).json(order);
     } catch (error) {
       if (error instanceof z.ZodError) {

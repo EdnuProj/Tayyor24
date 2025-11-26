@@ -61,7 +61,7 @@ export function Header({ onSearch }: HeaderProps) {
           </nav>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-md mx-4">
+          <form onSubmit={handleSearch} className="hidden lg:flex mx-4" style={{ width: "280px" }}>
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -76,7 +76,7 @@ export function Header({ onSearch }: HeaderProps) {
           </form>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-auto">
             {/* Theme Toggle */}
             <Button
               variant="ghost"
