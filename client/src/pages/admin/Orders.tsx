@@ -382,38 +382,40 @@ export default function AdminOrders() {
                   <div className="p-4 text-center text-muted-foreground">Mahsulot topilmadi</div>
                 ) : (
                   <div className="space-y-2 p-2">
-                    {filteredProducts.map((product) => (
-                      <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg hover-elevate">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          {product.images[0] && (
-                            <img
-                              src={product.images[0]}
-                              alt={product.name}
-                              className="w-10 h-10 rounded object-cover"
-                            />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{product.name}</p>
-                            <p className="text-xs text-muted-foreground">{formatPrice(product.price)}</p>
+                    {filteredProducts.map((product) => {
+                      const isSelected = selectedItems.some((item) => item.product.id === product.id);
+                      return (
+                        <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg hover-elevate">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            {product.images[0] && (
+                              <img
+                                src={product.images[0]}
+                                alt={product.name}
+                                className="w-10 h-10 rounded object-cover"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{product.name}</p>
+                              <p className="text-xs text-muted-foreground">{formatPrice(product.price)}</p>
+                            </div>
                           </div>
+                          <Button
+                            size="sm"
+                            variant={isSelected ? "default" : "outline"}
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedItems(selectedItems.filter((item) => item.product.id !== product.id));
+                              } else {
+                                setSelectedItems([...selectedItems, { product, quantity: 1 }]);
+                              }
+                            }}
+                            data-testid={`button-select-product-${product.id}`}
+                          >
+                            {isSelected ? "Olib tashlash" : "Tanlash"}
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          variant={selectedItems.some((item) => item.product.id === product.id) ? "default" : "outline"}
-                          onClick={() => {
-                            const existingItem = selectedItems.find((item) => item.product.id === product.id);
-                            if (existingItem) {
-                              setSelectedItems(selectedItems.filter((item) => item.product.id !== product.id));
-                            } else {
-                              setSelectedItems([...selectedItems, { product, quantity: 1 }]);
-                            }
-                          }}
-                          data-testid={`button-select-product-${product.id}`}
-                        >
-                          {existingItem ? "Olib tashlash" : "Tanlash"}
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
