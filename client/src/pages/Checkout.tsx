@@ -29,7 +29,7 @@ import type { OrderItem } from "@shared/schema";
 const checkoutSchema = z.object({
   customerName: z.string().min(2, "Ism kamida 2 ta belgi bo'lishi kerak"),
   customerPhone: z.string().min(9, "Telefon raqamini kiriting").regex(/^\+?[0-9]+$/, "Noto'g'ri telefon raqam"),
-  customerTelegramId: z.string().min(1, "Telegram ID ni kiriting"),
+  customerTelegramId: z.string().optional(),
   customerAddress: z.string().min(5, "Manzilni kiriting"),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
@@ -218,19 +218,6 @@ export default function Checkout() {
                           <FormLabel>Telefon raqam</FormLabel>
                           <FormControl>
                             <Input placeholder="+998 90 123 45 67" {...field} data-testid="input-phone" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="customerTelegramId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telegram ID (@username yoki raqam)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Masalan: @username yoki 123456789" {...field} data-testid="input-telegram-id" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
