@@ -16,9 +16,10 @@ import {
   ArrowLeft,
   TrendingDown,
   TrendingUp,
+  Package,
 } from "lucide-react";
 
-type TabType = "home" | "transfer" | "payments" | "qr" | "history" | "settings";
+type TabType = "home" | "transfer" | "payments" | "qr" | "history" | "orders" | "settings";
 
 const features = [
   {
@@ -102,6 +103,25 @@ interface Transaction {
   createdAt: string;
 }
 
+interface Order {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
+  total: number;
+  status: string;
+}
+
+interface Assignment {
+  id: string;
+  orderId: string;
+  courierId: string;
+  status: string;
+  assignedAt: string;
+  order?: Order;
+}
+
 export default function CourierPayme() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>("home");
@@ -112,6 +132,7 @@ export default function CourierPayme() {
   const [transferAmount, setTransferAmount] = useState<string>("");
   const [isTransferring, setIsTransferring] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [orders, setOrders] = useState<Assignment[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -134,6 +155,9 @@ export default function CourierPayme() {
       }
       if (data.transactions) {
         setTransactions(data.transactions);
+      }
+      if (data.assignments) {
+        setOrders(data.assignments);
       }
     } catch (error) {
       console.error("Failed to fetch courier data:", error);
@@ -213,7 +237,20 @@ export default function CourierPayme() {
             </Card>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
+              <button
+                onClick={() => setActiveTab("orders")}
+                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition relative"
+                data-testid="button-quick-orders"
+              >
+                <Package className="w-5 h-5 mx-auto mb-1" />
+                Buyurtma
+                {orders.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {orders.length}
+                  </span>
+                )}
+              </button>
               <button
                 onClick={() => setActiveTab("payments")}
                 className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition"
@@ -407,6 +444,46 @@ export default function CourierPayme() {
                   </Card>
                 );
               })
+            )}
+          </div>
+        );
+
+      case "orders":
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Mening Buyurtmalarim</h2>
+            {orders.length === 0 ? (
+              <Card className="bg-slate-800 border-slate-700 p-4 text-center text-slate-400">
+                Aktiv buyurtma yo'q
+              </Card>
+            ) : (
+              orders.map((assignment) => (
+                <Card
+                  key={assignment.id}
+                  className="bg-slate-800 border-slate-700 p-4 space-y-2"
+                  data-testid={`card-order-${assignment.orderId}`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-bold text-lg text-white">#${assignment.orderId?.substring(0, 6) || 'N/A'}</p>
+                      <p className="text-sm text-slate-300">{new Date(assignment.assignedAt).toLocaleDateString('uz-UZ')}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded text-xs font-medium ${
+                      assignment.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                      assignment.status === "accepted" ? "bg-green-500/20 text-green-400" :
+                      "bg-blue-500/20 text-blue-400"
+                    }`}>
+                      {assignment.status === "pending" ? "Kutilmoqda" :
+                       assignment.status === "accepted" ? "Qabul qilindi" : "Boshlandi"}
+                    </span>
+                  </div>
+                  <div className="bg-slate-700 p-3 rounded space-y-1">
+                    <p className="text-white font-medium">👤 Mijoz</p>
+                    <p className="text-slate-200">Telefon: +998 33 020 60 00</p>
+                    <p className="text-slate-300 text-sm mt-2">📍 Manzil</p>
+                  </div>
+                </Card>
+              ))
             )}
           </div>
         );
