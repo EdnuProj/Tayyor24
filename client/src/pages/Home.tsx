@@ -205,6 +205,64 @@ export default function Home() {
         </section>
       )}
 
+      {/* Categories */}
+      {categories.length > 0 && (
+        <section className="py-8 sm:py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-6 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">Kategoriyalar</h2>
+              <Link href="/categories">
+                <Button variant="ghost" size="sm" data-testid="link-view-all-categories">
+                  Barchasi
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
+              {[...categories].sort((a, b) => (a.order || 0) - (b.order || 0)).slice(0, 6).map((category) => (
+                <Link key={category.id} href={`/products?category=${category.id}`}>
+                  <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-category-${category.id}`}>
+                    <CardContent className="p-3 sm:p-4 md:p-6 text-center space-y-1 sm:space-y-2">
+                      <div className="w-10 sm:w-12 h-10 sm:h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center text-lg sm:text-2xl">
+                        {category.icon || "📦"}
+                      </div>
+                      <h3 className="font-medium text-xs sm:text-sm line-clamp-2">{category.name}</h3>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* CTA Section - Moved after categories */}
+      <section className="py-12 sm:py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <Card className="bg-primary text-primary-foreground overflow-hidden">
+            <CardContent className="p-6 sm:p-8 md:p-12 text-center relative">
+              <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">
+                  Bugun xarid qiling va 20% chegirma oling
+                </h2>
+                <p className="text-sm sm:text-base md:text-lg text-primary-foreground/80">
+                  Birinchi buyurtmangizda maxsus chegirma. Promokod: YANGI20
+                </p>
+                <Link href="/products" className="inline-block">
+                  <Button size="lg" variant="secondary" data-testid="button-cta-shop">
+                    Hozir xarid qiling
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+              {/* Decorative circles - Hidden on mobile */}
+              <div className="hidden sm:block absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="hidden sm:block absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/3" />
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       {/* Main Categories with Products */}
       {mainCategories.map((mainCategory, idx) => {
         const categoryProducts = getProductsByCategory(mainCategory.id);
@@ -257,33 +315,6 @@ export default function Home() {
               </Card>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-12 sm:py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <Card className="bg-primary text-primary-foreground overflow-hidden">
-            <CardContent className="p-6 sm:p-8 md:p-12 text-center relative">
-              <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">
-                  Bugun xarid qiling va 20% chegirma oling
-                </h2>
-                <p className="text-sm sm:text-base md:text-lg text-primary-foreground/80">
-                  Birinchi buyurtmangizda maxsus chegirma. Promokod: YANGI20
-                </p>
-                <Link href="/products" className="inline-block">
-                  <Button size="lg" variant="secondary" data-testid="button-cta-shop">
-                    Hozir xarid qiling
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-              {/* Decorative circles - Hidden on mobile */}
-              <div className="hidden sm:block absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="hidden sm:block absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/3" />
-            </CardContent>
-          </Card>
         </div>
       </section>
     </StoreLayout>
