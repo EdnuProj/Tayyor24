@@ -87,6 +87,7 @@ export interface OrderItem {
   quantity: number;
   selectedColor?: string;
   selectedSize?: string;
+  categoryId?: string;
 }
 
 // Customers

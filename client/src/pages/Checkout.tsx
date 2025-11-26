@@ -98,6 +98,7 @@ export default function Checkout() {
         quantity: item.quantity,
         selectedColor: item.selectedColor || undefined,
         selectedSize: item.selectedSize || undefined,
+        categoryId: item.product.categoryId,
       }));
 
       const orderData = {

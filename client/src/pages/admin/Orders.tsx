@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
@@ -53,7 +53,7 @@ import {
   paymentTypeLabels,
 } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Order, OrderItem } from "@shared/schema";
+import type { Order, OrderItem, Category } from "@shared/schema";
 
 const statusOptions = [
   { value: "new", label: "Yangi" },
@@ -72,6 +72,18 @@ export default function AdminOrders() {
   const { data: orders = [], isLoading } = useQuery<Order[]>({
     queryKey: ["/api/orders"],
   });
+
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
+
+  const categoryMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    categories.forEach((cat) => {
+      map[cat.id] = cat.name;
+    });
+    return map;
+  }, [categories]);
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -332,7 +344,12 @@ export default function AdminOrders() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{item.productName}</p>
-                        <div className="flex gap-2 text-xs text-muted-foreground">
+                        <div className="flex gap-2 text-xs text-muted-foreground flex-wrap">
+                          {item.categoryId && (
+                            <span className="bg-primary/10 text-primary px-2 py-1 rounded">
+                              {categoryMap[item.categoryId] || "Noma'lum"}
+                            </span>
+                          )}
                           {item.selectedColor && (
                             <span className="flex items-center gap-1">
                               Rang:
