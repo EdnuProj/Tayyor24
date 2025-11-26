@@ -8,6 +8,8 @@ export const categories = pgTable("categories", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   icon: text("icon"),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
 });
 
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });
@@ -53,6 +55,36 @@ export const insertCartItemSchema = createInsertSchema(cartItems).omit({ id: tru
 export type InsertCartItem = z.infer<typeof insertCartItemSchema>;
 export type CartItem = typeof cartItems.$inferSelect;
 
+// Couriers
+export const couriers = pgTable("couriers", {
+  id: varchar("id").primaryKey(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  telegramId: text("telegram_id").notNull().unique(),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
+  categoryId: varchar("category_id"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertCourierSchema = createInsertSchema(couriers).omit({ id: true, createdAt: true });
+export type InsertCourier = z.infer<typeof insertCourierSchema>;
+export type Courier = typeof couriers.$inferSelect;
+
+// Courier Assignments
+export const courierAssignments = pgTable("courier_assignments", {
+  id: varchar("id").primaryKey(),
+  orderId: varchar("order_id").notNull(),
+  courierId: varchar("courier_id"),
+  status: text("status").notNull().default("pending"), // pending, accepted, rejected, auto_assigned
+  assignedAt: timestamp("assigned_at").defaultNow(),
+});
+
+export const insertCourierAssignmentSchema = createInsertSchema(courierAssignments).omit({ id: true, assignedAt: true });
+export type InsertCourierAssignment = z.infer<typeof insertCourierAssignmentSchema>;
+export type CourierAssignment = typeof courierAssignments.$inferSelect;
+
 // Orders
 export const orders = pgTable("orders", {
   id: varchar("id").primaryKey(),
@@ -71,12 +103,17 @@ export const orders = pgTable("orders", {
   total: real("total").notNull(),
   promoCode: text("promo_code"),
   items: text("items").notNull(), // JSON string of order items
+  categoryId: varchar("category_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true });
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type Order = typeof orders.$inferSelect;
+
+export interface OrderWithAssignment extends Order {
+  assignment?: CourierAssignment;
+}
 
 // Order Items (for display)
 export interface OrderItem {

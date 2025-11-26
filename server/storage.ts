@@ -23,6 +23,10 @@ import {
   type InsertAdvertisement,
   type Newsletter,
   type InsertNewsletter,
+  type Courier,
+  type InsertCourier,
+  type CourierAssignment,
+  type InsertCourierAssignment,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -101,6 +105,19 @@ export interface IStorage {
   // Settings
   getSettings(): Promise<SiteSettings>;
   updateSettings(data: Partial<InsertSiteSettings>): Promise<SiteSettings>;
+
+  // Couriers
+  getCouriers(categoryId?: string): Promise<Courier[]>;
+  getCourier(id: string): Promise<Courier | undefined>;
+  getCourierByTelegramId(telegramId: string): Promise<Courier | undefined>;
+  createCourier(courier: InsertCourier): Promise<Courier>;
+  updateCourier(id: string, data: Partial<InsertCourier>): Promise<Courier | undefined>;
+  deleteCourier(id: string): Promise<boolean>;
+
+  // Courier Assignments
+  createAssignment(assignment: InsertCourierAssignment): Promise<CourierAssignment>;
+  getAssignment(orderId: string): Promise<CourierAssignment | undefined>;
+  updateAssignment(id: string, data: Partial<InsertCourierAssignment>): Promise<CourierAssignment | undefined>;
 
   // Dashboard Stats
   getDashboardStats(): Promise<DashboardStats>;
