@@ -63,6 +63,7 @@ export const couriers = pgTable("couriers", {
   name: text("name").notNull(),
   phone: text("phone").notNull(),
   telegramId: text("telegram_id").notNull().unique(),
+  cardNumber: text("card_number"),
   latitude: real("latitude"),
   longitude: real("longitude"),
   categoryId: varchar("category_id"),

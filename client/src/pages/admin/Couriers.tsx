@@ -55,6 +55,7 @@ export default function AdminCouriers() {
       name: "",
       phone: "",
       telegramId: "",
+      cardNumber: "",
       categoryId: "",
       latitude: undefined,
       longitude: undefined,
@@ -210,6 +211,23 @@ export default function AdminCouriers() {
 
               <FormField
                 control={form.control}
+                name="cardNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Karta Raqami</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="9860 1234 5678 9012"
+                        {...field}
+                        data-testid="input-courier-card"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="categoryId"
                 render={({ field }) => (
                   <FormItem>
@@ -280,6 +298,11 @@ export default function AdminCouriers() {
                       <p data-testid={`text-courier-telegram-${courier.id}`}>
                         💬 Telegram: {courier.telegramId}
                       </p>
+                      {courier.cardNumber && (
+                        <p data-testid={`text-courier-card-${courier.id}`}>
+                          💳 {courier.cardNumber}
+                        </p>
+                      )}
                       {courier.categoryId && (
                         <p data-testid={`text-courier-category-${courier.id}`}>
                           📂 Kategoriya: {categories.find((c: any) => c.id === courier.categoryId)?.name}
