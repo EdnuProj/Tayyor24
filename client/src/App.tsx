@@ -14,6 +14,7 @@ import ProductDetail from "@/pages/ProductDetail";
 import Categories from "@/pages/Categories";
 import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
+import SupportChat from "@/pages/Chat";
 
 // Courier App
 import CourierApp from "@/pages/CourierApp";
@@ -53,6 +54,7 @@ function Router() {
       <Route path="/categories" component={Categories} />
       <Route path="/cart" component={Cart} />
       <Route path="/checkout" component={Checkout} />
+      <Route path="/chat" component={SupportChat} />
 
       {/* Admin Routes */}
       <Route path="/admin" component={Admin} />

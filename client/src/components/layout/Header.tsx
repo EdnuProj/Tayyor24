@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCart } from "@/contexts/CartContext";
-import { ChatWidget } from "@/components/support/ChatWidget";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -79,7 +78,11 @@ export function Header({ onSearch }: HeaderProps) {
           {/* Right Actions */}
           <div className="flex items-center gap-2 ml-auto">
             {/* Chat */}
-            <ChatWidget showTriggerOnly={true} />
+            <Link href="/chat">
+              <Button variant="ghost" size="icon" data-testid="button-support-chat">
+                <MessageCircle className="h-5 w-5" />
+              </Button>
+            </Link>
 
             {/* Theme Toggle */}
             <Button
