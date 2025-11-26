@@ -770,7 +770,7 @@ export default function CourierPayme() {
                           className="flex-1 bg-blue-600 hover:bg-blue-700"
                           data-testid={`button-progress-${assignment.orderId}`}
                         >
-                          {updatingStatus ? "⏳ Yangilanmoqda..." : assignment.status === "accepted" ? "🚗 Yo'lda" : assignment.status === "shipping" ? "📍 Yetkazildi" : "✅ Tafsilotni Ko'rish"}
+                          {updatingStatus ? "Yangilanmoqda..." : assignment.status === "accepted" ? "Qabul Qilish → Yo'lda" : assignment.status === "shipping" ? "Yo'lda → Yetkazildi" : "Tafsilotni Ko'rish"}
                         </Button>
                         <Button
                           onClick={() => setSelectedOrder(assignment)}
