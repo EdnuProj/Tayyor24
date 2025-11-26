@@ -217,7 +217,7 @@ export default function Products() {
           {totalPages > 1 && (
             <div 
               ref={paginationRef}
-              className="mt-12 flex items-center justify-center gap-2 flex-wrap relative group"
+              className="mt-12 flex items-center justify-center gap-2 flex-wrap"
             >
               <Button
                 variant="outline"
@@ -257,21 +257,22 @@ export default function Products() {
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
 
-              {/* Scroll to Top Button - Shows on hover */}
-              <Button
-                size="icon"
-                variant="default"
-                onClick={() => {
-                  if (containerRef.current) {
-                    containerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }
-                }}
-                className="absolute -right-16 opacity-0 group-hover:opacity-100 group-hover:right-0 transition-all duration-300"
-                data-testid="button-scroll-to-top"
-                title="Tepaga ko'tar"
-              >
-                <ChevronLeft className="h-4 w-4 rotate-90" />
-              </Button>
+              {/* Scroll to Top Button - Shows on hover, positioned on right */}
+              <div className="ml-4 opacity-0 hover:opacity-100 transition-opacity duration-200">
+                <Button
+                  size="icon"
+                  variant="default"
+                  onClick={() => {
+                    if (containerRef.current) {
+                      containerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                  }}
+                  data-testid="button-scroll-to-top"
+                  title="Tepaga ko'tar"
+                >
+                  <ChevronLeft className="h-4 w-4 rotate-90" />
+                </Button>
+              </div>
             </div>
           )}
 
