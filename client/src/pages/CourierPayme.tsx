@@ -143,6 +143,47 @@ export default function CourierPayme() {
     const id = params.get("telegramId");
     if (id) setTelegramId(id);
     
+    // Request location permission
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          // Send location to server
+          fetch("/api/courier/update-location", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              telegramId: id,
+              latitude,
+              longitude,
+            }),
+          }).catch(() => {});
+          
+          // Watch for location changes
+          const watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+              const { latitude: lat, longitude: lon } = pos.coords;
+              fetch("/api/courier/update-location", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  telegramId: id,
+                  latitude: lat,
+                  longitude: lon,
+                }),
+              }).catch(() => {});
+            },
+            () => {}
+          );
+          
+          return () => navigator.geolocation.clearWatch(watchId);
+        },
+        () => {
+          console.log("Location permission denied");
+        }
+      );
+    }
+    
     // Fetch courier data
     if (id) {
       fetchCourierData(id);
