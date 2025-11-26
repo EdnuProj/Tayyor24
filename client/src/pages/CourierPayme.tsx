@@ -30,7 +30,7 @@ const features = [
     id: "transfer",
     icon: ArrowRightLeft,
     title: "Pul O'tkazmalar",
-    description: "Karta → Karta, Payme ID orqali",
+    description: "Karta → Karta, TaayyorCash ID orqali",
     color: "from-purple-500 to-purple-600",
   },
   {
@@ -43,7 +43,7 @@ const features = [
   {
     id: "business",
     icon: BarChart3,
-    title: "Payme Business",
+    title: "TaayyorCash Business",
     description: "QR, terminali, invoice",
     color: "from-green-500 to-green-600",
   },
@@ -398,7 +398,7 @@ export default function CourierPayme() {
           </button>
         )}
         {activeTab === "home" && <div />}
-        <h1 className="text-xl font-bold">Payme</h1>
+        <h1 className="text-xl font-bold">TaayyorCash</h1>
         <div />
       </div>
 
