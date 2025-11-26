@@ -707,22 +707,24 @@ export default function CourierPayme() {
                   </Button>
                 )}
                 {isDelivered && (
-                  <Button
-                    disabled
-                    className="flex-1 bg-green-600"
-                    data-testid="button-delivered-final"
-                  >
-                    ✅ Yetkazildi
-                  </Button>
+                  <>
+                    <Button
+                      disabled
+                      className="flex-1 bg-green-600"
+                      data-testid="button-delivered-final"
+                    >
+                      ✅ Yetkazildi
+                    </Button>
+                    <Button
+                      onClick={() => setSelectedOrder(null)}
+                      variant="outline"
+                      className="flex-1"
+                      data-testid="button-close-detail"
+                    >
+                      ❌ Tafsilotdan Chiqish
+                    </Button>
+                  </>
                 )}
-                <Button
-                  onClick={() => setSelectedOrder(null)}
-                  variant="outline"
-                  className="flex-1"
-                  data-testid="button-close-detail"
-                >
-                  ❌ Tafsilotdan Chiqish
-                </Button>
               </div>
             </div>
           );
