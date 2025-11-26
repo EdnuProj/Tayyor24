@@ -383,23 +383,33 @@ export default function AdminCouriers() {
               </p>
             </div>
             <Input
-              type="number"
-              placeholder="Miqdor kiriting"
+              type="text"
+              inputMode="numeric"
+              placeholder="Miqdor kiriting (masalan: 12500)"
               value={balanceAmount}
-              onChange={(e) => setBalanceAmount(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                setBalanceAmount(val);
+              }}
               data-testid="input-balance-amount"
             />
+            {balanceAmount && <p className="text-xs text-muted-foreground">Yuboriladi: {parseInt(balanceAmount).toLocaleString()} so'm</p>}
             <div className="flex gap-2">
               <Button
                 className="flex-1"
-                onClick={() =>
+                onClick={() => {
+                  const amount = parseInt(balanceAmount);
+                  if (!amount || amount <= 0) {
+                    toast({ title: "❌ Haqiqiy raqam kiriting", variant: "destructive" });
+                    return;
+                  }
                   balanceMutation.mutate({
                     id: selectedCourier?.id,
-                    amount: parseInt(balanceAmount) || 0,
+                    amount,
                     type: "credit",
-                  })
-                }
-                disabled={balanceMutation.isPending || !balanceAmount}
+                  });
+                }}
+                disabled={balanceMutation.isPending}
                 data-testid="button-credit-balance"
               >
                 ➕ Qo'shish
@@ -407,14 +417,19 @@ export default function AdminCouriers() {
               <Button
                 variant="destructive"
                 className="flex-1"
-                onClick={() =>
+                onClick={() => {
+                  const amount = parseInt(balanceAmount);
+                  if (!amount || amount <= 0) {
+                    toast({ title: "❌ Haqiqiy raqam kiriting", variant: "destructive" });
+                    return;
+                  }
                   balanceMutation.mutate({
                     id: selectedCourier?.id,
-                    amount: parseInt(balanceAmount) || 0,
+                    amount,
                     type: "debit",
-                  })
-                }
-                disabled={balanceMutation.isPending || !balanceAmount}
+                  });
+                }}
+                disabled={balanceMutation.isPending}
                 data-testid="button-debit-balance"
               >
                 ➖ Yechish
