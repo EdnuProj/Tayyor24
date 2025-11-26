@@ -23,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { MapPicker } from "@/components/MapPicker";
 import { useToast } from "@/hooks/use-toast";
 import { generateSlug } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -346,18 +347,15 @@ export default function AdminCategories() {
                   
                   {showLocationInput && (
                     <div className="space-y-3 pt-2 border-t">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleSelectLocation}
-                        disabled={gettingLocation}
-                        className="w-full"
-                        data-testid="button-open-yandex-map"
-                      >
-                        <MapPin className="w-4 h-4 mr-2" />
-                        {gettingLocation ? "Joylashuv olinmoqda..." : "Hozirgi Joylashuvni Tanlash"}
-                      </Button>
+                      <MapPicker
+                        latitude={form.getValues('latitude') ? parseFloat(form.getValues('latitude')) : 41.2995}
+                        longitude={form.getValues('longitude') ? parseFloat(form.getValues('longitude')) : 69.2401}
+                        onLocationSelect={(lat, lng) => {
+                          form.setValue('latitude', lat.toString());
+                          form.setValue('longitude', lng.toString());
+                          toast({ title: "Joylashuv tanlandi", description: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
+                        }}
+                      />
                       
                       <div className="grid grid-cols-2 gap-3">
                         <FormField
@@ -387,9 +385,18 @@ export default function AdminCategories() {
                           )}
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Yandex Maps da joylashuvga click qilib, URL ko'rsatgichdan koordinatalarni olib yuqoriga kiriting
-                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSelectLocation}
+                        disabled={gettingLocation}
+                        className="w-full"
+                        data-testid="button-get-current-location"
+                      >
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {gettingLocation ? "Joylashuv olinmoqda..." : "Hozirgi Joylashuvni Tanlash"}
+                      </Button>
                     </div>
                   )}
                 </>
