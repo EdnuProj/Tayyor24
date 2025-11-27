@@ -385,10 +385,10 @@ export default function CourierPayme() {
         setOrders(prev => prev.filter(o => o.orderId !== selectedOrder.orderId));
         setSelectedOrder(null);
         setActiveTab("home");
-        // Refresh data after switching
+        // Refresh data after switching - longer delay to ensure server updates
         setTimeout(() => {
           fetchCourierData(telegramId);
-        }, 300);
+        }, 1000);
       }
     } catch (error: any) {
       toast({
