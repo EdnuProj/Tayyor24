@@ -976,42 +976,40 @@ export default function CourierPayme() {
                 </div>
               </Card>
               <div className="flex gap-2">
-                {!isDelivered && (
+                {!isDelivered && !isShipping && (
                   <Button
                     onClick={() => {
                       if (!isAccepted) {
                         handleUpdateOrderStatus("accepted");
-                      } else if (!isShipping) {
-                        handleUpdateOrderStatus("shipping");
                       } else {
-                        handleUpdateOrderStatus("delivered");
+                        handleUpdateOrderStatus("shipping");
                       }
                     }}
                     disabled={updatingStatus}
                     className="flex-1 bg-blue-600 hover:bg-blue-700"
                     data-testid="button-progress"
                   >
-                    {updatingStatus ? "⏳ Yangilanmoqda..." : !isAccepted ? "⏳ Jarayonda" : !isShipping ? "🚗 Yo'lda" : "📍 Yetkazildi"}
+                    {updatingStatus ? "⏳ Yangilanmoqda..." : !isAccepted ? "⏳ Qabul qilish" : "🚗 Yo'lda"}
+                  </Button>
+                )}
+                {!isDelivered && isShipping && (
+                  <Button
+                    onClick={() => handleUpdateOrderStatus("delivered")}
+                    disabled={updatingStatus}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    data-testid="button-deliver"
+                  >
+                    {updatingStatus ? "⏳ Yangilanmoqda..." : "✅ Yetkazildi"}
                   </Button>
                 )}
                 {isDelivered && (
-                  <>
-                    <Button
-                      disabled
-                      className="flex-1 bg-green-600"
-                      data-testid="button-delivered-final"
-                    >
-                      ✅ Yetkazildi
-                    </Button>
-                    <Button
-                      onClick={() => setSelectedOrder(null)}
-                      variant="outline"
-                      className="flex-1"
-                      data-testid="button-close-detail"
-                    >
-                      ❌ Tafsilotdan Chiqish
-                    </Button>
-                  </>
+                  <Button
+                    onClick={() => setSelectedOrder(null)}
+                    className="flex-1 bg-gray-600 hover:bg-gray-700"
+                    data-testid="button-close-delivered"
+                  >
+                    ❌ Tafsilotdan Chiqish
+                  </Button>
                 )}
               </div>
             </div>
