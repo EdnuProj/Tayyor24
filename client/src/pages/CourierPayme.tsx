@@ -381,6 +381,8 @@ export default function CourierPayme() {
 
       // Close modal when delivered
       if (status === "delivered") {
+        // Remove from orders list immediately
+        setOrders(prev => prev.filter(o => o.orderId !== selectedOrder.orderId));
         setTimeout(() => {
           setSelectedOrder(null);
           setActiveTab("delivered");
