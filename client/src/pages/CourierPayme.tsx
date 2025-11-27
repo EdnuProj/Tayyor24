@@ -20,7 +20,7 @@ import {
   MapPin,
 } from "lucide-react";
 
-type TabType = "home" | "transfer" | "payments" | "qr" | "history" | "orders" | "nearby" | "settings";
+type TabType = "home" | "transfer" | "payments" | "qr" | "history" | "orders" | "nearby" | "delivered" | "settings";
 
 const features = [
   {
@@ -148,6 +148,7 @@ export default function CourierPayme() {
   const [courierLat, setCourierLat] = useState<number | null>(null);
   const [courierLon, setCourierLon] = useState<number | null>(null);
   const [nearbyOrders, setNearbyOrders] = useState<Assignment[]>([]);
+  const [deliveredOrders, setDeliveredOrders] = useState<Assignment[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -255,6 +256,10 @@ export default function CourierPayme() {
           return false;
         });
         setOrders(filteredAssignments);
+        
+        // Get delivered orders
+        const delivered = data.assignments.filter((a: Assignment) => a.status === "delivered" && a.courierId === data.courier?.id);
+        setDeliveredOrders(delivered);
         
         // Filter nearby orders (within 5km)
         // Use client-side location if available, otherwise use server-stored courier location
@@ -497,7 +502,7 @@ export default function CourierPayme() {
             </Card>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setActiveTab("orders")}
                 className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition relative"
@@ -512,20 +517,17 @@ export default function CourierPayme() {
                 )}
               </button>
               <button
-                onClick={() => setActiveTab("payments")}
-                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition"
-                data-testid="button-quick-payment"
+                onClick={() => setActiveTab("delivered")}
+                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition relative"
+                data-testid="button-quick-delivered"
               >
-                <Zap className="w-5 h-5 mx-auto mb-1" />
-                To'lov
-              </button>
-              <button
-                onClick={() => setActiveTab("qr")}
-                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition"
-                data-testid="button-quick-qr"
-              >
-                <QrCode className="w-5 h-5 mx-auto mb-1" />
-                QR
+                <Package className="w-5 h-5 mx-auto mb-1" />
+                Yetkazilgan
+                {deliveredOrders.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {deliveredOrders.length}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab("transfer")}
@@ -534,6 +536,14 @@ export default function CourierPayme() {
               >
                 <ArrowRightLeft className="w-5 h-5 mx-auto mb-1" />
                 O'tkazma
+              </button>
+              <button
+                onClick={() => setActiveTab("payments")}
+                className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-lg text-center text-sm font-medium transition"
+                data-testid="button-quick-payment"
+              >
+                <Zap className="w-5 h-5 mx-auto mb-1" />
+                To'lov
               </button>
             </div>
 
@@ -701,6 +711,58 @@ export default function CourierPayme() {
                       {isDebit ? "-" : "+"}
                       {Math.abs(tx.amount).toLocaleString()}
                     </p>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        );
+
+      case "delivered":
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Yetkazib bergan Zakaz</h2>
+            {deliveredOrders.length === 0 ? (
+              <Card className="bg-slate-800 border-slate-700 p-4 text-center text-slate-400">
+                Yetkazib bergan zakaz yo'q
+              </Card>
+            ) : (
+              deliveredOrders.map((order) => {
+                const orderData = (order as any).order;
+                return (
+                  <Card
+                    key={order.orderId}
+                    className="border-slate-700 bg-slate-800 p-4 space-y-3 cursor-pointer hover-elevate"
+                    onClick={() => setSelectedOrder(order)}
+                    data-testid={`card-delivered-${order.orderId}`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-bold text-white">
+                          #{orderData?.orderNumber || order.orderId?.substring(0, 8)}
+                        </p>
+                        <p className="text-sm text-slate-400">
+                          {orderData?.customerName}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-emerald-400 font-semibold">✅ Yetkazildi</p>
+                        <p className="text-xs text-slate-400">
+                          {new Date(order.assignedAt).toLocaleDateString("uz-UZ")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-sm">
+                      <p className="text-slate-300">
+                        📍 {orderData?.customerAddress}
+                      </p>
+                      <p className="text-slate-300">
+                        📞 {orderData?.customerPhone}
+                      </p>
+                      <p className="text-emerald-400 font-semibold mt-1">
+                        💰 {orderData?.total?.toLocaleString()} so'm
+                      </p>
+                    </div>
                   </Card>
                 );
               })
