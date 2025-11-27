@@ -144,11 +144,10 @@ export default function Checkout() {
       clearCart();
       setOrderComplete({ orderNumber: data.orderNumber });
     },
-    onError: (error: any) => {
-      const errorMsg = error?.message || "Buyurtma berishda xatolik yuz berdi";
+    onError: () => {
       toast({
         title: "Xatolik",
-        description: errorMsg,
+        description: "Buyurtma berishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
         variant: "destructive",
       });
     },

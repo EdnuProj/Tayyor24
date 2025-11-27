@@ -326,7 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let categoryName = "Noma'lum";
       
       // Strategy 1: Try direct category lookup by order.categoryId
-      category = allCategories.find(c => c.id === order.categoryId);
+      let category = allCategories.find(c => c.id === order.categoryId);
       if (category?.name) {
         // Check if it's a main category or needs parent lookup
         if (category.parentId) {
