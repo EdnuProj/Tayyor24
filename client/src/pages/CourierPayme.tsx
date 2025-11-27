@@ -381,13 +381,14 @@ export default function CourierPayme() {
 
       // Close modal when delivered
       if (status === "delivered") {
-        // Remove from orders list immediately
+        // Remove from orders list and close modal immediately
         setOrders(prev => prev.filter(o => o.orderId !== selectedOrder.orderId));
+        setSelectedOrder(null);
+        setActiveTab("delivered");
+        // Refresh data after switching
         setTimeout(() => {
-          setSelectedOrder(null);
-          setActiveTab("delivered");
           fetchCourierData(telegramId);
-        }, 500);
+        }, 300);
       }
     } catch (error: any) {
       toast({
