@@ -755,46 +755,113 @@ export default function CourierPayme() {
           next.setDate(next.getDate() + 1);
           setSelectedDeliveryDate(next.toISOString().split("T")[0]);
         };
+
+        // Handle day/month/year changes
+        const handleDayChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+          const newDate = new Date(selectedDeliveryDate);
+          newDate.setDate(parseInt(e.target.value));
+          setSelectedDeliveryDate(newDate.toISOString().split("T")[0]);
+        };
+        
+        const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+          const newDate = new Date(selectedDeliveryDate);
+          newDate.setMonth(parseInt(e.target.value));
+          setSelectedDeliveryDate(newDate.toISOString().split("T")[0]);
+        };
+        
+        const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+          const newDate = new Date(selectedDeliveryDate);
+          newDate.setFullYear(parseInt(e.target.value));
+          setSelectedDeliveryDate(newDate.toISOString().split("T")[0]);
+        };
+
+        const currentYear = deliveryDate.getFullYear();
+        const currentMonth = deliveryDate.getMonth();
+        const currentDay = deliveryDate.getDate();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
         
         return (
           <div className="space-y-3 px-2 sm:px-0">
             <h2 className="text-lg sm:text-2xl font-bold">Yetkazib bergan Zakaz</h2>
             <Card className="bg-gradient-to-r from-emerald-900 to-slate-800 border-emerald-700 p-2 sm:p-3 space-y-2">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePreviousDay}
-                  data-testid="button-prev-day"
-                  className="bg-slate-700 border-slate-600 hover:bg-slate-600 h-8 w-8 p-0 flex-shrink-0"
-                >
-                  ◀
-                </Button>
-                
-                <div className="flex-1 text-center w-full min-w-0">
-                  <p className="text-xs text-emerald-300 uppercase">
-                    {dayOfWeek}
-                  </p>
-                  <p className="hidden sm:block text-xs sm:text-sm font-bold text-white">{dateDisplay}</p>
-                  <p className="sm:hidden text-xs font-bold text-white">{dateDisplayMobile}</p>
-                  <input
-                    type="date"
-                    value={selectedDeliveryDate}
-                    onChange={(e) => setSelectedDeliveryDate(e.target.value)}
-                    className="mt-1 w-full bg-slate-700 border border-slate-600 rounded px-1 py-1 text-white text-xs text-center cursor-pointer"
-                    data-testid="input-delivery-date"
-                  />
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2">
+                {/* Left Navigation & Day/Month/Year Selectors */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviousDay}
+                    data-testid="button-prev-day"
+                    className="bg-slate-700 border-slate-600 hover:bg-slate-600 h-7 w-7 p-0 text-xs"
+                  >
+                    ◀
+                  </Button>
+                  
+                  {/* Day selector */}
+                  <select
+                    value={currentDay}
+                    onChange={handleDayChange}
+                    className="bg-slate-700 border border-slate-600 rounded text-white text-xs px-1 py-1 h-7"
+                    data-testid="select-day"
+                  >
+                    {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => (
+                      <option key={day} value={day}>{day}</option>
+                    ))}
+                  </select>
                 </div>
                 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNextDay}
-                  data-testid="button-next-day"
-                  className="bg-slate-700 border-slate-600 hover:bg-slate-600 h-8 w-8 p-0 flex-shrink-0"
-                >
-                  ▶
-                </Button>
+                {/* Center: Date Display */}
+                <div className="flex-1 text-center min-w-0 px-1">
+                  <p className="text-xs text-emerald-300 uppercase">{dayOfWeek}</p>
+                  <p className="hidden sm:block text-xs sm:text-sm font-bold text-white truncate">{dateDisplay}</p>
+                  <p className="sm:hidden text-xs font-bold text-white">{dateDisplayMobile}</p>
+                </div>
+                
+                {/* Right Month/Year Selectors & Navigation */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {/* Month selector */}
+                  <select
+                    value={currentMonth}
+                    onChange={handleMonthChange}
+                    className="bg-slate-700 border border-slate-600 rounded text-white text-xs px-1 py-1 h-7 hidden sm:block"
+                    data-testid="select-month"
+                  >
+                    <option value={0}>Jan</option>
+                    <option value={1}>Feb</option>
+                    <option value={2}>Mar</option>
+                    <option value={3}>Apr</option>
+                    <option value={4}>May</option>
+                    <option value={5}>Jun</option>
+                    <option value={6}>Jul</option>
+                    <option value={7}>Aug</option>
+                    <option value={8}>Sep</option>
+                    <option value={9}>Oct</option>
+                    <option value={10}>Nov</option>
+                    <option value={11}>Dec</option>
+                  </select>
+
+                  {/* Year selector */}
+                  <select
+                    value={currentYear}
+                    onChange={handleYearChange}
+                    className="bg-slate-700 border border-slate-600 rounded text-white text-xs px-1 py-1 h-7 hidden sm:block"
+                    data-testid="select-year"
+                  >
+                    {[2024, 2025, 2026].map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextDay}
+                    data-testid="button-next-day"
+                    className="bg-slate-700 border-slate-600 hover:bg-slate-600 h-7 w-7 p-0 text-xs"
+                  >
+                    ▶
+                  </Button>
+                </div>
               </div>
               
               <div className="flex items-center justify-center gap-2 pt-1 border-t border-slate-600">
