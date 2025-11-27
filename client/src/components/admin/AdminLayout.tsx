@@ -90,7 +90,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
           <Link href="/">
             <Button variant="outline" className="w-full" data-testid="button-back-to-store">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Do'konga qaytish
+              Tayyor24ga qaytish
             </Button>
           </Link>
           <Button
@@ -135,7 +135,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link href="/">
                   <Button variant="outline" className="w-full">
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Do'konga qaytish
+                    Tayyor24ga qaytish
                   </Button>
                 </Link>
                 <Button

@@ -15,7 +15,7 @@ export function Footer() {
               <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary">
                 <span className="text-lg font-bold text-primary-foreground">D</span>
               </div>
-              <span className="text-xl font-semibold">Do'kon</span>
+              <span className="text-xl font-semibold">Tayyor24</span>
             </div>
             <p className="text-sm text-muted-foreground">
               Sifatli mahsulotlar va tez yetkazib berish xizmati. Bizning maqsadimiz - 
@@ -83,7 +83,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-3 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <span>info@dokon.uz</span>
+                <span>info@tayyor24.uz</span>
               </li>
               <li className="flex items-start gap-3 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4 mt-0.5" />
@@ -116,7 +116,7 @@ export function Footer() {
         <div className="mt-12 pt-6 border-t">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Do'kon. Barcha huquqlar himoyalangan.
+              © {new Date().getFullYear()} Tayyor24. Barcha huquqlar himoyalangan.
             </p>
             <div className="flex gap-6">
               <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">

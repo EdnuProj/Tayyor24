@@ -39,7 +39,7 @@ export function Header({ onSearch }: HeaderProps) {
             <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary">
               <span className="text-lg font-bold text-primary-foreground">D</span>
             </div>
-            <span className="hidden text-xl font-semibold sm:inline-block">Do'kon</span>
+            <span className="hidden text-xl font-semibold sm:inline-block">Tayyor24</span>
           </Link>
 
           {/* Desktop Navigation */}

@@ -94,7 +94,7 @@ export default function CourierBalance() {
 
         {/* Footer */}
         <div className="text-center mt-12 text-emerald-100 text-xs">
-          <p>Do'kon Delivery System</p>
+          <p>Tayyor24 Delivery System</p>
         </div>
       </div>
     </div>
