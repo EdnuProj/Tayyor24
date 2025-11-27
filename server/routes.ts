@@ -639,6 +639,106 @@ Buyurtma: #${order.orderNumber}
     }
   });
 
+  // Assign order to specific courier (manual assignment)
+  app.post("/api/orders/:orderId/assign-courier", async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      const { courierId } = req.body;
+
+      if (!courierId) {
+        return res.status(400).json({ error: "Courier ID required" });
+      }
+
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      const courier = await storage.getCourier(courierId);
+      if (!courier) {
+        return res.status(404).json({ error: "Courier not found" });
+      }
+
+      // Delete existing assignment if any
+      const existing = await storage.getAssignment(orderId);
+      if (existing) {
+        const assignmentId = Array.from(storage.assignments.entries()).find(
+          ([_, a]) => a.orderId === orderId
+        )?.[0];
+        if (assignmentId) {
+          storage.assignments.delete(assignmentId);
+        }
+      }
+
+      // Create new assignment
+      const assignment = await storage.createAssignment({
+        orderId,
+        courierId,
+        status: "assigned",
+      });
+
+      // Update order status
+      await storage.updateOrder(orderId, { status: "processing" });
+
+      // Send Telegram notification to courier
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      if (botToken) {
+        const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        const courierMessage = `
+🎯 *YANGI BUYURTMA BELGILANDI*
+
+Buyurtma: #${order.orderNumber}
+👤 Mijoz: ${order.customerName}
+📞 Tel: ${order.customerPhone.replace(/\s/g, "")}
+📍 Manzil: ${order.customerAddress}
+💰 Jami: ${order.total} so'm
+
+✅ Siz bu buyurtmani berildi!
+        `.trim();
+
+        try {
+          await fetch(telegramUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: courier.telegramId,
+              text: courierMessage,
+              parse_mode: "Markdown",
+            }),
+          });
+        } catch (error) {
+          console.error("Failed to send courier notification:", error);
+        }
+      }
+
+      res.json({ success: true, assignment });
+    } catch (error) {
+      console.error("Courier assignment error:", error);
+      res.status(500).json({ error: "Failed to assign courier" });
+    }
+  });
+
+  // Get all assignments with courier and order info
+  app.get("/api/assignments", async (req, res) => {
+    try {
+      const assignments = await storage.getAllAssignments();
+      const result = await Promise.all(
+        assignments.map(async (a) => {
+          const courier = a.courierId ? await storage.getCourier(a.courierId) : null;
+          const order = await storage.getOrder(a.orderId);
+          return {
+            ...a,
+            courier,
+            order,
+          };
+        })
+      );
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch assignments" });
+    }
+  });
+
   // ========== COURIERS ==========
   app.get("/api/couriers", async (req, res) => {
     try {

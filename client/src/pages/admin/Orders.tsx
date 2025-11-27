@@ -56,7 +56,7 @@ import {
   generateOrderNumber,
 } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Order, OrderItem, Category, Product } from "@shared/schema";
+import type { Order, OrderItem, Category, Product, Courier, CourierAssignment } from "@shared/schema";
 
 const statusOptions = [
   { value: "new", label: "Yangi" },
@@ -65,6 +65,11 @@ const statusOptions = [
   { value: "delivered", label: "Yetkazildi" },
   { value: "cancelled", label: "Bekor qilindi" },
 ];
+
+interface AssignmentWithInfo extends CourierAssignment {
+  courier?: Courier | null;
+  order?: Order | null;
+}
 
 export default function AdminOrders() {
   const { toast } = useToast();
@@ -79,6 +84,7 @@ export default function AdminOrders() {
   const [customerAddress, setCustomerAddress] = useState("");
   const [deliveryType, setDeliveryType] = useState("courier");
   const [paymentType, setPaymentType] = useState("cash");
+  const [selectedCourier, setSelectedCourier] = useState<string>("");
 
   const { data: orders = [], isLoading } = useQuery<Order[]>({
     queryKey: ["/api/orders"],
@@ -90,6 +96,14 @@ export default function AdminOrders() {
 
   const { data: products = [] } = useQuery<Product[]>({
     queryKey: ["/api/products"],
+  });
+
+  const { data: couriers = [] } = useQuery<Courier[]>({
+    queryKey: ["/api/couriers"],
+  });
+
+  const { data: assignments = [] } = useQuery<AssignmentWithInfo[]>({
+    queryKey: ["/api/assignments"],
   });
 
   const categoryMap = useMemo(() => {
@@ -107,6 +121,20 @@ export default function AdminOrders() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
       toast({ title: "Buyurtma holati yangilandi" });
+    },
+    onError: () => {
+      toast({ title: "Xatolik yuz berdi", variant: "destructive" });
+    },
+  });
+
+  const assignCourierMutation = useMutation({
+    mutationFn: async ({ orderId, courierId }: { orderId: string; courierId: string }) => {
+      return apiRequest("POST", `/api/orders/${orderId}/assign-courier`, { courierId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/assignments"] });
+      toast({ title: "Kuryer belgilandi" });
     },
     onError: () => {
       toast({ title: "Xatolik yuz berdi", variant: "destructive" });
@@ -178,6 +206,11 @@ export default function AdminOrders() {
     } catch {
       return [];
     }
+  };
+
+  const getCourierForOrder = (orderId: string): Courier | undefined => {
+    const assignment = assignments.find((a) => a.orderId === orderId);
+    return assignment?.courier || undefined;
   };
 
   const stats = {
@@ -282,6 +315,7 @@ export default function AdminOrders() {
                     <TableHead>Mijoz</TableHead>
                     <TableHead>Summa</TableHead>
                     <TableHead>To'lov</TableHead>
+                    <TableHead>Kuryer</TableHead>
                     <TableHead>Holat</TableHead>
                     <TableHead>Sana</TableHead>
                     <TableHead className="text-right">Amallar</TableHead>
@@ -308,6 +342,37 @@ export default function AdminOrders() {
                         <p className="text-xs text-muted-foreground">
                           {deliveryTypeLabels[order.deliveryType]}
                         </p>
+                      </TableCell>
+                      <TableCell>
+                        {order.deliveryType === "courier" ? (
+                          <div className="flex items-center gap-2">
+                            {getCourierForOrder(order.id) ? (
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                {getCourierForOrder(order.id)?.name}
+                              </Badge>
+                            ) : (
+                              <Select
+                                value=""
+                                onValueChange={(courierId) =>
+                                  assignCourierMutation.mutate({ orderId: order.id, courierId })
+                                }
+                              >
+                                <SelectTrigger className="w-[140px] h-8 text-xs">
+                                  <SelectValue placeholder="Kuryer tanlang" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {couriers.map((courier) => (
+                                    <SelectItem key={courier.id} value={courier.id}>
+                                      {courier.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">-</p>
+                        )}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>

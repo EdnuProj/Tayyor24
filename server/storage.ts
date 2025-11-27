@@ -119,6 +119,9 @@ export interface IStorage {
   // Courier Assignments
   createAssignment(assignment: InsertCourierAssignment): Promise<CourierAssignment>;
   getAssignment(orderId: string): Promise<CourierAssignment | undefined>;
+  getAssignmentById(assignmentId: string): Promise<CourierAssignment | undefined>;
+  getAssignmentsByCourierId(courierId: string): Promise<CourierAssignment[]>;
+  getAllAssignments(): Promise<CourierAssignment[]>;
   updateAssignment(id: string, data: Partial<InsertCourierAssignment>): Promise<CourierAssignment | undefined>;
 
   // Courier Balance
@@ -848,6 +851,18 @@ export class MemStorage implements IStorage {
 
   async getAssignment(orderId: string): Promise<CourierAssignment | undefined> {
     return Array.from(this.assignments.values()).find((a) => a.orderId === orderId);
+  }
+
+  async getAssignmentById(assignmentId: string): Promise<CourierAssignment | undefined> {
+    return this.assignments.get(assignmentId);
+  }
+
+  async getAssignmentsByCourierId(courierId: string): Promise<CourierAssignment[]> {
+    return Array.from(this.assignments.values()).filter((a) => a.courierId === courierId);
+  }
+
+  async getAllAssignments(): Promise<CourierAssignment[]> {
+    return Array.from(this.assignments.values());
   }
 
   async updateAssignment(id: string, data: Partial<InsertCourierAssignment>): Promise<CourierAssignment | undefined> {
