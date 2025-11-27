@@ -758,14 +758,14 @@ export default function CourierPayme() {
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">Yetkazib bergan Zakaz</h2>
-            <Card className="bg-gradient-to-r from-emerald-900 to-slate-800 border-emerald-700 p-5 space-y-4">
-              <div className="flex items-center justify-between gap-3">
+            <Card className="bg-gradient-to-r from-emerald-900 to-slate-800 border-emerald-700 p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handlePreviousDay}
                   data-testid="button-prev-day"
-                  className="bg-slate-700 border-slate-600 hover:bg-slate-600"
+                  className="bg-slate-700 border-slate-600 hover:bg-slate-600 h-8 w-8 p-0"
                 >
                   ◀
                 </Button>
@@ -774,12 +774,12 @@ export default function CourierPayme() {
                   <p className="text-xs text-emerald-300 uppercase tracking-wider">
                     {dayOfWeek}
                   </p>
-                  <p className="text-2xl font-bold text-white">{dateDisplay}</p>
+                  <p className="text-sm font-bold text-white">{dateDisplay}</p>
                   <input
                     type="date"
                     value={selectedDeliveryDate}
                     onChange={(e) => setSelectedDeliveryDate(e.target.value)}
-                    className="mt-2 w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white text-center cursor-pointer"
+                    className="mt-1 w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-xs text-center cursor-pointer"
                     data-testid="input-delivery-date"
                   />
                 </div>
@@ -789,17 +789,17 @@ export default function CourierPayme() {
                   size="sm"
                   onClick={handleNextDay}
                   data-testid="button-next-day"
-                  className="bg-slate-700 border-slate-600 hover:bg-slate-600"
+                  className="bg-slate-700 border-slate-600 hover:bg-slate-600 h-8 w-8 p-0"
                 >
                   ▶
                 </Button>
               </div>
               
-              <div className="flex items-center justify-center gap-2 pt-2 border-t border-slate-600">
-                <span className="text-emerald-400 font-bold text-lg">
+              <div className="flex items-center justify-center gap-2 pt-1 border-t border-slate-600">
+                <span className="text-emerald-400 font-bold text-base">
                   ✅ {filteredDeliveredOrders.length}
                 </span>
-                <span className="text-emerald-300">
+                <span className="text-emerald-300 text-sm">
                   {filteredDeliveredOrders.length === 1 ? "zakaz" : "ta zakaz"}
                 </span>
               </div>
