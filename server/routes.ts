@@ -360,12 +360,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update order with MAIN category's location so kuryer app can find nearby orders
       let mainCategory = category;
+      console.log(`Order ${order.orderNumber}: Initial category ID: ${order.categoryId}, Has parentId: ${category?.parentId}`);
+      
       if (category?.parentId) {
         // If it's a subcategory, get parent category's location
         const parentCategory = allCategories.find(c => c.id === category.parentId);
         if (parentCategory) {
           mainCategory = parentCategory;
+          console.log(`Order ${order.orderNumber}: Found parent category: ${parentCategory.name}`);
         }
+      } else {
+        console.log(`Order ${order.orderNumber}: Using main category directly: ${category?.name}`);
       }
       
       if (mainCategory?.latitude && mainCategory?.longitude) {
@@ -373,7 +378,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           latitude: mainCategory.latitude,
           longitude: mainCategory.longitude,
         });
-        console.log(`Order ${order.orderNumber}: Updated with main category location (${mainCategory.latitude}, ${mainCategory.longitude})`);
+        console.log(`✅ Order ${order.orderNumber}: Updated with category location LAT=${mainCategory.latitude}, LON=${mainCategory.longitude}`);
+      } else {
+        console.log(`⚠️ Order ${order.orderNumber}: Main category has no location (lat=${mainCategory?.latitude}, lon=${mainCategory?.longitude})`);
       }
 
       // Send Telegram notification to group

@@ -261,10 +261,15 @@ export default function CourierPayme() {
         const useLat = courierLat || data.courier?.latitude;
         const useLon = courierLon || data.courier?.longitude;
         
+        console.log(`Courier location - Client: (${courierLat}, ${courierLon}), Server: (${data.courier?.latitude}, ${data.courier?.longitude}), Using: (${useLat}, ${useLon})`);
+        
         if (useLat && useLon) {
           const nearby = filteredAssignments.filter((a: Assignment) => {
             const order = (a as any).order;
-            if (!order || !order.latitude || !order.longitude) return false;
+            if (!order || !order.latitude || !order.longitude) {
+              console.log(`Order ${order?.orderNumber || 'unknown'}: Missing location (lat=${order?.latitude}, lon=${order?.longitude})`);
+              return false;
+            }
             
             const distance = calculateDistance(
               useLat,
@@ -272,13 +277,14 @@ export default function CourierPayme() {
               order.latitude,
               order.longitude
             );
+            console.log(`Distance for Order ${order.orderNumber}: ${distance.toFixed(3)}km (Order: ${order.latitude}, ${order.longitude})`);
             return distance <= 5; // 5km radius
           });
           setNearbyOrders(nearby);
-          console.log(`Nearby orders found: ${nearby.length} (using location: ${useLat.toFixed(4)}, ${useLon.toFixed(4)})`);
+          console.log(`✅ Nearby orders found: ${nearby.length} out of ${filteredAssignments.length} (courier at: ${useLat.toFixed(4)}, ${useLon.toFixed(4)})`);
         } else {
           setNearbyOrders([]);
-          console.log("No location available for nearby orders filter");
+          console.log("⚠️ No location available for nearby orders filter");
         }
       }
     } catch (error) {
