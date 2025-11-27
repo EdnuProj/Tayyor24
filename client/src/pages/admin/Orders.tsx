@@ -641,12 +641,12 @@ export default function AdminOrders() {
             {deliveryType === "courier" && (
               <div>
                 <label className="text-sm font-medium">Kuryer Tanlang (ixtiyoriy)</label>
-                <Select value={createCourierId} onValueChange={setCreateCourierId}>
+                <Select value={createCourierId || "auto"} onValueChange={(val) => setCreateCourierId(val === "auto" ? "" : val)}>
                   <SelectTrigger data-testid="select-create-courier">
                     <SelectValue placeholder="Kuryer tanlang yoki avtomatik belgilansin" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Avtomatik belgilash</SelectItem>
+                    <SelectItem value="auto">🤖 Avtomatik belgilash</SelectItem>
                     {couriers.map((courier) => (
                       <SelectItem key={courier.id} value={courier.id}>
                         {courier.name}
@@ -655,7 +655,7 @@ export default function AdminOrders() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {createCourierId ? "Tanlangan kuryerga yuboriladi" : "30 sekundda qabul qilmasa, hammaga yuboriladi"}
+                  {createCourierId ? "✅ Tanlangan kuryerga yuboriladi" : "⏱️ 30 sekundda qabul qilmasa, hammaga yuboriladi"}
                 </p>
               </div>
             )}
