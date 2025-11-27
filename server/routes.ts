@@ -1626,6 +1626,12 @@ Sababu: Redd etilgan
         return res.status(404).json({ error: "Order not found" });
       }
 
+      // Also update the assignment status to match order status
+      const assignment = await (storage as any).getAssignmentByOrderId(orderId);
+      if (assignment) {
+        await storage.updateAssignment(assignment.id, { status });
+      }
+
       // Send notifications only to customer
       const settings = await storage.getSettings();
       if (settings.telegramBotToken && order && order.customerTelegramId) {
