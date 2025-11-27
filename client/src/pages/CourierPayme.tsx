@@ -383,7 +383,7 @@ export default function CourierPayme() {
       if (status === "delivered") {
         setTimeout(() => {
           setSelectedOrder(null);
-          setActiveTab("home");
+          setActiveTab("delivered");
           fetchCourierData(telegramId);
         }, 500);
       }
