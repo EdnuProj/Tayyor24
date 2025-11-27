@@ -157,7 +157,7 @@ export default function AdminOrders() {
         categoryId: item.product.categoryId,
       }));
 
-      const order = await apiRequest("POST", "/api/orders", {
+      const orderRes = await apiRequest("POST", "/api/orders", {
         orderNumber: generateOrderNumber(),
         customerName,
         customerPhone,
@@ -172,12 +172,20 @@ export default function AdminOrders() {
         items: JSON.stringify(orderItems),
         categoryId: "elektronika",
       });
+      
+      const order = (await orderRes.json()) as Order;
 
       // Assign to courier if selected
-      if (createCourierId && deliveryType === "courier") {
-        await apiRequest("POST", `/api/orders/${order.id}/assign-courier`, {
-          courierId: createCourierId,
-        });
+      if (createCourierId && deliveryType === "courier" && order.id) {
+        try {
+          const assignRes = await apiRequest("POST", `/api/orders/${order.id}/assign-courier`, {
+            courierId: createCourierId,
+          });
+          await assignRes.json();
+        } catch (assignError) {
+          console.error("Courier assignment error:", assignError);
+          // Continue even if assignment fails - order was created
+        }
       }
 
       return order;
