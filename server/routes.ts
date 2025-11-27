@@ -728,6 +728,32 @@ Buyurtma: #${order.orderNumber}
     }
   });
 
+  app.post("/api/courier/update-location", async (req, res) => {
+    try {
+      const { telegramId, latitude, longitude } = req.body;
+      
+      if (!telegramId || latitude === undefined || longitude === undefined) {
+        return res.status(400).json({ error: "Missing telegramId, latitude, or longitude" });
+      }
+      
+      const courier = await storage.getCourierByTelegramId(telegramId);
+      if (!courier) {
+        return res.status(404).json({ error: "Courier not found" });
+      }
+      
+      const updated = await storage.updateCourier(courier.id, {
+        latitude,
+        longitude,
+      });
+      
+      console.log(`✅ Courier ${courier.name} location updated: (${latitude}, ${longitude})`);
+      res.json(updated);
+    } catch (error) {
+      console.error("Location update error:", error);
+      res.status(500).json({ error: "Failed to update location" });
+    }
+  });
+
   app.get("/api/courier-dashboard/:telegramId", async (req, res) => {
     try {
       const { telegramId } = req.params;
