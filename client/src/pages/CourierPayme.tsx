@@ -257,20 +257,28 @@ export default function CourierPayme() {
         setOrders(filteredAssignments);
         
         // Filter nearby orders (within 5km)
-        if (courierLat && courierLon) {
+        // Use client-side location if available, otherwise use server-stored courier location
+        const useLat = courierLat || data.courier?.latitude;
+        const useLon = courierLon || data.courier?.longitude;
+        
+        if (useLat && useLon) {
           const nearby = filteredAssignments.filter((a: Assignment) => {
             const order = (a as any).order;
             if (!order || !order.latitude || !order.longitude) return false;
             
             const distance = calculateDistance(
-              courierLat,
-              courierLon,
+              useLat,
+              useLon,
               order.latitude,
               order.longitude
             );
             return distance <= 5; // 5km radius
           });
           setNearbyOrders(nearby);
+          console.log(`Nearby orders found: ${nearby.length} (using location: ${useLat.toFixed(4)}, ${useLon.toFixed(4)})`);
+        } else {
+          setNearbyOrders([]);
+          console.log("No location available for nearby orders filter");
         }
       }
     } catch (error) {
