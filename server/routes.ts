@@ -1627,7 +1627,7 @@ Sababu: Redd etilgan
       }
 
       // Also update the assignment status to match order status
-      const assignment = await (storage as any).getAssignmentByOrderId(orderId);
+      const assignment = await (storage as any).getAssignment(orderId);
       if (assignment) {
         await storage.updateAssignment(assignment.id, { status });
       }
