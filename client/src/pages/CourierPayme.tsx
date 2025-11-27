@@ -149,6 +149,9 @@ export default function CourierPayme() {
   const [courierLon, setCourierLon] = useState<number | null>(null);
   const [nearbyOrders, setNearbyOrders] = useState<Assignment[]>([]);
   const [deliveredOrders, setDeliveredOrders] = useState<Assignment[]>([]);
+  const [selectedDeliveryDate, setSelectedDeliveryDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -726,15 +729,34 @@ export default function CourierPayme() {
         );
 
       case "delivered":
+        const filteredDeliveredOrders = deliveredOrders.filter((order) => {
+          const orderDate = new Date(order.assignedAt).toISOString().split("T")[0];
+          return orderDate === selectedDeliveryDate;
+        });
+        
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">Yetkazib bergan Zakaz</h2>
-            {deliveredOrders.length === 0 ? (
+            <div className="space-y-3">
+              <h2 className="text-xl font-bold">Yetkazib bergan Zakaz</h2>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="date"
+                  value={selectedDeliveryDate}
+                  onChange={(e) => setSelectedDeliveryDate(e.target.value)}
+                  className="bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white"
+                  data-testid="input-delivery-date"
+                />
+                <span className="text-sm text-slate-400">
+                  {filteredDeliveredOrders.length} ta zakaz
+                </span>
+              </div>
+            </div>
+            {filteredDeliveredOrders.length === 0 ? (
               <Card className="bg-slate-800 border-slate-700 p-4 text-center text-slate-400">
-                Yetkazib bergan zakaz yo'q
+                {selectedDeliveryDate} da yetkazib bergan zakaz yo'q
               </Card>
             ) : (
-              deliveredOrders.map((order) => {
+              filteredDeliveredOrders.map((order) => {
                 const orderData = (order as any).order;
                 return (
                   <Card
@@ -754,7 +776,10 @@ export default function CourierPayme() {
                       <div className="text-right">
                         <p className="text-emerald-400 font-semibold">✅ Yetkazildi</p>
                         <p className="text-xs text-slate-400">
-                          {new Date(order.assignedAt).toLocaleDateString("uz-UZ")}
+                          {new Date(order.assignedAt).toLocaleDateString("uz-UZ", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
                       </div>
                     </div>
