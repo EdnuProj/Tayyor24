@@ -132,10 +132,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { categories: reordered } = req.body;
       for (const item of reordered) {
-        const category = (storage as any).categories.get(item.id);
+        const category = storage.categories.get(item.id);
         if (category) {
           category.order = item.order;
-          (storage as any).categories.set(item.id, category);
+          storage.categories.set(item.id, category);
         }
       }
       res.json({ success: true });
@@ -147,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========== COURIER TRANSACTIONS ==========
   app.get("/api/courier-transactions", async (req, res) => {
     try {
-      const transactions = Array.from((storage as any).courierTransactions.values()).sort(
+      const transactions = Array.from(storage.courierTransactions.values()).sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
       res.json(transactions);
@@ -440,14 +440,14 @@ ${itemsList}
             let orderCategory = allCategories.find(c => c.id === order.categoryId);
             
             // If it's a subcategory, get parent category for location
-            if (orderCategory && orderCategory.parentId) {
+            if (orderCategory?.parentId) {
               const parentCategory = allCategories.find(c => c.id === orderCategory.parentId);
               if (parentCategory) {
                 orderCategory = parentCategory;
               }
             }
             
-            if (orderCategory && orderCategory.latitude && orderCategory.longitude) {
+            if (orderCategory?.latitude && orderCategory?.longitude) {
               console.log(`Order ${order.orderNumber}: Main category location: (${orderCategory.latitude}, ${orderCategory.longitude})`);
               // Filter couriers within 1km of main category location
               nearByCouriers = activeCouriers.filter((courier) => {
