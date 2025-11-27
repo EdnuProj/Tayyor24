@@ -2080,6 +2080,17 @@ ${message}
     }
   });
 
+  // Catch-all route for SPA - serve frontend for non-API routes
+  app.use((req, res, next) => {
+    if (!req.path.startsWith('/api/')) {
+      // Let Vite handle it in dev mode via middleware, or send index.html in production
+      next();
+    } else {
+      // 404 for API routes that weren't matched
+      res.status(404).json({ error: "API route not found" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
