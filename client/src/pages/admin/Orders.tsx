@@ -220,9 +220,10 @@ export default function AdminOrders() {
     }
   };
 
-  const getCourierForOrder = (orderId: string): Courier | undefined => {
+  const getCourierForOrder = (orderId: string): Courier | null | undefined => {
     const assignment = assignments.find((a) => a.orderId === orderId);
-    return assignment?.courier || undefined;
+    if (!assignment) return undefined;
+    return assignment.courier;
   };
 
   const stats = {
@@ -359,20 +360,23 @@ export default function AdminOrders() {
                         {order.deliveryType === "courier" ? (
                           <div className="flex items-center gap-2">
                             {getCourierForOrder(order.id) ? (
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                {getCourierForOrder(order.id)?.name}
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 animate-pulse">
+                                ✅ {getCourierForOrder(order.id)?.name || "Kuryer"}
                               </Badge>
                             ) : (
                               <Select
-                                value=""
-                                onValueChange={(courierId) =>
-                                  assignCourierMutation.mutate({ orderId: order.id, courierId })
-                                }
+                                value="select"
+                                onValueChange={(courierId) => {
+                                  if (courierId && courierId !== "select") {
+                                    assignCourierMutation.mutate({ orderId: order.id, courierId });
+                                  }
+                                }}
                               >
                                 <SelectTrigger className="w-[140px] h-8 text-xs">
                                   <SelectValue placeholder="Kuryer tanlang" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                  <SelectItem value="select" disabled>Kuryer tanlang</SelectItem>
                                   {couriers.map((courier) => (
                                     <SelectItem key={courier.id} value={courier.id}>
                                       {courier.name}
