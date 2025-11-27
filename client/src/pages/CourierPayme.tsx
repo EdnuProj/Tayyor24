@@ -700,12 +700,12 @@ export default function CourierPayme() {
                           <TrendingUp className="w-5 h-5 text-green-400" />
                         </div>
                       )}
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm truncate">{tx.description}</p>
                         <p className="text-xs text-slate-400">
-                          {new Date(tx.createdAt).toLocaleDateString("uz-UZ", {
-                            month: "short",
-                            day: "numeric",
+                          {new Date(tx.createdAt).toLocaleString("uz-UZ", {
+                            month: "2-digit",
+                            day: "2-digit",
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
@@ -827,10 +827,12 @@ export default function CourierPayme() {
                           {orderData?.customerName}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0">
                         <p className="text-emerald-400 font-semibold text-xs sm:text-sm">✅ Yetkazildi</p>
-                        <p className="text-xs text-slate-400">
-                          {new Date(order.assignedAt).toLocaleDateString("uz-UZ", {
+                        <p className="text-xs text-slate-400 whitespace-nowrap">
+                          {new Date(order.assignedAt).toLocaleString("uz-UZ", {
+                            month: "2-digit",
+                            day: "2-digit",
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
