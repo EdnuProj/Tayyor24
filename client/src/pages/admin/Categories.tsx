@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, GripVertical, Loader2, ChevronLeft, ArrowRight, Package, MapPin } from "lucide-react";
+import { Plus, Trash2, GripVertical, Loader2, ChevronLeft, ArrowRight, Package, MapPin, Edit } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,6 +104,30 @@ export default function AdminCategories() {
       toast({ title: "Kategoriya qo'shildi", variant: "default" });
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       form.reset();
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Xato yuz berdi", variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: CategoryForm) => {
+      if (!editingCategory) throw new Error("No category selected");
+      const response = await apiRequest("PATCH", `/api/categories/${editingCategory.id}`, {
+        name: data.name,
+        icon: data.icon || "📦",
+        latitude: data.latitude,
+        longitude: data.longitude,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Kategoriya yangilandi", variant: "default" });
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      form.reset();
+      setEditingCategory(null);
+      setShowLocationInput(false);
       setDialogOpen(false);
     },
     onError: () => {
@@ -275,6 +299,27 @@ export default function AdminCategories() {
                       </Button>
                     )}
                   </>
+                  {!selectedParentId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingCategory(category);
+                        form.reset({
+                          name: category.name,
+                          icon: category.icon || "📦",
+                          latitude: category.latitude ? category.latitude.toString() : "",
+                          longitude: category.longitude ? category.longitude.toString() : "",
+                        });
+                        setShowLocationInput(!!category.latitude && !!category.longitude);
+                        setDialogOpen(true);
+                      }}
+                      data-testid={`button-edit-category-${category.id}`}
+                      title="Tahrirlash"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -295,7 +340,14 @@ export default function AdminCategories() {
         </CardContent>
       </Card>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) {
+          setEditingCategory(null);
+          form.reset();
+          setShowLocationInput(false);
+        }
+      }}>
         <DialogContent className={!selectedParentId ? "max-w-2xl max-h-[90vh] overflow-y-auto" : ""}>
           <DialogHeader>
             <DialogTitle>
@@ -303,7 +355,7 @@ export default function AdminCategories() {
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit((data) => createMutation.mutate(data))} className="space-y-4">
+            <form onSubmit={form.handleSubmit((data) => editingCategory ? updateMutation.mutate(data) : createMutation.mutate(data))} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -408,11 +460,11 @@ export default function AdminCategories() {
                 }}>
                   Bekor qilish
                 </Button>
-                <Button type="submit" disabled={createMutation.isPending} data-testid="button-save-category">
-                  {createMutation.isPending ? (
+                <Button type="submit" disabled={editingCategory ? updateMutation.isPending : createMutation.isPending} data-testid="button-save-category">
+                  {(editingCategory ? updateMutation.isPending : createMutation.isPending) ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : null}
-                  Saqlash
+                  {editingCategory ? "Yangilash" : "Saqlash"}
                 </Button>
               </DialogFooter>
             </form>
