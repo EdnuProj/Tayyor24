@@ -97,6 +97,24 @@ export default function Checkout() {
     }
   };
 
+  // Fetch categories for location validation
+  const { data: categories } = useQuery({
+    queryKey: ["/api/categories"],
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Helper function to calculate distance
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   const createOrderMutation = useMutation({
     mutationFn: async (data: CheckoutForm) => {
       const orderNumber = generateOrderNumber();
@@ -144,10 +162,11 @@ export default function Checkout() {
       clearCart();
       setOrderComplete({ orderNumber: data.orderNumber });
     },
-    onError: () => {
+    onError: (error: any) => {
+      const errorMsg = error?.message || "Buyurtma berishda xatolik yuz berdi";
       toast({
         title: "Xatolik",
-        description: "Buyurtma berishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
+        description: errorMsg,
         variant: "destructive",
       });
     },
@@ -238,28 +257,60 @@ export default function Checkout() {
                     <FormField
                       control={form.control}
                       name="customerAddress"
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-center justify-between mb-2">
-                            <FormLabel>Manzil</FormLabel>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={handleGetLocation}
-                              disabled={geoLoading}
-                              data-testid="button-get-location"
-                            >
-                              <MapPin className="h-4 w-4 mr-2" />
-                              {geoLoading ? "Aniqlanmoqda..." : "Joyni aniqla"}
-                            </Button>
-                          </div>
-                          <FormControl>
-                            <Input placeholder="To'liq manzilingizni kiriting" {...field} data-testid="input-address" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const categoryId = items.length > 0 ? items[0].product.categoryId : "elektronika";
+                        const category = categories?.find((c: any) => c.id === categoryId);
+                        const customerLat = form.watch("latitude");
+                        const customerLon = form.watch("longitude");
+                        let distanceWarning = "";
+
+                        if (
+                          category?.latitude &&
+                          category?.longitude &&
+                          customerLat &&
+                          customerLon
+                        ) {
+                          const distance = calculateDistance(
+                            category.latitude,
+                            category.longitude,
+                            customerLat,
+                            customerLon
+                          );
+                          if (distance > 1) {
+                            distanceWarning = `⚠️ Sizning joylashuvingiz ${distance.toFixed(1)}km uzoqda (maksimal 1km)`;
+                          } else {
+                            distanceWarning = `✅ Joylashuvingiz tekshirub o'tdi (${distance.toFixed(1)}km)`;
+                          }
+                        }
+
+                        return (
+                          <FormItem>
+                            <div className="flex items-center justify-between mb-2">
+                              <FormLabel>Manzil</FormLabel>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={handleGetLocation}
+                                disabled={geoLoading}
+                                data-testid="button-get-location"
+                              >
+                                <MapPin className="h-4 w-4 mr-2" />
+                                {geoLoading ? "Aniqlanmoqda..." : "Joyni aniqla"}
+                              </Button>
+                            </div>
+                            <FormControl>
+                              <Input placeholder="To'liq manzilingizni kiriting" {...field} data-testid="input-address" />
+                            </FormControl>
+                            {distanceWarning && (
+                              <p className={`text-sm mt-1 ${distanceWarning.includes("✅") ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                                {distanceWarning}
+                              </p>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                   </CardContent>
                 </Card>

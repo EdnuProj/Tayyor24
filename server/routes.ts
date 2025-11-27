@@ -316,17 +316,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!data.categoryId) {
         data.categoryId = "elektronika";
       }
+
+      // Validate customer location against category location
+      const allCategories = await storage.getCategories();
+      const category = allCategories.find(c => c.id === data.categoryId);
+      
+      if (category?.latitude && category?.longitude && data.latitude && data.longitude) {
+        const distance = calculateDistance(
+          category.latitude,
+          category.longitude,
+          data.latitude,
+          data.longitude
+        );
+        console.log(`Order validation: Customer distance from category: ${distance}km`);
+        
+        if (distance > 1) {
+          return res.status(400).json({
+            error: `Sizning joylashuvingiz kategoriyadan ${distance.toFixed(1)}km uzoqda. Faqat 1km ichida buyurtma berish mumkin.`,
+            distance: distance,
+          });
+        }
+      }
+
       const order = await storage.createOrder(data);
 
       // Get main category name (available for both group and courier messages)
-      const allCategories = await storage.getCategories();
       const allProducts = await storage.getProducts();
       const orderItems = JSON.parse(data.items || "[]");
       
       let categoryName = "Noma'lum";
       
       // Strategy 1: Try direct category lookup by order.categoryId
-      let category = allCategories.find(c => c.id === order.categoryId);
+      category = allCategories.find(c => c.id === order.categoryId);
       if (category?.name) {
         // Check if it's a main category or needs parent lookup
         if (category.parentId) {
