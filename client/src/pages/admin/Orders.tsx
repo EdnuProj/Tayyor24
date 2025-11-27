@@ -190,9 +190,11 @@ export default function AdminOrders() {
 
       return order;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/assignments"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/orders"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/assignments"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/assignments"] });
       toast({ title: "Buyurtma muvaffaqiyatli yaratildi" });
       setIsCreateOpen(false);
       setSelectedItems([]);
