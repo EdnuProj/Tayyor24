@@ -358,13 +358,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Update order with category's location so kuryer app can find nearby orders
-      if (category?.latitude && category?.longitude) {
+      // Update order with MAIN category's location so kuryer app can find nearby orders
+      let mainCategory = category;
+      if (category?.parentId) {
+        // If it's a subcategory, get parent category's location
+        const parentCategory = allCategories.find(c => c.id === category.parentId);
+        if (parentCategory) {
+          mainCategory = parentCategory;
+        }
+      }
+      
+      if (mainCategory?.latitude && mainCategory?.longitude) {
         await storage.updateOrder(order.id, {
-          latitude: category.latitude,
-          longitude: category.longitude,
+          latitude: mainCategory.latitude,
+          longitude: mainCategory.longitude,
         });
-        console.log(`Order ${order.orderNumber}: Updated with category location (${category.latitude}, ${category.longitude})`);
+        console.log(`Order ${order.orderNumber}: Updated with main category location (${mainCategory.latitude}, ${mainCategory.longitude})`);
       }
 
       // Send Telegram notification to group
@@ -418,14 +427,22 @@ ${itemsList}
             const allCouriers = await storage.getCouriers("");
             const activeCouriers = allCouriers.filter((c) => c.isActive && c.telegramId);
             
-            // Get category information to check for location
+            // Get MAIN category information to check for location
             let nearByCouriers = activeCouriers;
             let needsExpand = false;
-            const orderCategory = allCategories.find(c => c.id === order.categoryId);
+            let orderCategory = allCategories.find(c => c.id === order.categoryId);
+            
+            // If it's a subcategory, get parent category for location
+            if (orderCategory?.parentId) {
+              const parentCategory = allCategories.find(c => c.id === orderCategory.parentId);
+              if (parentCategory) {
+                orderCategory = parentCategory;
+              }
+            }
             
             if (orderCategory?.latitude && orderCategory?.longitude) {
-              console.log(`Order ${order.orderNumber}: Category location: (${orderCategory.latitude}, ${orderCategory.longitude})`);
-              // Filter couriers within 1km of category location
+              console.log(`Order ${order.orderNumber}: Main category location: (${orderCategory.latitude}, ${orderCategory.longitude})`);
+              // Filter couriers within 1km of main category location
               nearByCouriers = activeCouriers.filter((courier) => {
                 console.log(`Checking courier ${courier.id}: lat=${courier.latitude}, lon=${courier.longitude}`);
                 if (!courier.latitude || !courier.longitude) return false;
