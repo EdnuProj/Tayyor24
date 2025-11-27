@@ -243,14 +243,14 @@ export default function CourierPayme() {
         setTransactions(data.transactions);
       }
       if (data.assignments) {
-        // Show both pending orders (available) and this courier's accepted orders
+        // Show both pending orders (available) and this courier's accepted orders (excluding delivered)
         const filteredAssignments = data.assignments.filter((a: Assignment) => {
           // Pending orders available to accept
           if (a.status === "pending" && !a.courierId) {
             return true;
           }
-          // Orders this courier has already accepted
-          if (a.courierId === data.courier?.id) {
+          // Orders this courier has already accepted (but not delivered)
+          if (a.courierId === data.courier?.id && a.status !== "delivered") {
             return true;
           }
           return false;
