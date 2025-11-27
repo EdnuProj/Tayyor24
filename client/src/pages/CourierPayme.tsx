@@ -734,23 +734,76 @@ export default function CourierPayme() {
           return orderDate === selectedDeliveryDate;
         });
         
+        const deliveryDate = new Date(selectedDeliveryDate);
+        const dayOfWeek = deliveryDate.toLocaleDateString("uz-UZ", { weekday: "long" });
+        const dateDisplay = deliveryDate.toLocaleDateString("uz-UZ", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        
+        // Navigate to previous/next day
+        const handlePreviousDay = () => {
+          const prev = new Date(selectedDeliveryDate);
+          prev.setDate(prev.getDate() - 1);
+          setSelectedDeliveryDate(prev.toISOString().split("T")[0]);
+        };
+        
+        const handleNextDay = () => {
+          const next = new Date(selectedDeliveryDate);
+          next.setDate(next.getDate() + 1);
+          setSelectedDeliveryDate(next.toISOString().split("T")[0]);
+        };
+        
         return (
           <div className="space-y-4">
-            <div className="space-y-3">
-              <h2 className="text-xl font-bold">Yetkazib bergan Zakaz</h2>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="date"
-                  value={selectedDeliveryDate}
-                  onChange={(e) => setSelectedDeliveryDate(e.target.value)}
-                  className="bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white"
-                  data-testid="input-delivery-date"
-                />
-                <span className="text-sm text-slate-400">
-                  {filteredDeliveredOrders.length} ta zakaz
+            <h2 className="text-2xl font-bold">Yetkazib bergan Zakaz</h2>
+            <Card className="bg-gradient-to-r from-emerald-900 to-slate-800 border-emerald-700 p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousDay}
+                  data-testid="button-prev-day"
+                  className="bg-slate-700 border-slate-600 hover:bg-slate-600"
+                >
+                  ◀
+                </Button>
+                
+                <div className="flex-1 text-center">
+                  <p className="text-xs text-emerald-300 uppercase tracking-wider">
+                    {dayOfWeek}
+                  </p>
+                  <p className="text-2xl font-bold text-white">{dateDisplay}</p>
+                  <input
+                    type="date"
+                    value={selectedDeliveryDate}
+                    onChange={(e) => setSelectedDeliveryDate(e.target.value)}
+                    className="mt-2 w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white text-center cursor-pointer"
+                    data-testid="input-delivery-date"
+                  />
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextDay}
+                  data-testid="button-next-day"
+                  className="bg-slate-700 border-slate-600 hover:bg-slate-600"
+                >
+                  ▶
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-center gap-2 pt-2 border-t border-slate-600">
+                <span className="text-emerald-400 font-bold text-lg">
+                  ✅ {filteredDeliveredOrders.length}
+                </span>
+                <span className="text-emerald-300">
+                  {filteredDeliveredOrders.length === 1 ? "zakaz" : "ta zakaz"}
                 </span>
               </div>
-            </div>
+            </Card>
             {filteredDeliveredOrders.length === 0 ? (
               <Card className="bg-slate-800 border-slate-700 p-4 text-center text-slate-400">
                 {selectedDeliveryDate} da yetkazib bergan zakaz yo'q
