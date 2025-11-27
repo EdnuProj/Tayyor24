@@ -278,7 +278,7 @@ export default function CourierPayme() {
               order.longitude
             );
             console.log(`Distance for Order ${order.orderNumber}: ${distance.toFixed(3)}km (Order: ${order.latitude}, ${order.longitude})`);
-            return distance <= 5; // 5km radius
+            return distance <= 1; // 1km radius - same as courier assignment threshold
           });
           setNearbyOrders(nearby);
           console.log(`✅ Nearby orders found: ${nearby.length} out of ${filteredAssignments.length} (courier at: ${useLat.toFixed(4)}, ${useLon.toFixed(4)})`);
@@ -708,14 +708,19 @@ export default function CourierPayme() {
       case "nearby":
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">Joylashuvdagi Zakaz</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">Joylashuvdagi Zakaz (1km)</h2>
+              <div className="text-xs text-slate-400">
+                📍 {courierLat?.toFixed(4)}, {courierLon?.toFixed(4)}
+              </div>
+            </div>
             {!courierLat || !courierLon ? (
               <Card className="bg-slate-800 border-slate-700 p-4 text-center text-slate-400">
                 Joylashuv topilmadi. Geolocation ruxsati bering.
               </Card>
             ) : nearbyOrders.length === 0 ? (
               <Card className="bg-slate-800 border-slate-700 p-4 text-center text-slate-400">
-                Yaqin atrofda buyurtma yo'q
+                ⏱️ 1km ichida buyurtma yo'q (5 sekundda yangilanadi)
               </Card>
             ) : (
               nearbyOrders.map((order) => {
@@ -742,10 +747,14 @@ export default function CourierPayme() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-emerald-400">
-                          {distance.toFixed(1)} km
+                        <p className={`text-lg font-bold ${
+                          distance <= 0.5 ? "text-red-400" : "text-emerald-400"
+                        }`}>
+                          {distance.toFixed(2)} km
                         </p>
-                        <p className="text-xs text-slate-400">Masofasi</p>
+                        <p className="text-xs text-slate-400">
+                          {distance <= 0.5 ? "🔴 Juda yaqin" : "✅ Joylashuvda"}
+                        </p>
                       </div>
                     </div>
 
