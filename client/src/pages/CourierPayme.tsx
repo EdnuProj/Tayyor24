@@ -732,8 +732,7 @@ export default function CourierPayme() {
                 return (
                   <Card
                     key={order.orderId}
-                    className="border-slate-700 bg-slate-800 p-4 space-y-3 cursor-pointer hover-elevate"
-                    onClick={() => setSelectedOrder(order)}
+                    className="border-slate-700 bg-slate-800 p-4 space-y-3"
                     data-testid={`card-delivered-${order.orderId}`}
                   >
                     <div className="flex items-start justify-between">
