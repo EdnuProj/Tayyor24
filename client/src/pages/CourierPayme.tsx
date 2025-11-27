@@ -759,7 +759,7 @@ export default function CourierPayme() {
           <div className="space-y-3 px-2 sm:px-0">
             <h2 className="text-lg sm:text-2xl font-bold">Yetkazib bergan Zakaz</h2>
             <Card className="bg-gradient-to-r from-emerald-900 to-slate-800 border-emerald-700 p-2 sm:p-3 space-y-2">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-1 sm:gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -770,18 +770,11 @@ export default function CourierPayme() {
                   ◀
                 </Button>
                 
-                <div className="flex-1 text-center w-full">
-                  <p className="text-xs text-emerald-300 uppercase tracking-wider">
+                <div className="text-center">
+                  <p className="text-xs text-emerald-300 uppercase tracking-wider leading-none">
                     {dayOfWeek}
                   </p>
-                  <p className="text-xs sm:text-sm font-bold text-white">{dateDisplay}</p>
-                  <input
-                    type="date"
-                    value={selectedDeliveryDate}
-                    onChange={(e) => setSelectedDeliveryDate(e.target.value)}
-                    className="mt-1 w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-xs text-center cursor-pointer"
-                    data-testid="input-delivery-date"
-                  />
+                  <p className="text-xs sm:text-sm font-bold text-white leading-tight">{dateDisplay}</p>
                 </div>
                 
                 <Button
@@ -794,6 +787,14 @@ export default function CourierPayme() {
                   ▶
                 </Button>
               </div>
+              
+              <input
+                type="date"
+                value={selectedDeliveryDate}
+                onChange={(e) => setSelectedDeliveryDate(e.target.value)}
+                className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-xs text-center cursor-pointer"
+                data-testid="input-delivery-date"
+              />
               
               <div className="flex items-center justify-center gap-2 pt-1 border-t border-slate-600">
                 <span className="text-emerald-400 font-bold text-sm sm:text-base">
