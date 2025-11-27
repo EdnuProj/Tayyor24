@@ -772,6 +772,10 @@ Buyurtma: #${order.orderNumber}
       );
       
       const assignments = assignmentsWithOrders.filter((a: any) => {
+        // NEVER show delivered orders in main list
+        if (a.status === "delivered") {
+          return false;
+        }
         // Pending orders available for any courier to accept
         if (a.status === "pending" && !a.courierId) {
           return true;
@@ -1342,6 +1346,10 @@ Buyurtma: #${order.orderNumber}
       console.log(`Dashboard: Courier ID = ${courier.id}`);
       
       const assignments = allAssignments.filter((a) => {
+        // NEVER show delivered orders in main list
+        if (a.status === "delivered") {
+          return false;
+        }
         // Show pending assignments (not yet accepted by any courier)
         if (a.status === "pending" && !a.courierId) {
           console.log(`Dashboard: Including pending assignment ${a.id}`);
