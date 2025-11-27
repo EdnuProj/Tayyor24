@@ -1320,11 +1320,19 @@ Buyurtma: #${order.orderNumber}
 
       console.log(`Dashboard: Filtered to ${assignments.length} assignments for courier`);
 
+      // Attach order data to each assignment
+      const assignmentsWithOrders = await Promise.all(
+        assignments.map(async (a: any) => {
+          const order = await storage.getOrder(a.orderId);
+          return { ...a, order };
+        })
+      );
+
       const transactions = await (storage as any).getCourierTransactions(courier.id);
 
       res.json({
         courier,
-        assignments,
+        assignments: assignmentsWithOrders,
         transactions,
       });
     } catch (error) {
