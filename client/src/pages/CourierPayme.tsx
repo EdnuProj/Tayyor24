@@ -384,7 +384,7 @@ export default function CourierPayme() {
         // Remove from orders list and close modal immediately
         setOrders(prev => prev.filter(o => o.orderId !== selectedOrder.orderId));
         setSelectedOrder(null);
-        setActiveTab("delivered");
+        setActiveTab("home");
         // Refresh data after switching
         setTimeout(() => {
           fetchCourierData(telegramId);
