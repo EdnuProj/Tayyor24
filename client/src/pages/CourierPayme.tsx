@@ -735,12 +735,13 @@ export default function CourierPayme() {
         });
         
         const deliveryDate = new Date(selectedDeliveryDate);
-        const dayOfWeek = deliveryDate.toLocaleDateString("uz-UZ", { weekday: "long" });
+        const dayOfWeek = deliveryDate.toLocaleDateString("uz-UZ", { weekday: "short" });
         const dateDisplay = deliveryDate.toLocaleDateString("uz-UZ", {
           year: "numeric",
           month: "long",
           day: "numeric",
         });
+        const dateDisplayMobile = `${deliveryDate.getDate()}.${String(deliveryDate.getMonth() + 1).padStart(2, "0")}`;
         
         // Navigate to previous/next day
         const handlePreviousDay = () => {
@@ -770,16 +771,17 @@ export default function CourierPayme() {
                   ◀
                 </Button>
                 
-                <div className="flex-1 text-center w-full">
-                  <p className="text-xs text-emerald-300 uppercase tracking-wider">
+                <div className="flex-1 text-center w-full min-w-0">
+                  <p className="text-xs text-emerald-300 uppercase">
                     {dayOfWeek}
                   </p>
-                  <p className="text-xs sm:text-sm font-bold text-white">{dateDisplay}</p>
+                  <p className="hidden sm:block text-xs sm:text-sm font-bold text-white">{dateDisplay}</p>
+                  <p className="sm:hidden text-xs font-bold text-white">{dateDisplayMobile}</p>
                   <input
                     type="date"
                     value={selectedDeliveryDate}
                     onChange={(e) => setSelectedDeliveryDate(e.target.value)}
-                    className="mt-1 w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-xs text-center cursor-pointer"
+                    className="mt-1 w-full bg-slate-700 border border-slate-600 rounded px-1 py-1 text-white text-xs text-center cursor-pointer"
                     data-testid="input-delivery-date"
                   />
                 </div>
