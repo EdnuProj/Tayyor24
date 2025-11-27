@@ -1346,16 +1346,12 @@ Buyurtma: #${order.orderNumber}
       console.log(`Dashboard: Courier ID = ${courier.id}`);
       
       const assignments = allAssignments.filter((a) => {
-        // NEVER show delivered orders in main list
-        if (a.status === "delivered") {
-          return false;
-        }
         // Show pending assignments (not yet accepted by any courier)
         if (a.status === "pending" && !a.courierId) {
           console.log(`Dashboard: Including pending assignment ${a.id}`);
           return true;
         }
-        // Show assignments accepted by this courier
+        // Show assignments accepted by this courier (including delivered ones)
         if (a.courierId === courier.id) {
           console.log(`Dashboard: Including courier's assignment ${a.id}`);
           return true;
