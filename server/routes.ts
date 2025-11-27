@@ -754,47 +754,6 @@ Buyurtma: #${order.orderNumber}
     }
   });
 
-  app.get("/api/courier-dashboard/:telegramId", async (req, res) => {
-    try {
-      const { telegramId } = req.params;
-      const courier = await storage.getCourierByTelegramId(telegramId);
-      if (!courier) {
-        return res.status(404).json({ error: "Courier not found" });
-      }
-      
-      // Get all assignments - both pending (available) and this courier's accepted orders
-      const allAssignments = Array.from((storage as any).assignments?.values() || []);
-      const assignmentsWithOrders = await Promise.all(
-        allAssignments.map(async (a: any) => {
-          const order = await storage.getOrder(a.orderId);
-          return { ...a, order };
-        })
-      );
-      
-      const assignments = assignmentsWithOrders.filter((a: any) => {
-        // NEVER show delivered orders in main list
-        if (a.status === "delivered") {
-          return false;
-        }
-        // Pending orders available for any courier to accept
-        if (a.status === "pending" && !a.courierId) {
-          return true;
-        }
-        // Orders this courier has accepted
-        if (a.courierId === courier.id) {
-          return true;
-        }
-        return false;
-      });
-      
-      console.log(`Dashboard for courier ${courier.id}: ${assignments.length} assignments (${allAssignments.length} total)`);
-      res.json({ courier, assignments });
-    } catch (error) {
-      console.error("Dashboard fetch error:", error);
-      res.status(500).json({ error: "Failed to fetch dashboard" });
-    }
-  });
-
   // Setup Telegram Bot Webhook
   app.post("/api/admin/setup-telegram-webhook", async (req, res) => {
     try {
