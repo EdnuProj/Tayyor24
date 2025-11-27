@@ -756,25 +756,25 @@ export default function CourierPayme() {
         };
         
         return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Yetkazib bergan Zakaz</h2>
-            <Card className="bg-gradient-to-r from-emerald-900 to-slate-800 border-emerald-700 p-3 space-y-2">
-              <div className="flex items-center justify-between gap-2">
+          <div className="space-y-3 px-2 sm:px-0">
+            <h2 className="text-lg sm:text-2xl font-bold">Yetkazib bergan Zakaz</h2>
+            <Card className="bg-gradient-to-r from-emerald-900 to-slate-800 border-emerald-700 p-2 sm:p-3 space-y-2">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handlePreviousDay}
                   data-testid="button-prev-day"
-                  className="bg-slate-700 border-slate-600 hover:bg-slate-600 h-8 w-8 p-0"
+                  className="bg-slate-700 border-slate-600 hover:bg-slate-600 h-8 w-8 p-0 flex-shrink-0"
                 >
                   ◀
                 </Button>
                 
-                <div className="flex-1 text-center">
+                <div className="flex-1 text-center w-full">
                   <p className="text-xs text-emerald-300 uppercase tracking-wider">
                     {dayOfWeek}
                   </p>
-                  <p className="text-sm font-bold text-white">{dateDisplay}</p>
+                  <p className="text-xs sm:text-sm font-bold text-white">{dateDisplay}</p>
                   <input
                     type="date"
                     value={selectedDeliveryDate}
@@ -789,23 +789,23 @@ export default function CourierPayme() {
                   size="sm"
                   onClick={handleNextDay}
                   data-testid="button-next-day"
-                  className="bg-slate-700 border-slate-600 hover:bg-slate-600 h-8 w-8 p-0"
+                  className="bg-slate-700 border-slate-600 hover:bg-slate-600 h-8 w-8 p-0 flex-shrink-0"
                 >
                   ▶
                 </Button>
               </div>
               
               <div className="flex items-center justify-center gap-2 pt-1 border-t border-slate-600">
-                <span className="text-emerald-400 font-bold text-base">
+                <span className="text-emerald-400 font-bold text-sm sm:text-base">
                   ✅ {filteredDeliveredOrders.length}
                 </span>
-                <span className="text-emerald-300 text-sm">
+                <span className="text-emerald-300 text-xs sm:text-sm">
                   {filteredDeliveredOrders.length === 1 ? "zakaz" : "ta zakaz"}
                 </span>
               </div>
             </Card>
             {filteredDeliveredOrders.length === 0 ? (
-              <Card className="bg-slate-800 border-slate-700 p-4 text-center text-slate-400">
+              <Card className="bg-slate-800 border-slate-700 p-3 sm:p-4 text-center text-slate-400 text-sm">
                 {selectedDeliveryDate} da yetkazib bergan zakaz yo'q
               </Card>
             ) : (
@@ -814,20 +814,20 @@ export default function CourierPayme() {
                 return (
                   <Card
                     key={order.orderId}
-                    className="border-slate-700 bg-slate-800 p-4 space-y-3"
+                    className="border-slate-700 bg-slate-800 p-3 sm:p-4 space-y-2 sm:space-y-3"
                     data-testid={`card-delivered-${order.orderId}`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-bold text-white">
+                    <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="font-bold text-white text-sm sm:text-base">
                           #{orderData?.orderNumber || order.orderId?.substring(0, 8)}
                         </p>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-xs sm:text-sm text-slate-400">
                           {orderData?.customerName}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-emerald-400 font-semibold">✅ Yetkazildi</p>
+                        <p className="text-emerald-400 font-semibold text-xs sm:text-sm">✅ Yetkazildi</p>
                         <p className="text-xs text-slate-400">
                           {new Date(order.assignedAt).toLocaleDateString("uz-UZ", {
                             hour: "2-digit",
@@ -836,14 +836,14 @@ export default function CourierPayme() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-sm">
-                      <p className="text-slate-300">
+                    <div className="text-xs sm:text-sm space-y-1">
+                      <p className="text-slate-300 truncate">
                         📍 {orderData?.customerAddress}
                       </p>
                       <p className="text-slate-300">
                         📞 {orderData?.customerPhone}
                       </p>
-                      <p className="text-emerald-400 font-semibold mt-1">
+                      <p className="text-emerald-400 font-semibold">
                         💰 {orderData?.total?.toLocaleString()} so'm
                       </p>
                     </div>
