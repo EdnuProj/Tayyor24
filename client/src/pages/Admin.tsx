@@ -111,12 +111,6 @@ export default function Admin() {
               </Button>
             </form>
           </Form>
-
-          <div className="mt-6 p-4 rounded-lg bg-muted text-sm">
-            <p className="font-medium mb-2">Test kirish ma'lumotlari:</p>
-            <p className="text-muted-foreground">Telefon: {ADMIN_CREDENTIALS.phone}</p>
-            <p className="text-muted-foreground">Parol: {ADMIN_CREDENTIALS.password}</p>
-          </div>
         </CardContent>
       </Card>
     </div>
