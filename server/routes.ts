@@ -674,14 +674,15 @@ Buyurtma: #${order.orderNumber}
       const assignment = await storage.createAssignment({
         orderId,
         courierId,
-        status: "assigned",
+        status: "pending",
       });
 
       // Update order status
       await storage.updateOrder(orderId, { status: "processing" });
 
-      // Send Telegram notification to courier
+      // Send Telegram notification to specific courier
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      const settings = await storage.getSettings();
       if (botToken) {
         const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
         const courierMessage = `
@@ -693,7 +694,7 @@ Buyurtma: #${order.orderNumber}
 📍 Manzil: ${order.customerAddress}
 💰 Jami: ${order.total} so'm
 
-✅ Siz bu buyurtmani berildi!
+✅ Siz bu buyurtmani qabul qildingiz!
         `.trim();
 
         try {
@@ -710,6 +711,51 @@ Buyurtma: #${order.orderNumber}
           console.error("Failed to send courier notification:", error);
         }
       }
+
+      // 30-second auto-broadcast timeout
+      setTimeout(async () => {
+        try {
+          const updatedAssignment = await storage.getAssignmentById(assignment.id);
+          if (updatedAssignment && updatedAssignment.status === "pending") {
+            // Still pending after 30 seconds, broadcast to all couriers
+            const allCouriers = await storage.getCouriers();
+            const activeCouriers = allCouriers.filter((c) => c.isActive);
+
+            if (botToken && settings.telegramGroupId) {
+              for (const courierToNotify of activeCouriers) {
+                const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+                const broadcastMessage = `
+📢 *BUYURTMA BARCHAGA YUBORILDI*
+
+Buyurtma: #${order.orderNumber}
+👤 Mijoz: ${order.customerName}
+📞 Tel: ${order.customerPhone.replace(/\s/g, "")}
+📍 Manzil: ${order.customerAddress}
+💰 Jami: ${order.total} so'm
+
+Birinchi qabul qilgan kuryer uzatib beradi!
+                `.trim();
+
+                try {
+                  await fetch(telegramUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      chat_id: courierToNotify.telegramId,
+                      text: broadcastMessage,
+                      parse_mode: "Markdown",
+                    }),
+                  });
+                } catch (error) {
+                  console.error("Failed to broadcast to courier:", error);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Auto-broadcast error:", error);
+        }
+      }, 30000); // 30 seconds
 
       res.json({ success: true, assignment });
     } catch (error) {

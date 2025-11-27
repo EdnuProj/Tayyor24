@@ -11,6 +11,7 @@ import {
   Filter,
   Plus,
   Minus,
+  X,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -84,7 +85,7 @@ export default function AdminOrders() {
   const [customerAddress, setCustomerAddress] = useState("");
   const [deliveryType, setDeliveryType] = useState("courier");
   const [paymentType, setPaymentType] = useState("cash");
-  const [selectedCourier, setSelectedCourier] = useState<string>("");
+  const [createCourierId, setCreateCourierId] = useState<string>("");
 
   const { data: orders = [], isLoading } = useQuery<Order[]>({
     queryKey: ["/api/orders"],
@@ -156,7 +157,7 @@ export default function AdminOrders() {
         categoryId: item.product.categoryId,
       }));
 
-      return apiRequest("POST", "/api/orders", {
+      const order = await apiRequest("POST", "/api/orders", {
         orderNumber: generateOrderNumber(),
         customerName,
         customerPhone,
@@ -171,9 +172,19 @@ export default function AdminOrders() {
         items: JSON.stringify(orderItems),
         categoryId: "elektronika",
       });
+
+      // Assign to courier if selected
+      if (createCourierId && deliveryType === "courier") {
+        await apiRequest("POST", `/api/orders/${order.id}/assign-courier`, {
+          courierId: createCourierId,
+        });
+      }
+
+      return order;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/assignments"] });
       toast({ title: "Buyurtma muvaffaqiyatli yaratildi" });
       setIsCreateOpen(false);
       setSelectedItems([]);
@@ -181,6 +192,7 @@ export default function AdminOrders() {
       setCustomerPhone("");
       setCustomerAddress("");
       setProductSearch("");
+      setCreateCourierId("");
     },
     onError: () => {
       toast({ title: "Xatolik yuz berdi", variant: "destructive" });
@@ -536,6 +548,17 @@ export default function AdminOrders() {
                           <p className="font-medium text-sm min-w-20 text-right">
                             {formatPrice(item.product.price * item.quantity)}
                           </p>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              setSelectedItems(selectedItems.filter((i) => i.product.id !== item.product.id));
+                            }}
+                            data-testid={`button-remove-product-${item.product.id}`}
+                            className="ml-2"
+                          >
+                            <X className="h-4 w-4 text-red-600" />
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -613,6 +636,29 @@ export default function AdminOrders() {
                 </Select>
               </div>
             </div>
+
+            {/* Courier Selection (if courier delivery) */}
+            {deliveryType === "courier" && (
+              <div>
+                <label className="text-sm font-medium">Kuryer Tanlang (ixtiyoriy)</label>
+                <Select value={createCourierId} onValueChange={setCreateCourierId}>
+                  <SelectTrigger data-testid="select-create-courier">
+                    <SelectValue placeholder="Kuryer tanlang yoki avtomatik belgilansin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Avtomatik belgilash</SelectItem>
+                    {couriers.map((courier) => (
+                      <SelectItem key={courier.id} value={courier.id}>
+                        {courier.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {createCourierId ? "Tanlangan kuryerga yuboriladi" : "30 sekundda qabul qilmasa, hammaga yuboriladi"}
+                </p>
+              </div>
+            )}
 
             {/* Total */}
             {selectedItems.length > 0 && (
