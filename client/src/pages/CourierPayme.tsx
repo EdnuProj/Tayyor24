@@ -330,6 +330,9 @@ export default function CourierPayme() {
         description: `Balans: ${data.newBalance.toLocaleString()} so'm`,
       });
 
+      // Remove accepted order from nearby orders immediately
+      setNearbyOrders(prev => prev.filter(o => o.orderId !== orderId));
+      
       // Set selected order and show detail view
       setSelectedOrder(assignment);
       setCourierBalance(data.newBalance);
