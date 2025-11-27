@@ -1076,14 +1076,6 @@ export default function CourierPayme() {
                           {rejectingOrderId === assignment.orderId ? "Bekor qilinmoqda..." : "❌ Bekor Qilish"}
                         </Button>
                       </div>
-                    ) : assignment.status !== "delivered" ? (
-                      <Button
-                        onClick={() => setSelectedOrder(assignment)}
-                        className="w-full bg-blue-600 hover:bg-blue-700"
-                        data-testid={`button-view-order-${assignment.orderId}`}
-                      >
-                        📋 Tafsilotlarni Ko'rish
-                      </Button>
                     ) : null}
                   </Card>
                 );
