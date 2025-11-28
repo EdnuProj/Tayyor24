@@ -932,14 +932,17 @@ export default function CourierPayme() {
                       </div>
                     </div>
 
-                    <div className="text-sm">
+                    <div className="text-sm space-y-1">
+                      <p className="text-slate-300">
+                        📂 {getCategoryName(orderData?.categoryId || "elektronika")}
+                      </p>
                       <p className="text-slate-300">
                         📍 {orderData?.customerAddress}
                       </p>
                       <p className="text-slate-300">
                         📞 {orderData?.customerPhone}
                       </p>
-                      <p className="text-emerald-400 font-semibold mt-1">
+                      <p className="text-emerald-400 font-semibold">
                         💰 {orderData?.total?.toLocaleString()} so'm
                       </p>
                     </div>
@@ -1152,6 +1155,10 @@ export default function CourierPayme() {
                       <span className={`px-3 py-1 rounded text-xs font-medium ${statusColor}`}>
                         {statusLabel}
                       </span>
+                    </div>
+                    <div className="bg-slate-700 p-3 rounded space-y-1">
+                      <p className="text-slate-400 text-sm">📂 Kategoriya</p>
+                      <p className="text-white font-semibold">{getCategoryName((assignment as any).order?.categoryId || "elektronika")}</p>
                     </div>
                     <div className="bg-slate-700 p-3 rounded space-y-1">
                       <p className="text-white font-medium">👤 Mijoz</p>
