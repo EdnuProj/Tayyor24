@@ -204,6 +204,7 @@ export default function Products() {
                 onClick={() => {
                   setFilters((prev) => ({ ...prev, categoryId: null }));
                   setCurrentPage(1);
+                  window.scrollTo(0, 0);
                 }}
                 data-testid="button-all-categories"
               >
@@ -217,6 +218,7 @@ export default function Products() {
                   onClick={() => {
                     setFilters((prev) => ({ ...prev, categoryId: mainCat.id }));
                     setCurrentPage(1);
+                    window.scrollTo(0, 0);
                   }}
                   data-testid={`button-category-${mainCat.id}`}
                 >
