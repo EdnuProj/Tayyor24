@@ -46,6 +46,9 @@ export function CartItemComponent({ item }: CartItemProps) {
           {item.selectedSize && (
             <span>O'lcham: {item.selectedSize}</span>
           )}
+          {item.selectedContainer && (
+            <span>Idish: {item.selectedContainer.split("|")[0]}</span>
+          )}
         </div>
 
         {/* Price */}
@@ -53,6 +56,14 @@ export function CartItemComponent({ item }: CartItemProps) {
           <span className="font-semibold text-primary">
             {formatPrice(product.price)}
           </span>
+          {item.selectedContainer && (() => {
+            const containerPrice = parseInt(item.selectedContainer.split("|")[1] || "0");
+            return containerPrice > 0 ? (
+              <span className="text-xs text-muted-foreground">
+                + {formatPrice(containerPrice)} idish
+              </span>
+            ) : null;
+          })()}
           {product.oldPrice && product.oldPrice > product.price && (
             <span className="text-xs text-muted-foreground line-through">
               {formatPrice(product.oldPrice)}
@@ -103,7 +114,15 @@ export function CartItemComponent({ item }: CartItemProps) {
       {/* Line Total */}
       <div className="hidden sm:block text-right shrink-0">
         <span className="font-semibold">
-          {formatPrice(product.price * item.quantity)}
+          {(() => {
+            let containerPrice = 0;
+            if (item.selectedContainer) {
+              const [, priceStr] = item.selectedContainer.split("|");
+              containerPrice = priceStr ? parseInt(priceStr) : 0;
+            }
+            const totalPrice = (product.price + containerPrice) * item.quantity;
+            return formatPrice(totalPrice);
+          })()}
         </span>
       </div>
     </div>

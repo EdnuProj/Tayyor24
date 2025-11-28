@@ -104,7 +104,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [clearMutation]);
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => {
+    let containerPrice = 0;
+    if (item.selectedContainer) {
+      const [, priceStr] = item.selectedContainer.split("|");
+      containerPrice = priceStr ? parseInt(priceStr) : 0;
+    }
+    const itemPrice = item.product.price + containerPrice;
+    return sum + itemPrice * item.quantity;
+  }, 0);
 
   return (
     <CartContext.Provider value={{
