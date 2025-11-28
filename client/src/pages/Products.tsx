@@ -118,9 +118,22 @@ export default function Products() {
       );
     }
 
-    // Category filter
+    // Category filter - include subcategories if main category is selected
     if (filters.categoryId) {
-      result = result.filter((p) => p.categoryId === filters.categoryId);
+      const selectedCat = categories.find(c => c.id === filters.categoryId);
+      
+      // If selected category is a main category (no parentId)
+      if (selectedCat && !selectedCat.parentId) {
+        // Get this category and all its subcategories
+        const subcatIds = categories
+          .filter(c => c.parentId === filters.categoryId)
+          .map(c => c.id);
+        const allIds = [filters.categoryId, ...subcatIds];
+        result = result.filter((p) => allIds.includes(p.categoryId));
+      } else {
+        // If selected category is a subcategory, just filter by it
+        result = result.filter((p) => p.categoryId === filters.categoryId);
+      }
     }
 
     // Price filter
