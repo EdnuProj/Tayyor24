@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
+import logoUrl from "@assets/photo_2025-05-11_15-33-54_1764328387857.jpg";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -77,11 +78,9 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
     <div className="min-h-screen bg-muted/30">
       {/* Desktop Sidebar */}
       <aside className="fixed left-0 top-0 z-40 hidden lg:flex h-screen w-64 flex-col border-r bg-background">
-        <div className="flex h-16 items-center gap-2 border-b px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-            <span className="text-sm font-bold text-primary-foreground">D</span>
-          </div>
-          <span className="font-semibold">Admin Panel</span>
+        <div className="flex h-16 items-center gap-2.5 border-b px-6">
+          <img src={logoUrl} alt="Lavyor" className="h-7 w-auto object-contain" />
+          <span className="font-semibold">Admin</span>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
           <Sidebar />

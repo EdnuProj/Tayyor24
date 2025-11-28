@@ -3,6 +3,7 @@ import { Phone, Mail, MapPin, Send } from "lucide-react";
 import { SiTelegram, SiInstagram, SiFacebook } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import logoUrl from "@assets/photo_2025-05-11_15-33-54_1764328387857.jpg";
 
 export function Footer() {
   return (
@@ -11,10 +12,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* About */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary">
-                <span className="text-lg font-bold text-primary-foreground">D</span>
-              </div>
+            <div className="flex items-center gap-2.5">
+              <img src={logoUrl} alt="Lavyor" className="h-9 w-auto object-contain" />
               <span className="text-xl font-semibold">Tayyor24</span>
             </div>
             <p className="text-sm text-muted-foreground">
