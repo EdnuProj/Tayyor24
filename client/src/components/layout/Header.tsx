@@ -36,9 +36,11 @@ export function Header({ onSearch }: HeaderProps) {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2" data-testid="link-home">
-            <img src={logoUrl} alt="Lavyor" className="h-9 w-auto" />
-            <span className="hidden text-xl font-semibold sm:inline-block">Tayyor24</span>
+          <Link href="/" className="flex items-center gap-2.5 shrink-0" data-testid="link-home">
+            <div className="relative">
+              <img src={logoUrl} alt="Lavyor" className="h-10 w-auto object-contain" />
+            </div>
+            <span className="hidden text-lg font-bold sm:inline-block">Tayyor24</span>
           </Link>
 
           {/* Desktop Navigation */}
