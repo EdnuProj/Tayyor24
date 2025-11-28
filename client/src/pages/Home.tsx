@@ -97,6 +97,29 @@ export default function Home() {
   const heroImage = settings?.heroImageUrl;
   const primaryColor = settings?.primaryColor || "#8B5CF6";
 
+  const isLoading = categories.length === 0;
+
+  if (isLoading) {
+    return (
+      <StoreLayout>
+        <div className="h-screen flex items-center justify-center">
+          <div className="space-y-8 text-center">
+            <div className="flex justify-center">
+              <div className="relative w-20 h-20">
+                <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent">Tayyor24</h2>
+              <p className="text-muted-foreground">Mahsulotlar yuklanyapti...</p>
+            </div>
+          </div>
+        </div>
+      </StoreLayout>
+    );
+  }
+
   return (
     <StoreLayout>
       {/* Hero Section */}

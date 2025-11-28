@@ -29,7 +29,7 @@ export function Footer() {
                 <SiTelegram className="h-4 w-4" />
               </a>
               <a
-                href="#"
+                href="https://www.instagram.com/tayyor24/"
                 className="flex h-9 w-9 items-center justify-center rounded-md bg-muted hover-elevate"
                 data-testid="link-social-instagram"
               >

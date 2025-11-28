@@ -40,7 +40,7 @@ export function Header({ onSearch }: HeaderProps) {
             <div className="relative">
               <img src={logoUrl} alt="Lavyor" className="h-10 w-auto object-contain" />
             </div>
-            <span className="hidden text-lg font-bold sm:inline-block">Tayyor24</span>
+            <span className="hidden sm:inline-block text-lg md:text-xl font-bold bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent">Tayyor24</span>
           </Link>
 
           {/* Desktop Navigation */}
