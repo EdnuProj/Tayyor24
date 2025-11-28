@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -55,6 +55,11 @@ export default function Checkout() {
 
   const deliveryPrice = 15000;
   const total = subtotal + deliveryPrice;
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Get telegramId from localStorage (saved from URL params in Home.tsx)
   const storedTelegramId = typeof window !== "undefined" ? localStorage.getItem("customerTelegramId") || "" : "";
