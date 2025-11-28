@@ -32,6 +32,7 @@ import type { Category } from "@shared/schema";
 const categorySchema = z.object({
   name: z.string().min(2, "Kamida 2 ta belgi"),
   icon: z.string().optional(),
+  imageUrl: z.string().optional(),
   latitude: z.string().optional().transform(val => val && val.trim() ? parseFloat(val) : undefined),
   longitude: z.string().optional().transform(val => val && val.trim() ? parseFloat(val) : undefined),
 });
@@ -81,6 +82,7 @@ export default function AdminCategories() {
     defaultValues: {
       name: "",
       icon: "",
+      imageUrl: "",
       latitude: "",
       longitude: "",
     },
@@ -93,6 +95,7 @@ export default function AdminCategories() {
         name: data.name,
         slug: generateSlug(data.name),
         icon: data.icon || "📦",
+        imageUrl: data.imageUrl || null,
         order: selectedParentId ? subcategories.length : parentCategories.length,
         parentId: selectedParentId || null,
         latitude: data.latitude,
@@ -117,6 +120,7 @@ export default function AdminCategories() {
       const response = await apiRequest("PATCH", `/api/categories/${editingCategory.id}`, {
         name: data.name,
         icon: data.icon || "📦",
+        imageUrl: data.imageUrl || null,
         latitude: data.latitude,
         longitude: data.longitude,
       });
@@ -308,6 +312,7 @@ export default function AdminCategories() {
                         form.reset({
                           name: category.name,
                           icon: category.icon || "📦",
+                          imageUrl: category.imageUrl || "",
                           latitude: category.latitude ? category.latitude.toString() : "",
                           longitude: category.longitude ? category.longitude.toString() : "",
                         });
@@ -377,6 +382,19 @@ export default function AdminCategories() {
                     <FormLabel>Emoji yoki belgi</FormLabel>
                     <FormControl>
                       <Input placeholder="masalan: 📱" {...field} data-testid="input-category-icon" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="imageUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Kategoriya rasmi (URL)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://example.com/image.jpg" {...field} data-testid="input-category-image" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

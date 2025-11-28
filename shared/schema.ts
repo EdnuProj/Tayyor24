@@ -8,6 +8,7 @@ export const categories = pgTable("categories", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   icon: text("icon"),
+  imageUrl: text("image_url"),
   latitude: real("latitude"),
   longitude: real("longitude"),
   order: integer("order").notNull().default(0),
