@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { CartProvider } from "@/contexts/CartContext";
-import { TelegramProvider } from "@/contexts/TelegramContext";
 import { AdminGuard } from "@/components/admin/AdminGuard";
 
 // Store Pages
@@ -184,16 +183,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TelegramProvider>
-        <ThemeProvider>
-          <CartProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-            </TooltipProvider>
-          </CartProvider>
-        </ThemeProvider>
-      </TelegramProvider>
+      <ThemeProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </CartProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

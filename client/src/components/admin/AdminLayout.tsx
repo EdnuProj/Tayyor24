@@ -110,19 +110,19 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
       {/* Main Content */}
       <div className="lg:pl-64">
         {/* Header */}
-        <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center gap-2 sm:gap-4 border-b bg-background px-3 sm:px-4 md:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
           {/* Mobile Menu */}
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10" data-testid="button-admin-menu">
-                <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Button variant="ghost" size="icon" data-testid="button-admin-menu">
+                <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0">
               <SheetHeader className="h-16 flex items-center justify-center border-b">
-                <SheetTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <SheetTitle className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-                    <span className="text-xs sm:text-sm font-bold text-primary-foreground">D</span>
+                    <span className="text-sm font-bold text-primary-foreground">D</span>
                   </div>
                   Admin Panel
                 </SheetTitle>
@@ -132,41 +132,40 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
               </div>
               <div className="absolute bottom-4 left-4 right-4 space-y-2">
                 <Link href="/">
-                  <Button variant="outline" className="w-full text-xs sm:text-sm">
-                    <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                  <Button variant="outline" className="w-full">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
                     Tayyor24ga qaytish
                   </Button>
                 </Link>
                 <Button
                   variant="outline"
-                  className="w-full text-destructive hover:text-destructive text-xs sm:text-sm"
+                  className="w-full text-destructive hover:text-destructive"
                   onClick={() => {
                     localStorage.removeItem("admin_logged_in");
                     window.location.href = "/admin";
                   }}
                 >
-                  <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                  <LogOut className="h-4 w-4 mr-2" />
                   Chiqish
                 </Button>
               </div>
             </SheetContent>
           </Sheet>
 
-          <h1 className="text-base sm:text-lg font-semibold flex-1 truncate">{title}</h1>
+          <h1 className="text-lg font-semibold flex-1">{title}</h1>
 
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 sm:h-10 sm:w-10"
             onClick={toggleTheme}
             data-testid="button-admin-theme"
           >
-            {theme === "light" ? <Moon className="h-4 w-4 sm:h-5 sm:w-5" /> : <Sun className="h-4 w-4 sm:h-5 sm:w-5" />}
+            {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </Button>
         </header>
 
         {/* Page Content */}
-        <main className="p-2 sm:p-4 md:p-6">{children}</main>
+        <main className="p-4 md:p-6">{children}</main>
       </div>
     </div>
   );
