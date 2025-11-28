@@ -156,16 +156,17 @@ export default function CourierPayme() {
   );
 
   // Fetch all categories to get real names
-  const { data: categories = [] } = useQuery<Category[]>({
+  const { data: categories = [], refetch: refetchCategories } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
     staleTime: 0, // Always fresh - refetch on mount and focus
     gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes
+    refetchInterval: 5000, // Refetch every 5 seconds to get new categories
   });
 
   // Get category name by ID (handles parent categories)
   const getCategoryName = (categoryId: string): string => {
     const category = categories.find(c => c.id === categoryId);
-    if (!category) return `📦 ${categoryId}`;
+    if (!category) return "📂 Kategoriya topilmadi";
     
     // If it's a subcategory, get parent's name
     if (category.parentId) {
