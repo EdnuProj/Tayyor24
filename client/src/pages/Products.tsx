@@ -241,6 +241,7 @@ export default function Products() {
                 onClick={() => {
                   setFilters((prev) => ({ ...prev, categoryId: parentCategoryId }));
                   setCurrentPage(1);
+                  window.scrollTo(0, 0);
                 }}
                 data-testid="button-all-subcategories"
               >
@@ -254,6 +255,7 @@ export default function Products() {
                   onClick={() => {
                     setFilters((prev) => ({ ...prev, categoryId: subcat.id }));
                     setCurrentPage(1);
+                    window.scrollTo(0, 0);
                   }}
                   data-testid={`button-subcategory-${subcat.id}`}
                 >
