@@ -67,7 +67,7 @@ export default function Categories() {
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {[...categories].sort((a, b) => (a.order || 0) - (b.order || 0)).map((category) => (
+              {[...categories].filter(c => !c.parentId).sort((a, b) => (a.order || 0) - (b.order || 0)).map((category) => (
                 <div
                   key={category.id}
                   onClick={() => handleCategoryClick(category)}
