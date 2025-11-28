@@ -891,7 +891,7 @@ export default function CourierPayme() {
                         📞 {orderData?.customerPhone}
                       </p>
                       <p className="text-emerald-400 font-semibold">
-                        💰 {orderData?.total?.toLocaleString()} so'm
+                        💰 {(orderData?.total || 0).toLocaleString()} so'm
                       </p>
                     </div>
                   </Card>
@@ -967,7 +967,7 @@ export default function CourierPayme() {
                         📞 {orderData?.customerPhone}
                       </p>
                       <p className="text-emerald-400 font-semibold">
-                        💰 {orderData?.total?.toLocaleString()} so'm
+                        💰 {(orderData?.total || 0).toLocaleString()} so'm
                       </p>
                     </div>
 
@@ -1072,7 +1072,7 @@ export default function CourierPayme() {
                             <span className="text-slate-300 whitespace-nowrap">x{item.quantity}</span>
                           </div>
                           <p className="text-slate-400 text-xs mt-1">
-                            {(item.price * item.quantity).toLocaleString()} so'm
+                            {((item.price || 0) * item.quantity).toLocaleString()} so'm
                             {item.selectedColor && <span> • {item.selectedColor}</span>}
                             {item.selectedSize && <span> • {item.selectedSize}</span>}
                           </p>
@@ -1085,7 +1085,7 @@ export default function CourierPayme() {
                 </div>
                 <div className="border-t border-slate-700 pt-3">
                   <p className="text-slate-400 text-sm">Jami summa</p>
-                  <p className="text-white font-bold text-lg">{total.toLocaleString()} so'm</p>
+                  <p className="text-white font-bold text-lg">{(total || 0).toLocaleString()} so'm</p>
                 </div>
                 <div className="bg-slate-700 p-3 rounded">
                   <p className="text-slate-400 text-xs mb-2">📍 Manzil: {customerAddress}</p>
