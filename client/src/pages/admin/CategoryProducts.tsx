@@ -142,6 +142,23 @@ export default function CategoryProducts() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async (data: ProductForm & { id: string }) => {
+      const slug = generateSlug(data.name);
+      return apiRequest("PATCH", `/api/products/${data.id}`, { ...data, slug });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({ title: "Mahsulot yangilandi" });
+      setDialogOpen(false);
+      setEditingProduct(null);
+      form.reset();
+    },
+    onError: () => {
+      toast({ title: "Xatolik yuz berdi", variant: "destructive" });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       return apiRequest("DELETE", `/api/products/${id}`);
@@ -156,7 +173,11 @@ export default function CategoryProducts() {
   });
 
   const handleSubmit = (data: ProductForm) => {
-    createMutation.mutate(data);
+    if (editingProduct) {
+      updateMutation.mutate({ ...data, id: editingProduct.id });
+    } else {
+      createMutation.mutate(data);
+    }
   };
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -263,7 +284,34 @@ export default function CategoryProducts() {
                       <TableCell>{formatPrice(product.price)}</TableCell>
                       <TableCell>{product.brand || "-"}</TableCell>
                       <TableCell>{product.stock}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right flex gap-2 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingProduct(product);
+                            form.reset({
+                              name: product.name,
+                              description: product.description || "",
+                              price: product.price,
+                              oldPrice: product.oldPrice,
+                              categoryId: product.categoryId,
+                              brand: product.brand || "",
+                              images: product.images || [],
+                              colors: product.colors || [],
+                              sizes: product.sizes || [],
+                              types: product.types || "[]",
+                              containers: product.containers || [],
+                              stock: product.stock,
+                              isPopular: product.isPopular || false,
+                              isNew: product.isNew || false,
+                            });
+                            setDialogOpen(true);
+                          }}
+                          data-testid={`button-edit-product-${product.id}`}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -290,7 +338,7 @@ export default function CategoryProducts() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Yangi mahsulot - {category?.name}</DialogTitle>
+            <DialogTitle>{editingProduct ? "Mahsulotni tahrirlash" : "Yangi mahsulot"} - {category?.name}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
