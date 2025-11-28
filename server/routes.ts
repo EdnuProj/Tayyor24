@@ -1933,14 +1933,14 @@ ${message}
         return res.status(400).json({ error: "Title and message required" });
       }
 
-      const settings = await storage.getSettings();
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
       const couriers = await storage.getCouriers();
       const activeCouriers = couriers.filter((c) => c.isActive && c.telegramId);
 
       let sentCount = 0;
 
       // Send via Telegram if token is configured and couriers exist
-      if (settings.telegramBotToken && activeCouriers.length > 0) {
+      if (botToken && activeCouriers.length > 0) {
         try {
           const telegramMessage = `
 📢 *${title}*
@@ -1948,8 +1948,8 @@ ${message}
 ${message}
           `.trim();
 
-          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
-          const photoUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendPhoto`;
+          const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+          const photoUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
 
           for (const courier of activeCouriers) {
             try {
@@ -1994,7 +1994,7 @@ ${message}
         }
       }
 
-      const message_text = settings.telegramBotToken 
+      const message_text = botToken 
         ? `Rassilka ${sentCount} ta kuryerga yuborildi`
         : `Telegram to'g'ri sozlangan emas (${activeCouriers.length} aktiv kuryer topildi)`;
 
