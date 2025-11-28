@@ -11,6 +11,7 @@ import type { Product, Category, Advertisement, SiteSettings } from "@shared/sch
 
 export default function Home() {
   const [adIndex, setAdIndex] = useState(0);
+  const [shouldLoadNonCritical, setShouldLoadNonCritical] = useState(false);
 
   // Save Telegram ID from URL to localStorage
   useEffect(() => {
@@ -22,26 +23,36 @@ export default function Home() {
     }
   }, []);
 
+  // Defer non-critical data loading for faster initial render
+  useEffect(() => {
+    const timer = setTimeout(() => setShouldLoadNonCritical(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   const { data: allProducts = [] } = useQuery<Product[]>({
     queryKey: ["/api/products"],
     queryFn: async () => {
       const response = await fetch("/api/products?limit=20");
       return response.json();
     },
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 10,
   });
 
   const { data: advertisements = [] } = useQuery<Advertisement[]>({
     queryKey: ["/api/advertisements"],
-    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
+    staleTime: 1000 * 60 * 15,
+    enabled: shouldLoadNonCritical,
   });
 
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["/api/settings"],
+    staleTime: 1000 * 60 * 30,
+    enabled: shouldLoadNonCritical,
   });
 
   useEffect(() => {
