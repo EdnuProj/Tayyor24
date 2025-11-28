@@ -374,6 +374,20 @@ export default function CategoryProducts() {
 
               <FormField
                 control={form.control}
+                name="containers"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Idish (optional) - vergul bilan ajrating</FormLabel>
+                    <FormControl>
+                      <Input placeholder="1kg, 2kg, 5kg" {...field} value={field.value?.join(", ") || ""} onChange={(e) => field.onChange(e.target.value ? e.target.value.split(",").map(s => s.trim()) : [])} data-testid="input-containers" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="images"
                 render={({ field }) => (
                   <FormItem>

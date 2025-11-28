@@ -9,7 +9,7 @@ interface CartContextType {
   isLoading: boolean;
   itemCount: number;
   subtotal: number;
-  addToCart: (product: Product, quantity?: number, color?: string, size?: string) => Promise<void>;
+  addToCart: (product: Product, quantity?: number, color?: string, size?: string, container?: string) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -34,7 +34,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       productId: string; 
       quantity: number; 
       selectedColor?: string; 
-      selectedSize?: string 
+      selectedSize?: string; 
+      selectedContainer?: string;
     }) => {
       return apiRequest("POST", "/api/cart", { ...data, sessionId });
     },
@@ -74,13 +75,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     product: Product, 
     quantity = 1, 
     color?: string, 
-    size?: string
+    size?: string,
+    container?: string
   ) => {
     await addMutation.mutateAsync({
       productId: product.id,
       quantity,
       selectedColor: color,
       selectedSize: size,
+      selectedContainer: container,
     });
   }, [addMutation]);
 

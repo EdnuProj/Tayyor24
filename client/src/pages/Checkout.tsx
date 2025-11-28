@@ -105,16 +105,6 @@ export default function Checkout() {
   const createOrderMutation = useMutation({
     mutationFn: async (data: CheckoutForm) => {
       const orderNumber = generateOrderNumber();
-      const orderItems: OrderItem[] = items.map((item) => ({
-        productId: item.productId,
-        productName: item.product.name,
-        productImage: item.product.images[0] || "",
-        price: item.product.price,
-        quantity: item.quantity,
-        selectedColor: item.selectedColor || undefined,
-        selectedSize: item.selectedSize || undefined,
-        categoryId: item.product.categoryId,
-      }));
 
       // Get all unique categories from all items
       const categoriesSet = new Set<string>();
@@ -123,6 +113,28 @@ export default function Checkout() {
       });
       const allCategories = Array.from(categoriesSet).join(",");
       const categoryId = allCategories || "elektronika";
+
+      // Calculate total with containers
+      let finalSubtotal = 0;
+      const finalItems: OrderItem[] = items.map((item) => {
+        const itemContainers = item.selectedContainer ? 1 : 1;
+        const itemQty = item.quantity * itemContainers;
+        finalSubtotal += item.product.price * itemQty;
+        return {
+          productId: item.productId,
+          productName: item.product.name,
+          productImage: item.product.images[0] || "",
+          price: item.product.price,
+          quantity: itemQty,
+          selectedColor: item.selectedColor || undefined,
+          selectedSize: item.selectedSize || undefined,
+          selectedContainer: item.selectedContainer || undefined,
+          categoryId: item.product.categoryId,
+        };
+      });
+      
+      const finalDeliveryPrice = data.deliveryType === "pickup" ? 0 : deliveryPrice;
+      const finalTotal = data.deliveryType === "pickup" ? finalSubtotal : finalSubtotal + finalDeliveryPrice;
 
       // Ensure customerTelegramId is from form, not URL params
       const finalTelegramId = data.customerTelegramId || initialTelegramId;
@@ -136,11 +148,11 @@ export default function Checkout() {
         customerAddress: data.customerAddress,
         latitude: data.latitude,
         longitude: data.longitude,
-        subtotal,
-        deliveryPrice: data.deliveryType === "pickup" ? 0 : deliveryPrice,
+        subtotal: finalSubtotal,
+        deliveryPrice: finalDeliveryPrice,
         discount: 0,
-        total: data.deliveryType === "pickup" ? subtotal : total,
-        items: JSON.stringify(orderItems),
+        total: finalTotal,
+        items: JSON.stringify(finalItems),
         categoryId,
         deliveryType: data.deliveryType,
         paymentType: data.paymentType,

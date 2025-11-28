@@ -36,6 +36,7 @@ export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedContainer, setSelectedContainer] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
   const { data: product, isLoading } = useQuery<Product>({
@@ -73,8 +74,17 @@ export default function ProductDetail() {
       return;
     }
 
+    if (product.containers && product.containers.length > 0 && !selectedContainer) {
+      toast({
+        title: "Idish tanlang",
+        description: "Iltimos, idish turini tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      await addToCart(product, quantity, selectedColor || undefined, selectedSize || undefined);
+      await addToCart(product, quantity, selectedColor || undefined, selectedSize || undefined, selectedContainer || undefined);
       toast({
         title: "Savatchaga qo'shildi",
         description: `${product.name} (${quantity} dona)`,
@@ -285,6 +295,28 @@ export default function ProductDetail() {
                       data-testid={`button-size-${size}`}
                     >
                       {size}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Containers */}
+            {product.containers && product.containers.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-medium">
+                  Idish: <span className="text-muted-foreground">{selectedContainer || "Tanlang"}</span>
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {product.containers.map((container) => (
+                    <Button
+                      key={container}
+                      variant={selectedContainer === container ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedContainer(container)}
+                      data-testid={`button-container-${container}`}
+                    >
+                      {container}
                     </Button>
                   ))}
                 </div>
