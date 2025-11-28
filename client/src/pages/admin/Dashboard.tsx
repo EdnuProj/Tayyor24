@@ -64,7 +64,7 @@ export default function AdminDashboard() {
   return (
     <AdminLayout title="Dashboard">
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
               <Card key={i}>
@@ -106,18 +106,18 @@ export default function AdminDashboard() {
             ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         {/* Recent Orders */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>
-              <CardTitle className="text-lg">So'nggi buyurtmalar</CardTitle>
-              <CardDescription>Oxirgi 5 ta buyurtma</CardDescription>
+              <CardTitle className="text-base sm:text-lg">So'nggi buyurtmalar</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Oxirgi 5 ta buyurtma</CardDescription>
             </div>
             <Link href="/admin/orders">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
                 Barchasi
-                <ArrowRight className="h-4 w-4 ml-1" />
+                <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
               </Button>
             </Link>
           </CardHeader>
@@ -131,13 +131,13 @@ export default function AdminDashboard() {
                 {recentOrders.slice(0, 5).map((order) => (
                   <div
                     key={order.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-lg bg-muted/50 gap-2"
                   >
-                    <div className="space-y-1">
+                    <div className="space-y-1 flex-1 min-w-0">
                       <p className="font-medium text-sm">#{order.orderNumber}</p>
-                      <p className="text-xs text-muted-foreground">{order.customerName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{order.customerName}</p>
                     </div>
-                    <div className="text-right space-y-1">
+                    <div className="text-left sm:text-right space-y-1 w-full sm:w-auto">
                       <Badge className={orderStatusColors[order.status]}>
                         {orderStatusLabels[order.status]}
                       </Badge>
@@ -152,15 +152,15 @@ export default function AdminDashboard() {
 
         {/* Top Products */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>
-              <CardTitle className="text-lg">Ommabop mahsulotlar</CardTitle>
-              <CardDescription>Eng ko'p sotilganlar</CardDescription>
+              <CardTitle className="text-base sm:text-lg">Ommabop mahsulotlar</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Eng ko'p sotilganlar</CardDescription>
             </div>
             <Link href="/admin/products">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
                 Barchasi
-                <ArrowRight className="h-4 w-4 ml-1" />
+                <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
               </Button>
             </Link>
           </CardHeader>
@@ -174,12 +174,12 @@ export default function AdminDashboard() {
                 {topProducts.slice(0, 5).map((product, index) => (
                   <div
                     key={product.id}
-                    className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"
+                    className="flex items-start sm:items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg bg-muted/50"
                   >
-                    <span className="text-lg font-bold text-muted-foreground w-6">
+                    <span className="text-base sm:text-lg font-bold text-muted-foreground w-5 shrink-0">
                       {index + 1}
                     </span>
-                    <div className="w-12 h-12 rounded-md overflow-hidden bg-muted shrink-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden bg-muted shrink-0">
                       <img
                         src={product.images[0] || "/placeholder.svg"}
                         alt={product.name}
@@ -187,12 +187,12 @@ export default function AdminDashboard() {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{product.name}</p>
+                      <p className="font-medium text-xs sm:text-sm truncate">{product.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {product.stock} dona mavjud
+                        {product.stock} dona
                       </p>
                     </div>
-                    <p className="font-semibold text-sm">{formatPrice(product.price)}</p>
+                    <p className="font-semibold text-xs sm:text-sm shrink-0">{formatPrice(product.price)}</p>
                   </div>
                 ))}
               </div>
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
           <CardTitle className="text-lg">Tezkor harakatlar</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
             <Link href="/admin/products/new">
               <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
                 <Package className="h-5 w-5" />
