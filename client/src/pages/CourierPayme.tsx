@@ -1140,19 +1140,19 @@ export default function CourierPayme() {
                 }, {} as Record<string, Assignment[]>);
 
                 return Object.entries(groupedByCategory).map(([categoryId, categoryOrders]) => (
-                  <div key={categoryId} className="space-y-2">
+                  <Card key={categoryId} className="bg-slate-800 border-slate-700 overflow-hidden">
                     {/* Category Header */}
-                    <div className="px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-800 rounded-lg border border-slate-600">
-                      <p className="text-lg font-bold text-white">
+                    <div className="px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-800 border-b border-slate-700">
+                      <p className="text-sm font-semibold text-slate-300">
                         {getCategoryName(categoryId)}
                       </p>
-                      <p className="text-sm text-slate-400">
+                      <p className="text-xs text-slate-500">
                         {categoryOrders.length} buyurtma
                       </p>
                     </div>
 
                     {/* Orders in this category */}
-                    <div className="space-y-2 ml-2">
+                    <div className="space-y-2 p-3">
                       {categoryOrders.map((assignment) => {
                         const isAccepted = assignment.courierId !== undefined && assignment.courierId !== null;
                         const statusLabel = assignment.status === "pending" ? "Yangi" : 
@@ -1168,44 +1168,44 @@ export default function CourierPayme() {
                                            "bg-red-500/20 text-red-400";
 
                         return (
-                          <Card
+                          <div
                             key={assignment.id}
-                            className="bg-slate-800 border-slate-700 p-4 space-y-3"
+                            className="bg-slate-700 p-3 rounded border border-slate-600 space-y-2"
                             data-testid={`card-order-${assignment.orderId}`}
                           >
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-bold text-lg text-white">#${assignment.orderId?.substring(0, 6) || 'N/A'}</p>
-                                <p className="text-sm text-slate-300">{new Date(assignment.assignedAt).toLocaleDateString('uz-UZ')}</p>
+                            <div className="flex justify-between items-start gap-2">
+                              <div className="flex-1">
+                                <p className="font-bold text-base text-white">#${assignment.orderId?.substring(0, 6) || 'N/A'}</p>
+                                <p className="text-xs text-slate-400">{new Date(assignment.assignedAt).toLocaleDateString('uz-UZ')}</p>
                               </div>
-                              <span className={`px-3 py-1 rounded text-xs font-medium ${statusColor}`}>
+                              <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${statusColor}`}>
                                 {statusLabel}
                               </span>
                             </div>
-                            <div className="bg-slate-700 p-3 rounded space-y-1">
-                              <p className="text-white font-medium">👤 Mijoz</p>
+                            <div className="bg-slate-600 p-2 rounded space-y-1 text-sm">
+                              <p className="text-slate-300">👤 Mijoz</p>
                               <p className="text-slate-200">Telefon: +998 33 020 60 00</p>
-                              <p className="text-slate-300 text-sm mt-2">📍 Manzil</p>
+                              <p className="text-slate-400 text-xs mt-1">📍 Manzil</p>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 pt-1">
                               {assignment.status === "pending" && !isAccepted && (
                                 <>
                                   <Button
                                     onClick={() => handleAcceptOrder(assignment.orderId, assignment.id, assignment)}
                                     disabled={acceptingOrderId === assignment.orderId}
-                                    className="flex-1 bg-green-600 hover:bg-green-700"
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-sm h-8"
                                     data-testid={`button-accept-order-${assignment.orderId}`}
                                   >
-                                    {acceptingOrderId === assignment.orderId ? "Qabul qilinmoqda..." : "✅ Qabul Qilish"}
+                                    {acceptingOrderId === assignment.orderId ? "Qabul..." : "✅ Qabul"}
                                   </Button>
                                   <Button
                                     onClick={() => handleRejectOrder(assignment.orderId, assignment.id)}
                                     disabled={rejectingOrderId === assignment.orderId}
                                     variant="destructive"
-                                    className="flex-1"
+                                    className="flex-1 text-sm h-8"
                                     data-testid={`button-reject-order-${assignment.orderId}`}
                                   >
-                                    {rejectingOrderId === assignment.orderId ? "Bekor qilinmoqda..." : "❌ Bekor Qilish"}
+                                    {rejectingOrderId === assignment.orderId ? "Bekor..." : "❌ Bekor"}
                                   </Button>
                                 </>
                               )}
@@ -1213,37 +1213,37 @@ export default function CourierPayme() {
                                 <Button
                                   onClick={() => handleUpdateOrderStatus("shipping")}
                                   disabled={updatingStatus}
-                                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-sm h-8"
                                   data-testid={`button-shipping-${assignment.orderId}`}
                                 >
-                                  {updatingStatus ? "⏳ Yangilanmoqda..." : "🚗 Yo'lda"}
+                                  {updatingStatus ? "⏳ Yangilash..." : "🚗 Yo'lda"}
                                 </Button>
                               )}
                               {assignment.status === "shipping" && (
                                 <Button
                                   onClick={() => handleUpdateOrderStatus("delivered")}
                                   disabled={updatingStatus}
-                                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-sm h-8"
                                   data-testid={`button-delivered-${assignment.orderId}`}
                                 >
-                                  {updatingStatus ? "⏳ Yangilanmoqda..." : "✅ Yetkazildi"}
+                                  {updatingStatus ? "⏳ Yangilash..." : "✅ Yetkazildi"}
                                 </Button>
                               )}
                               {assignment.status === "delivered" && (
                                 <Button
                                   onClick={() => setOrders(prev => prev.filter(o => o.orderId !== assignment.orderId))}
-                                  className="flex-1 bg-gray-600 hover:bg-gray-700"
+                                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-sm h-8"
                                   data-testid={`button-done-${assignment.orderId}`}
                                 >
                                   ❌ Chiqish
                                 </Button>
                               )}
                             </div>
-                          </Card>
+                          </div>
                         );
                       })}
                     </div>
-                  </div>
+                  </Card>
                 ));
               })()
             )}
