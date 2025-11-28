@@ -1474,12 +1474,9 @@ Birinchi qabul qilgan kuryer uzatib beradi!
         })
       );
 
-      const transactions = await (storage as any).getCourierTransactions(courier.id);
-
       res.json({
         courier,
         assignments: assignmentsWithOrders,
-        transactions,
       });
     } catch (error) {
       console.error("Dashboard fetch error:", error);
@@ -1487,31 +1484,7 @@ Birinchi qabul qilgan kuryer uzatib beradi!
     }
   });
 
-  app.post("/api/courier/topup", async (req, res) => {
-    try {
-      const { telegramId, amount } = req.body;
-      if (!telegramId || !amount || amount <= 0) {
-        return res.status(400).json({ error: "Invalid request" });
-      }
-
-      const courier = await storage.getCourierByTelegramId(telegramId);
-      if (!courier) {
-        return res.status(404).json({ error: "Courier not found" });
-      }
-
-      const updated = await storage.creditCourierBalance(courier.id, amount);
-      await (storage as any).createCourierTransaction(
-        courier.id,
-        amount,
-        "topup_credit",
-        `Topup: +${amount} so'm`
-      );
-
-      res.json({ success: true, newBalance: updated?.balance || 0 });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to process topup" });
-    }
-  });
+  // REMOVED: Courier topup endpoint - payment features removed
 
   app.post("/api/courier/accept-order", async (req, res) => {
     try {
@@ -1525,22 +1498,6 @@ Birinchi qabul qilgan kuryer uzatib beradi!
       if (!courier) {
         return res.status(404).json({ error: "Courier not found" });
       }
-
-      // Check if balance is sufficient (2000 som)
-      if (courier.balance < 2000) {
-        return res.status(400).json({ error: "Balans yetarli emas (2000 som kerak)" });
-      }
-
-      // Debit 2000 som from balance
-      const updatedCourier = await storage.debitCourierBalance(courier.id, 2000);
-      
-      // Record transaction
-      await (storage as any).createCourierTransaction(
-        courier.id,
-        -2000,
-        "order_debit",
-        `Buyurtma #${assignmentId}: 2000 so'm yexhilish haqi`
-      );
 
       // Update assignment to accepted
       const assignment = await storage.updateAssignment(assignmentId, {
@@ -1587,8 +1544,6 @@ Buyurtma raqam: #${order.orderNumber}
 
 📍 Manzil: ${order.customerAddress}
 💰 Yetkazish haqi: 2000 so'm
-
-💳 Yangi balansingiz: ${updatedCourier?.balance || 0} so'm
 
 Tez orada yetkazib bering! ⚡
         `.trim();
@@ -1660,7 +1615,7 @@ Kuryer yetkazishni boshlaydi!
         }
       }
 
-      res.json({ success: true, assignment, newBalance: updatedCourier?.balance || 0 });
+      res.json({ success: true, assignment });
     } catch (error) {
       console.error("Accept order error:", error);
       res.status(500).json({ error: "Failed to accept order" });
