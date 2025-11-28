@@ -31,10 +31,6 @@ export default function Home() {
 
   const { data: allProducts = [] } = useQuery<Product[]>({
     queryKey: ["/api/products"],
-    queryFn: async () => {
-      const response = await fetch("/api/products?limit=20");
-      return response.json();
-    },
     staleTime: 1000 * 60 * 5,
   });
 
