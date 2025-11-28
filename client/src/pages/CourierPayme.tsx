@@ -158,7 +158,8 @@ export default function CourierPayme() {
   // Fetch all categories to get real names
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
-    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
+    staleTime: 0, // Always fresh - refetch on mount and focus
+    gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes
   });
 
   // Get category name by ID (handles parent categories)
