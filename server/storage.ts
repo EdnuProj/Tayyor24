@@ -189,6 +189,21 @@ export class MemStorage implements IStorage {
       { name: "Sport", slug: "sport", icon: "⚽" },
       { name: "Go'zallik", slug: "gozallik", icon: "💄" },
       { name: "Bolalar", slug: "bolalar", icon: "🧸" },
+      { name: "Tayyor Food", slug: "tayyor-food", icon: "🍽️" },
+      { name: "Toshkent Gumma", slug: "toshkent-gumma", icon: "🍽️" },
+      { name: "Espresso cafe", slug: "espresso-cafe", icon: "🍽️" },
+      { name: "Shosh Kafe", slug: "shosh-kafe", icon: "🍽️" },
+      { name: "Well food", slug: "well-food", icon: "🍽️" },
+      { name: "Maxkam ota choyxonasi", slug: "maxkam-ota-choyxonasi", icon: "🍽️" },
+      { name: "Efes kebab fast food", slug: "efes-kebab-fast-food", icon: "🍽️" },
+      { name: "Anhor Choyxonasi", slug: "anhor-choyxonasi", icon: "🍽️" },
+      { name: "Izmir", slug: "izmir", icon: "🍽️" },
+      { name: "Temir ota", slug: "temir-ota", icon: "🍽️" },
+      { name: "Max food", slug: "max-food", icon: "🍽️" },
+      { name: "Pit stop", slug: "pit-stop", icon: "🍽️" },
+      { name: "Non kabob", slug: "non-kabob", icon: "🍽️" },
+      { name: "KFC", slug: "kfc", icon: "🍽️" },
+      { name: "Bozor kabob", slug: "bozor-kabob", icon: "🍽️" },
     ];
 
     categories.forEach((cat) => {
