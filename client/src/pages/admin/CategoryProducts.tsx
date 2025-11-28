@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -76,6 +76,9 @@ export default function CategoryProducts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [imageInput, setImageInput] = useState("");
+  const [containerName, setContainerName] = useState("");
+  const [containerPrice, setContainerPrice] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: products = [], isLoading: loadingProducts } = useQuery<Product[]>({
     queryKey: ["/api/products"],
@@ -377,32 +380,67 @@ export default function CategoryProducts() {
                 name="containers"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Idish (optional) - "nomi|narx" formatida</FormLabel>
+                    <FormLabel>Idish (optional)</FormLabel>
                     <div className="space-y-3">
-                      <FormControl>
-                        <Input placeholder="1kg|5000" {...field} value={field.value?.join(", ") || ""} onChange={(e) => field.onChange(e.target.value ? e.target.value.split(",").map(s => s.trim()).filter(s => s) : [])} data-testid="input-containers" />
-                      </FormControl>
-                      <p className="text-xs text-muted-foreground">Misol: 1kg|5000, 2kg|10000, 5kg|20000</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Input
+                          placeholder="Nomi (1kg, 2kg...)"
+                          value={containerName}
+                          onChange={(e) => setContainerName(e.target.value)}
+                          data-testid="input-container-name"
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Narx (so'm)"
+                          value={containerPrice}
+                          onChange={(e) => setContainerPrice(e.target.value)}
+                          data-testid="input-container-price"
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            if (!containerName.trim() || !containerPrice.trim()) {
+                              toast({ title: "Xatolik", description: "Ism va narx kiriting", variant: "destructive" });
+                              return;
+                            }
+                            const newContainer = `${containerName}|${containerPrice}`;
+                            const current = field.value || [];
+                            field.onChange([...current, newContainer]);
+                            setContainerName("");
+                            setContainerPrice("");
+                          }}
+                          variant="outline"
+                          data-testid="button-add-container"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Qo'shish
+                        </Button>
+                      </div>
                       {field.value && field.value.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {field.value.map((container, idx) => {
-                            const [name, price] = container.split("|");
-                            return (
-                              <div key={idx} className="bg-secondary text-secondary-foreground px-3 py-1 rounded-md text-sm flex items-center gap-2">
-                                <span>{name} - {price ? parseInt(price).toLocaleString() : "0"} so'm</span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const updated = field.value!.filter((_, i) => i !== idx);
-                                    field.onChange(updated);
-                                  }}
-                                  className="hover:text-destructive"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            );
-                          })}
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Qo'shilgan idishlar:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {field.value.map((container, idx) => {
+                              const [name, price] = container.split("|");
+                              return (
+                                <div key={idx} className="bg-primary/10 text-foreground px-3 py-2 rounded-md text-sm flex items-center gap-2">
+                                  <span className="font-medium">{name}</span>
+                                  <span className="text-muted-foreground">·</span>
+                                  <span>{parseInt(price).toLocaleString()} so'm</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = field.value!.filter((_, i) => i !== idx);
+                                      field.onChange(updated);
+                                    }}
+                                    className="ml-1 hover:text-destructive"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -420,12 +458,13 @@ export default function CategoryProducts() {
                     <div className="space-y-2">
                       <div className="flex gap-2">
                         <Input
+                          ref={fileInputRef}
                           type="file"
                           accept="image/*"
                           onChange={handleImageUpload}
                           data-testid="input-image-file"
                         />
-                        <Button type="button" onClick={() => document.querySelector('input[type="file"]')?.click()} variant="default" size="sm">
+                        <Button type="button" onClick={() => fileInputRef.current?.click()} variant="default" size="sm">
                           Yuklash
                         </Button>
                       </div>
