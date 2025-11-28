@@ -1848,73 +1848,80 @@ Do'kon-da xarid qilib davomi bering!
         return res.status(400).json({ error: "Title and message required" });
       }
 
+      // Always save newsletter first
+      await storage.createNewsletter({ title, message, imageUrl: imageUrl || null });
+
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
-      if (!botToken) {
-        return res.status(400).json({ error: "Telegram bot token not configured" });
-      }
+      let sentCount = 0;
+      let totalUsers = 0;
 
-      const telegramUsers = await (storage as any).getTelegramUsers();
-      if (telegramUsers.length === 0) {
-        return res.status(400).json({ error: "No users have started the bot yet" });
-      }
+      // Send via Telegram if token is configured
+      if (botToken) {
+        try {
+          const telegramUsers = await (storage as any).getTelegramUsers();
+          totalUsers = telegramUsers.length;
 
-      const telegramMessage = `
+          const telegramMessage = `
 ${title}
 
 ${message}
-      `.trim();
+          `.trim();
 
-      let sentCount = 0;
-      for (const user of telegramUsers) {
-        try {
-          if (imageUrl) {
-            const photoUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
-            const formData = new FormData();
-            formData.append("chat_id", user.telegramId);
-            formData.append("caption", `${title}\n\n${message}`);
-            formData.append("parse_mode", "HTML");
+          for (const user of telegramUsers) {
+            try {
+              if (imageUrl) {
+                const photoUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
+                const formData = new FormData();
+                formData.append("chat_id", user.telegramId);
+                formData.append("caption", `${title}\n\n${message}`);
+                formData.append("parse_mode", "HTML");
 
-            if (imageUrl.startsWith("data:")) {
-              const base64Data = imageUrl.split(",")[1];
-              const buffer = Buffer.from(base64Data, "base64");
-              const blob = new Blob([buffer], { type: "image/jpeg" });
-              formData.append("photo", blob, "image.jpg");
-            } else {
-              formData.append("photo", imageUrl);
+                if (imageUrl.startsWith("data:")) {
+                  const base64Data = imageUrl.split(",")[1];
+                  const buffer = Buffer.from(base64Data, "base64");
+                  const blob = new Blob([buffer], { type: "image/jpeg" });
+                  formData.append("photo", blob, "image.jpg");
+                } else {
+                  formData.append("photo", imageUrl);
+                }
+
+                const fetchRes = await fetch(photoUrl, {
+                  method: "POST",
+                  body: formData,
+                });
+                if (fetchRes.ok) sentCount++;
+              } else {
+                const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+                const fetchRes = await fetch(telegramUrl, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    chat_id: user.telegramId,
+                    text: telegramMessage,
+                    parse_mode: "HTML",
+                  }),
+                });
+                if (fetchRes.ok) sentCount++;
+              }
+            } catch (userError) {
+              console.error(`Failed to send message to user ${user.telegramId}:`, userError);
             }
-
-            const res = await fetch(photoUrl, {
-              method: "POST",
-              body: formData,
-            });
-            if (res.ok) sentCount++;
-          } else {
-            const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
-            const res = await fetch(telegramUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                chat_id: user.telegramId,
-                text: telegramMessage,
-                parse_mode: "HTML",
-              }),
-            });
-            if (res.ok) sentCount++;
           }
-        } catch (userError) {
-          console.error(`Failed to send message to user ${user.telegramId}:`, userError);
+        } catch (telegramError) {
+          console.error("Telegram sending failed:", telegramError);
         }
       }
 
-      await storage.createNewsletter({ title, message, imageUrl: imageUrl || null });
       res.json({ 
         success: true, 
-        message: `Newsletter sent to ${sentCount} out of ${telegramUsers.length} users`,
+        message: botToken 
+          ? `Newsletter saved and sent to ${sentCount} out of ${totalUsers} users`
+          : "Newsletter saved successfully (Telegram not configured)",
         sentCount,
-        totalUsers: telegramUsers.length
+        totalUsers
       });
     } catch (error) {
-      res.status(500).json({ error: "Failed to send newsletter" });
+      res.status(500).json({ error: "Failed to save newsletter" });
     }
   });
 
@@ -1926,64 +1933,71 @@ ${message}
       }
 
       const settings = await storage.getSettings();
-      if (!settings.telegramBotToken) {
-        return res.status(400).json({ error: "Telegram bot not configured" });
-      }
-
       const couriers = await storage.getCouriers();
       const activeCouriers = couriers.filter((c) => c.isActive && c.telegramId);
 
-      if (activeCouriers.length === 0) {
-        return res.status(400).json({ error: "No active couriers found" });
-      }
+      let sentCount = 0;
 
-      const telegramMessage = `
+      // Send via Telegram if token is configured and couriers exist
+      if (settings.telegramBotToken && activeCouriers.length > 0) {
+        try {
+          const telegramMessage = `
 📢 *${title}*
 
 ${message}
-      `.trim();
+          `.trim();
 
-      const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
-      const photoUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendPhoto`;
+          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+          const photoUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendPhoto`;
 
-      for (const courier of activeCouriers) {
-        try {
-          if (imageUrl) {
-            const formData = new FormData();
-            formData.append("chat_id", courier.telegramId);
-            formData.append("caption", telegramMessage);
-            formData.append("parse_mode", "Markdown");
+          for (const courier of activeCouriers) {
+            try {
+              if (imageUrl) {
+                const formData = new FormData();
+                formData.append("chat_id", courier.telegramId);
+                formData.append("caption", telegramMessage);
+                formData.append("parse_mode", "Markdown");
 
-            if (imageUrl.startsWith("data:")) {
-              const base64Data = imageUrl.split(",")[1];
-              const buffer = Buffer.from(base64Data, "base64");
-              const blob = new Blob([buffer], { type: "image/jpeg" });
-              formData.append("photo", blob, "image.jpg");
-            } else {
-              formData.append("photo", imageUrl);
+                if (imageUrl.startsWith("data:")) {
+                  const base64Data = imageUrl.split(",")[1];
+                  const buffer = Buffer.from(base64Data, "base64");
+                  const blob = new Blob([buffer], { type: "image/jpeg" });
+                  formData.append("photo", blob, "image.jpg");
+                } else {
+                  formData.append("photo", imageUrl);
+                }
+
+                const fetchRes = await fetch(photoUrl, {
+                  method: "POST",
+                  body: formData,
+                });
+                if (fetchRes.ok) sentCount++;
+              } else {
+                const fetchRes = await fetch(telegramUrl, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    chat_id: courier.telegramId,
+                    text: telegramMessage,
+                    parse_mode: "Markdown",
+                  }),
+                });
+                if (fetchRes.ok) sentCount++;
+              }
+            } catch (courierError) {
+              console.error(`Failed to send message to courier ${courier.id}:`, courierError);
             }
-
-            await fetch(photoUrl, {
-              method: "POST",
-              body: formData,
-            });
-          } else {
-            await fetch(telegramUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                chat_id: courier.telegramId,
-                text: telegramMessage,
-                parse_mode: "Markdown",
-              }),
-            });
           }
-        } catch (courierError) {
-          console.error(`Failed to send message to courier ${courier.id}:`, courierError);
+        } catch (telegramError) {
+          console.error("Telegram sending failed:", telegramError);
         }
       }
 
-      res.json({ success: true, message: `Rassilka ${activeCouriers.length} ta kuryerga yuborildi` });
+      const message_text = settings.telegramBotToken 
+        ? `Rassilka ${sentCount} ta kuryerga yuborildi`
+        : `Telegram to'g'ri sozlangan emas (${activeCouriers.length} aktiv kuryer topildi)`;
+
+      res.json({ success: true, message: message_text, sentCount, totalCouriers: activeCouriers.length });
     } catch (error) {
       res.status(500).json({ error: "Failed to send courier rassilka" });
     }
