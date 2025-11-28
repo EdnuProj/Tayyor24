@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "wouter";
+import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
@@ -17,7 +17,6 @@ import {
 import type { Category } from "@shared/schema";
 
 export default function Categories() {
-  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -34,7 +33,7 @@ export default function Categories() {
     if (selectedCategory) {
       setDialogOpen(false);
       window.scrollTo(0, 0);
-      navigate(`/products?category=${selectedCategory.id}`);
+      window.location.href = `/products?category=${selectedCategory.id}`;
     }
   };
 
