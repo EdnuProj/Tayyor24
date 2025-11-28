@@ -176,6 +176,20 @@ export default function CourierPayme() {
     return `${category.icon || "📦"} ${category.name}`;
   };
 
+  // Get product names from order items
+  const getProductNames = (order: any): string => {
+    try {
+      if (!order || !order.items) return "Mahsulot";
+      const items = typeof order.items === "string" ? JSON.parse(order.items) : order.items;
+      if (!Array.isArray(items) || items.length === 0) return "Mahsulot";
+      const names = items.map((item: any) => item.productName || "Mahsulot").slice(0, 2);
+      const suffix = items.length > 2 ? ` +${items.length - 2}` : "";
+      return names.join(", ") + suffix;
+    } catch {
+      return "Mahsulot";
+    }
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("telegramId");
@@ -1182,8 +1196,13 @@ export default function CourierPayme() {
                                 {statusLabel}
                               </span>
                             </div>
-                            <div className="text-xs text-slate-300 px-2 py-1 bg-slate-600/50 rounded inline-block">
-                              📂 {getCategoryName(categoryId)}
+                            <div className="space-y-1">
+                              <div className="text-xs text-slate-300 px-2 py-1 bg-slate-600/50 rounded inline-block">
+                                📦 {getProductNames((assignment as any).order)}
+                              </div>
+                              <div className="text-xs text-slate-400 px-2 py-1 bg-slate-600/50 rounded inline-block ml-1">
+                                📂 {getCategoryName(categoryId)}
+                              </div>
                             </div>
                             <div className="bg-slate-600 p-2 rounded space-y-1 text-sm">
                               <p className="text-slate-300">👤 Mijoz</p>
