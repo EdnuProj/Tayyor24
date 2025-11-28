@@ -24,14 +24,20 @@ export default function Home() {
 
   const { data: allProducts = [] } = useQuery<Product[]>({
     queryKey: ["/api/products"],
+    queryFn: async () => {
+      const response = await fetch("/api/products?limit=20");
+      return response.json();
+    },
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const { data: advertisements = [] } = useQuery<Advertisement[]>({
     queryKey: ["/api/advertisements"],
+    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
   });
 
   const { data: settings } = useQuery<SiteSettings>({
