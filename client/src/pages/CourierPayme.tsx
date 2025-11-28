@@ -1182,6 +1182,9 @@ export default function CourierPayme() {
                                 {statusLabel}
                               </span>
                             </div>
+                            <div className="text-xs text-slate-300 px-2 py-1 bg-slate-600/50 rounded inline-block">
+                              📂 {getCategoryName(categoryId)}
+                            </div>
                             <div className="bg-slate-600 p-2 rounded space-y-1 text-sm">
                               <p className="text-slate-300">👤 Mijoz</p>
                               <p className="text-slate-200">Telefon: +998 33 020 60 00</p>
