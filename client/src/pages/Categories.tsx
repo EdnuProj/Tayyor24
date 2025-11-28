@@ -91,26 +91,28 @@ export default function Categories() {
 
             {/* Confirmation Dialog */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogContent>
+              <DialogContent className="w-[95vw] sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <span className="text-2xl">{selectedCategory?.icon || "📦"}</span>
-                    {selectedCategory?.name} mahsulotlari
+                  <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl line-clamp-2">
+                    <span className="text-xl sm:text-2xl shrink-0">{selectedCategory?.icon || "📦"}</span>
+                    <span className="truncate">{selectedCategory?.name} mahsulotlari</span>
                   </DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription className="text-xs sm:text-sm">
                     Ushbu kategoriyada mavjud bo'lgan barcha mahsulotlarni ko'rasizmi?
                   </DialogDescription>
                 </DialogHeader>
-                <DialogFooter className="gap-2">
+                <DialogFooter className="gap-2 flex-col-reverse sm:flex-row">
                   <Button
                     variant="outline"
                     onClick={() => setDialogOpen(false)}
+                    className="w-full sm:w-auto"
                     data-testid="button-cancel-category"
                   >
                     Bekor qilish
                   </Button>
                   <Button
                     onClick={handleConfirm}
+                    className="w-full sm:w-auto"
                     data-testid="button-confirm-category"
                   >
                     Mahsulotlarni ko'rish
