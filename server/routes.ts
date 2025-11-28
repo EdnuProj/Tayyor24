@@ -419,11 +419,12 @@ ${itemsList}
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              chat_id: settings.telegramGroupId,
+              chat_id: groupId,
               text: message,
               parse_mode: "Markdown",
             }),
           });
+          console.log(`✅ Order notification sent to group: ${groupId}`);
         } catch (telegramError) {
           console.error("Telegram notification failed:", telegramError);
         }
