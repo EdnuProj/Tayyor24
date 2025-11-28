@@ -87,10 +87,18 @@ export default function Home() {
     .filter(c => !c.parentId)
     .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-  // Get products for a specific category (5 products)
+  // Get products for a specific category including subcategories (5 products)
   const getProductsByCategory = (categoryId: string) => {
+    // Get subcategories of this main category
+    const subcategoryIds = categories
+      .filter(c => c.parentId === categoryId)
+      .map(c => c.id);
+    
+    // Include both main category products and subcategory products
+    const allCategoryIds = [categoryId, ...subcategoryIds];
+    
     return allProducts
-      .filter(p => p.categoryId === categoryId)
+      .filter(p => allCategoryIds.includes(p.categoryId))
       .slice(0, 5);
   };
 
