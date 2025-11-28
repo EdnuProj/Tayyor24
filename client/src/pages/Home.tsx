@@ -181,21 +181,21 @@ export default function Home() {
               </div>
               
               {/* Navigation */}
-              <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-2 sm:left-3 md:left-4 right-2 sm:right-3 md:right-4 flex items-center justify-between gap-2">
+              <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-2 sm:left-3 md:left-4 right-2 sm:right-3 md:right-4 flex items-center justify-center gap-3 sm:gap-4">
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="bg-white/20 hover:bg-white/30 text-white h-8 w-8 sm:h-9 sm:w-9"
+                  className="bg-white/20 hover:bg-white/30 text-white h-8 w-8 sm:h-9 sm:w-9 shrink-0"
                   onClick={() => setAdIndex((prev) => (prev - 1 + advertisements.length) % advertisements.length)}
                   data-testid="button-prev-ad"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <div className="flex gap-1 sm:gap-2 flex-wrap justify-center">
+                <div className="flex gap-1 sm:gap-2 justify-center">
                   {advertisements.map((_, idx) => (
                     <button
                       key={idx}
-                      className={`h-1.5 sm:h-2 rounded-full transition-all ${
+                      className={`h-1.5 sm:h-2 rounded-full transition-all shrink-0 ${
                         idx === adIndex ? "bg-white w-4 sm:w-6" : "bg-white/50 w-1.5 sm:w-2"
                       }`}
                       onClick={() => setAdIndex(idx)}
@@ -206,7 +206,7 @@ export default function Home() {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="bg-white/20 hover:bg-white/30 text-white h-8 w-8 sm:h-9 sm:w-9"
+                  className="bg-white/20 hover:bg-white/30 text-white h-8 w-8 sm:h-9 sm:w-9 shrink-0"
                   onClick={() => setAdIndex((prev) => (prev + 1) % advertisements.length)}
                   data-testid="button-next-ad"
                 >
