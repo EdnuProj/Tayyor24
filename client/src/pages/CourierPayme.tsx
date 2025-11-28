@@ -1165,27 +1165,58 @@ export default function CourierPayme() {
                       <p className="text-slate-200">Telefon: +998 33 020 60 00</p>
                       <p className="text-slate-300 text-sm mt-2">📍 Manzil</p>
                     </div>
-                    {!isAccepted ? (
-                      <div className="flex gap-2">
+                    <div className="flex gap-2">
+                      {assignment.status === "pending" && !isAccepted && (
+                        <>
+                          <Button
+                            onClick={() => handleAcceptOrder(assignment.orderId, assignment.id, assignment)}
+                            disabled={acceptingOrderId === assignment.orderId}
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                            data-testid={`button-accept-order-${assignment.orderId}`}
+                          >
+                            {acceptingOrderId === assignment.orderId ? "Qabul qilinmoqda..." : "✅ Qabul Qilish"}
+                          </Button>
+                          <Button
+                            onClick={() => handleRejectOrder(assignment.orderId, assignment.id)}
+                            disabled={rejectingOrderId === assignment.orderId}
+                            variant="destructive"
+                            className="flex-1"
+                            data-testid={`button-reject-order-${assignment.orderId}`}
+                          >
+                            {rejectingOrderId === assignment.orderId ? "Bekor qilinmoqda..." : "❌ Bekor Qilish"}
+                          </Button>
+                        </>
+                      )}
+                      {assignment.status === "accepted" && (
                         <Button
-                          onClick={() => handleAcceptOrder(assignment.orderId, assignment.id, assignment)}
-                          disabled={acceptingOrderId === assignment.orderId}
-                          className="flex-1 bg-green-600 hover:bg-green-700"
-                          data-testid={`button-accept-order-${assignment.orderId}`}
+                          onClick={() => handleUpdateOrderStatus("shipping")}
+                          disabled={updatingStatus}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700"
+                          data-testid={`button-shipping-${assignment.orderId}`}
                         >
-                          {acceptingOrderId === assignment.orderId ? "Qabul qilinmoqda..." : "✅ Qabul Qilish"}
+                          {updatingStatus ? "⏳ Yangilanmoqda..." : "🚗 Yo'lda"}
                         </Button>
+                      )}
+                      {assignment.status === "shipping" && (
                         <Button
-                          onClick={() => handleRejectOrder(assignment.orderId, assignment.id)}
-                          disabled={rejectingOrderId === assignment.orderId}
-                          variant="destructive"
-                          className="flex-1"
-                          data-testid={`button-reject-order-${assignment.orderId}`}
+                          onClick={() => handleUpdateOrderStatus("delivered")}
+                          disabled={updatingStatus}
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                          data-testid={`button-delivered-${assignment.orderId}`}
                         >
-                          {rejectingOrderId === assignment.orderId ? "Bekor qilinmoqda..." : "❌ Bekor Qilish"}
+                          {updatingStatus ? "⏳ Yangilanmoqda..." : "✅ Yetkazildi"}
                         </Button>
-                      </div>
-                    ) : null}
+                      )}
+                      {assignment.status === "delivered" && (
+                        <Button
+                          onClick={() => setOrders(prev => prev.filter(o => o.orderId !== assignment.orderId))}
+                          className="flex-1 bg-gray-600 hover:bg-gray-700"
+                          data-testid={`button-done-${assignment.orderId}`}
+                        >
+                          ❌ Chiqish
+                        </Button>
+                      )}
+                    </div>
                   </Card>
                 );
               })
