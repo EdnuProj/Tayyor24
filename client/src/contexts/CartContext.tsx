@@ -9,7 +9,7 @@ interface CartContextType {
   isLoading: boolean;
   itemCount: number;
   subtotal: number;
-  addToCart: (product: Product, quantity?: number, color?: string, size?: string, container?: string) => Promise<void>;
+  addToCart: (product: Product, quantity?: number, color?: string, size?: string, type?: string, typePrice?: number, container?: string) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -35,6 +35,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       quantity: number; 
       selectedColor?: string; 
       selectedSize?: string; 
+      selectedType?: string;
+      selectedTypePrice?: number;
       selectedContainer?: string;
     }) => {
       return apiRequest("POST", "/api/cart", { ...data, sessionId });
@@ -76,6 +78,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     quantity = 1, 
     color?: string, 
     size?: string,
+    type?: string,
+    typePrice?: number,
     container?: string
   ) => {
     await addMutation.mutateAsync({
@@ -83,6 +87,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       quantity,
       selectedColor: color,
       selectedSize: size,
+      selectedType: type,
+      selectedTypePrice: typePrice,
       selectedContainer: container,
     });
   }, [addMutation]);
@@ -110,7 +116,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const [, priceStr] = item.selectedContainer.split("|");
       containerPrice = priceStr ? parseInt(priceStr) : 0;
     }
-    const itemPrice = item.product.price + containerPrice;
+    const typePrice = item.selectedTypePrice || 0;
+    const itemPrice = item.product.price + typePrice + containerPrice;
     return sum + itemPrice * item.quantity;
   }, 0);
 

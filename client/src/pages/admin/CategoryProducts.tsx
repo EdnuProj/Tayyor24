@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, type ChangeEvent } from "react";
 import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -62,6 +62,7 @@ const productSchema = z.object({
   images: z.array(z.string()).min(1, "Kamida 1 ta rasm kerak"),
   colors: z.array(z.string()).optional(),
   sizes: z.array(z.string()).optional(),
+  types: z.string().default("[]"),
   containers: z.array(z.string()).optional(),
   stock: z.coerce.number().min(0).default(0),
   isPopular: z.boolean().default(false),
@@ -78,6 +79,8 @@ export default function CategoryProducts() {
   const [imageInput, setImageInput] = useState("");
   const [containerName, setContainerName] = useState("");
   const [containerPrice, setContainerPrice] = useState("");
+  const [typeName, setTypeName] = useState("");
+  const [typePrice, setTypePrice] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: products = [], isLoading: loadingProducts } = useQuery<Product[]>({
@@ -129,6 +132,7 @@ export default function CategoryProducts() {
         images: [],
         colors: [],
         sizes: [],
+        types: "[]",
         containers: [],
         stock: 0,
       });
@@ -155,7 +159,7 @@ export default function CategoryProducts() {
     createMutation.mutate(data);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -212,6 +216,7 @@ export default function CategoryProducts() {
               images: [],
               colors: [],
               sizes: [],
+              types: "[]",
               containers: [],
               stock: 0,
               isPopular: false,
@@ -374,6 +379,78 @@ export default function CategoryProducts() {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="types"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Turi (optional)</FormLabel>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        <Input
+                          placeholder="Turi (katta, kichik...)"
+                          value={typeName}
+                          onChange={(e) => setTypeName(e.target.value)}
+                          data-testid="input-type-name"
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Narx qo'shimcha (so'm)"
+                          value={typePrice}
+                          onChange={(e) => setTypePrice(e.target.value)}
+                          data-testid="input-type-price"
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            if (!typeName.trim() || !typePrice.trim()) {
+                              toast({ title: "Xatolik", description: "Tur ism va narx kiriting", variant: "destructive" });
+                              return;
+                            }
+                            const types = JSON.parse(field.value || "[]");
+                            types.push({ name: typeName, price: parseInt(typePrice) });
+                            field.onChange(JSON.stringify(types));
+                            setTypeName("");
+                            setTypePrice("");
+                          }}
+                          variant="outline"
+                          data-testid="button-add-type"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Qo'shish
+                        </Button>
+                      </div>
+                      {field.value && JSON.parse(field.value).length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Qo'shilgan turlar:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {JSON.parse(field.value).map((type: any, idx: number) => (
+                              <div key={idx} className="bg-primary/10 text-foreground px-3 py-2 rounded-md text-sm flex items-center gap-2">
+                                <span className="font-medium">{type.name}</span>
+                                <span className="text-muted-foreground">·</span>
+                                <span>+{type.price.toLocaleString()} so'm</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const types = JSON.parse(field.value!);
+                                    types.splice(idx, 1);
+                                    field.onChange(JSON.stringify(types));
+                                  }}
+                                  className="ml-1 hover:text-destructive"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}

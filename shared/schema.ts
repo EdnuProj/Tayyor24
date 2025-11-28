@@ -31,6 +31,7 @@ export const products = pgTable("products", {
   images: text("images").array().notNull(),
   colors: text("colors").array(),
   sizes: text("sizes").array(),
+  types: text("types").notNull().default("[]"), // JSON array of {name, price}
   containers: text("containers").array(),
   stock: integer("stock").notNull().default(0),
   sold: integer("sold").notNull().default(0),
@@ -53,6 +54,8 @@ export const cartItems = pgTable("cart_items", {
   quantity: integer("quantity").notNull().default(1),
   selectedColor: text("selected_color"),
   selectedSize: text("selected_size"),
+  selectedType: text("selected_type"),
+  selectedTypePrice: real("selected_type_price"),
   selectedContainer: text("selected_container"),
 });
 
@@ -137,6 +140,8 @@ export interface OrderItem {
   quantity: number;
   selectedColor?: string;
   selectedSize?: string;
+  selectedType?: string;
+  selectedTypePrice?: number;
   selectedContainer?: string;
   containerPrice?: number;
   categoryId: string;

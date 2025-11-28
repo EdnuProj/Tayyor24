@@ -36,6 +36,8 @@ export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedTypePrice, setSelectedTypePrice] = useState<number>(0);
   const [selectedContainer, setSelectedContainer] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
@@ -74,6 +76,16 @@ export default function ProductDetail() {
       return;
     }
 
+    const types = JSON.parse(product.types || "[]");
+    if (types.length > 0 && !selectedType) {
+      toast({
+        title: "Turini tanlang",
+        description: "Iltimos, mahsulot turini tanlang",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (product.containers && product.containers.length > 0 && !selectedContainer) {
       toast({
         title: "Idish tanlang",
@@ -84,7 +96,7 @@ export default function ProductDetail() {
     }
 
     try {
-      await addToCart(product, quantity, selectedColor || undefined, selectedSize || undefined, selectedContainer || undefined);
+      await addToCart(product, quantity, selectedColor || undefined, selectedSize || undefined, selectedType || undefined, selectedTypePrice || undefined, selectedContainer || undefined);
       toast({
         title: "Savatchaga qo'shildi",
         description: `${product.name} (${quantity} dona)`,
@@ -253,6 +265,38 @@ export default function ProductDetail() {
             </div>
 
             <Separator />
+
+            {/* Types */}
+            {(() => {
+              const types = JSON.parse(product.types || "[]");
+              return types.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="font-medium">
+                    Turi: <span className="text-muted-foreground">{selectedType || "Tanlang"}</span>
+                    {selectedTypePrice > 0 && <span className="ml-2 text-primary">+{formatPrice(selectedTypePrice)}</span>}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {types.map((type: any) => (
+                      <button
+                        key={type.name}
+                        onClick={() => {
+                          setSelectedType(type.name);
+                          setSelectedTypePrice(type.price);
+                        }}
+                        className={`px-4 py-2 rounded-md transition-all font-medium ${
+                          selectedType === type.name
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                        data-testid={`button-type-${type.name}`}
+                      >
+                        {type.name} {type.price > 0 && `(+${formatPrice(type.price)})`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Colors */}
             {product.colors && product.colors.length > 0 && (
