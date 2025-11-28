@@ -237,7 +237,7 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
               {mainCategories.slice(0, 6).map((category) => (
-                <Link key={category.id} href={`/products?category=${category.id}`}>
+                <Link key={category.id} href={`/products?category=${category.id}`} onClick={() => window.scrollTo(0, 0)}>
                   <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-category-${category.id}`}>
                     <CardContent className="p-3 sm:p-4 md:p-6 text-center space-y-1 sm:space-y-2">
                       <div className="w-10 sm:w-12 h-10 sm:h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center text-lg sm:text-2xl">
@@ -276,7 +276,7 @@ export default function Home() {
                     </p>
                   </div>
                 </div>
-                <Link href={`/products?category=${mainCategory.id}`}>
+                <Link href={`/products?category=${mainCategory.id}`} onClick={() => window.scrollTo(0, 0)}>
                   <Button variant="ghost" size="sm" data-testid={`link-view-category-${mainCategory.id}`}>
                     Barchasi
                     <ChevronRight className="ml-1 h-4 w-4" />
