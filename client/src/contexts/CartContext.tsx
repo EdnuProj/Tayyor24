@@ -117,7 +117,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       containerPrice = priceStr ? parseInt(priceStr) : 0;
     }
     const typePrice = item.selectedTypePrice || 0;
-    const itemPrice = item.product.price + typePrice + containerPrice;
+    const itemPrice = typePrice > 0 ? typePrice + containerPrice : item.product.price + containerPrice;
     return sum + itemPrice * item.quantity;
   }, 0);
 

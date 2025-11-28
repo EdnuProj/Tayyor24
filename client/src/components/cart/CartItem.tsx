@@ -46,6 +46,9 @@ export function CartItemComponent({ item }: CartItemProps) {
           {item.selectedSize && (
             <span>O'lcham: {item.selectedSize}</span>
           )}
+          {item.selectedType && (
+            <span>Turi: {item.selectedType}</span>
+          )}
           {item.selectedContainer && (
             <span>Idish: {item.selectedContainer.split("|")[0]}</span>
           )}
@@ -54,7 +57,7 @@ export function CartItemComponent({ item }: CartItemProps) {
         {/* Price */}
         <div className="flex items-baseline gap-2 flex-wrap">
           <span className="font-semibold text-primary">
-            {formatPrice(product.price)}
+            {formatPrice(item.selectedTypePrice ? item.selectedTypePrice : product.price)}
           </span>
           {item.selectedContainer && (() => {
             const containerPrice = parseInt(item.selectedContainer.split("|")[1] || "0");
@@ -64,7 +67,7 @@ export function CartItemComponent({ item }: CartItemProps) {
               </span>
             ) : null;
           })()}
-          {product.oldPrice && product.oldPrice > product.price && (
+          {product.oldPrice && product.oldPrice > product.price && !item.selectedType && (
             <span className="text-xs text-muted-foreground line-through">
               {formatPrice(product.oldPrice)}
             </span>
@@ -120,7 +123,8 @@ export function CartItemComponent({ item }: CartItemProps) {
               const [, priceStr] = item.selectedContainer.split("|");
               containerPrice = priceStr ? parseInt(priceStr) : 0;
             }
-            const totalPrice = (product.price + containerPrice) * item.quantity;
+            const itemPrice = item.selectedTypePrice ? item.selectedTypePrice + containerPrice : product.price + containerPrice;
+            const totalPrice = itemPrice * item.quantity;
             return formatPrice(totalPrice);
           })()}
         </span>

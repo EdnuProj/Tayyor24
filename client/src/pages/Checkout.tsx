@@ -114,7 +114,7 @@ export default function Checkout() {
       const allCategories = Array.from(categoriesSet).join(",");
       const categoryId = allCategories || "elektronika";
 
-      // Calculate total with containers
+      // Calculate total with containers and types
       let finalSubtotal = 0;
       const finalItems: OrderItem[] = items.map((item) => {
         let containerPrice = 0;
@@ -122,17 +122,21 @@ export default function Checkout() {
           const [, priceStr] = item.selectedContainer.split("|");
           containerPrice = priceStr ? parseInt(priceStr) : 0;
         }
-        const itemPrice = item.product.price + containerPrice;
+        const typePrice = item.selectedTypePrice || 0;
+        const finalPrice = typePrice > 0 ? typePrice : item.product.price;
+        const itemPrice = finalPrice + containerPrice;
         const itemQty = item.quantity;
         finalSubtotal += itemPrice * itemQty;
         return {
           productId: item.productId,
           productName: item.product.name,
           productImage: item.product.images[0] || "",
-          price: item.product.price,
+          price: finalPrice,
           quantity: itemQty,
           selectedColor: item.selectedColor || undefined,
           selectedSize: item.selectedSize || undefined,
+          selectedType: item.selectedType || undefined,
+          selectedTypePrice: typePrice || undefined,
           selectedContainer: item.selectedContainer || undefined,
           containerPrice: containerPrice,
           categoryId: item.product.categoryId,
