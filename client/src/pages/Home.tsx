@@ -244,9 +244,13 @@ export default function Home() {
                 <Link key={category.id} href={`/products?category=${category.id}`} onClick={() => window.scrollTo(0, 0)}>
                   <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-category-${category.id}`}>
                     <CardContent className="p-3 sm:p-4 md:p-6 text-center space-y-1 sm:space-y-2">
-                      <div className="w-10 sm:w-12 h-10 sm:h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center text-lg sm:text-2xl">
-                        {category.icon || "📦"}
-                      </div>
+                      {category.imageData ? (
+                        <img src={category.imageData} alt={category.name} className="w-10 sm:w-12 h-10 sm:h-12 mx-auto rounded-full object-cover" />
+                      ) : (
+                        <div className="w-10 sm:w-12 h-10 sm:h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center text-lg sm:text-2xl">
+                          {category.icon || "📦"}
+                        </div>
+                      )}
                       <h3 className="font-medium text-xs sm:text-sm line-clamp-2">{category.name}</h3>
                     </CardContent>
                   </Card>
@@ -270,9 +274,13 @@ export default function Home() {
             <div className="container mx-auto px-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="text-2xl sm:text-3xl">
-                    {mainCategory.icon || "📦"}
-                  </div>
+                  {mainCategory.imageData ? (
+                    <img src={mainCategory.imageData} alt={mainCategory.name} className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover" />
+                  ) : (
+                    <div className="text-2xl sm:text-3xl">
+                      {mainCategory.icon || "📦"}
+                    </div>
+                  )}
                   <div>
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">{mainCategory.name}</h2>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">

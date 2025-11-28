@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, GripVertical, Loader2, ChevronLeft, ArrowRight, Package, MapPin, Edit } from "lucide-react";
+import { Plus, Trash2, GripVertical, Loader2, ChevronLeft, ArrowRight, Package, MapPin, Edit, Image as ImageIcon } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +32,7 @@ import type { Category } from "@shared/schema";
 const categorySchema = z.object({
   name: z.string().min(2, "Kamida 2 ta belgi"),
   icon: z.string().optional(),
-  imageUrl: z.string().optional(),
+  imageData: z.string().optional(),
   latitude: z.string().optional().transform(val => val && val.trim() ? parseFloat(val) : undefined),
   longitude: z.string().optional().transform(val => val && val.trim() ? parseFloat(val) : undefined),
 });
@@ -41,12 +41,28 @@ type CategoryForm = z.infer<typeof categorySchema>;
 
 export default function AdminCategories() {
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [showLocationInput, setShowLocationInput] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64String = event.target?.result as string;
+      form.setValue("imageData", base64String);
+      setPreviewImage(base64String);
+      toast({ title: "Rasm yuklandi", description: "Kategoriyani saqlash uchun 'Saqlash' tugmasini bosing" });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSelectLocation = () => {
     setGettingLocation(true);
@@ -82,7 +98,7 @@ export default function AdminCategories() {
     defaultValues: {
       name: "",
       icon: "",
-      imageUrl: "",
+      imageData: "",
       latitude: "",
       longitude: "",
     },
@@ -95,7 +111,7 @@ export default function AdminCategories() {
         name: data.name,
         slug: generateSlug(data.name),
         icon: data.icon || "📦",
-        imageUrl: data.imageUrl || null,
+        imageData: data.imageData || null,
         order: selectedParentId ? subcategories.length : parentCategories.length,
         parentId: selectedParentId || null,
         latitude: data.latitude,
@@ -120,7 +136,7 @@ export default function AdminCategories() {
       const response = await apiRequest("PATCH", `/api/categories/${editingCategory.id}`, {
         name: data.name,
         icon: data.icon || "📦",
-        imageUrl: data.imageUrl || null,
+        imageData: data.imageData || null,
         latitude: data.latitude,
         longitude: data.longitude,
       });
@@ -277,7 +293,13 @@ export default function AdminCategories() {
                       </div>
                     </div>
                   )}
-                  <div className="text-2xl flex-shrink-0">{category.icon || "📦"}</div>
+                  <div className="flex-shrink-0">
+                    {category.imageData ? (
+                      <img src={category.imageData} alt={category.name} className="w-12 h-12 object-cover rounded-md" />
+                    ) : (
+                      <div className="text-2xl">{category.icon || "📦"}</div>
+                    )}
+                  </div>
                   <div className="flex-1">
                     <p className="font-medium">{category.name}</p>
                     <p className="text-sm text-muted-foreground">{category.slug}</p>
@@ -312,10 +334,11 @@ export default function AdminCategories() {
                         form.reset({
                           name: category.name,
                           icon: category.icon || "📦",
-                          imageUrl: category.imageUrl || "",
+                          imageData: category.imageData || "",
                           latitude: category.latitude ? category.latitude.toString() : "",
                           longitude: category.longitude ? category.longitude.toString() : "",
                         });
+                        setPreviewImage(category.imageData || null);
                         setShowLocationInput(!!category.latitude && !!category.longitude);
                         setDialogOpen(true);
                       }}
@@ -389,12 +412,49 @@ export default function AdminCategories() {
               />
               <FormField
                 control={form.control}
-                name="imageUrl"
-                render={({ field }) => (
+                name="imageData"
+                render={() => (
                   <FormItem>
-                    <FormLabel>Kategoriya rasmi (URL)</FormLabel>
+                    <FormLabel>Kategoriya rasmi</FormLabel>
                     <FormControl>
-                      <Input placeholder="https://example.com/image.jpg" {...field} data-testid="input-category-image" />
+                      <div className="space-y-3">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageSelect}
+                          className="hidden"
+                          data-testid="input-category-image-file"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full justify-start"
+                          data-testid="button-upload-category-image"
+                        >
+                          <ImageIcon className="w-4 h-4 mr-2" />
+                          Rasm yuklash
+                        </Button>
+                        {previewImage && (
+                          <div className="relative">
+                            <img src={previewImage} alt="Preview" className="w-full h-32 object-cover rounded-md border" />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                form.setValue("imageData", "");
+                                setPreviewImage(null);
+                              }}
+                              className="absolute top-1 right-1"
+                              data-testid="button-remove-category-image"
+                            >
+                              ✕
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
