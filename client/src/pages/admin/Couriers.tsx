@@ -99,7 +99,7 @@ export default function AdminCouriers() {
       queryClient.invalidateQueries({ queryKey: ["/api/couriers"] });
       setSelectedCourier(data);
       setBalanceAmount("");
-      toast({ title: "✅ Balansi yangilandi", description: `Yangi balans: ${data?.balance?.toLocaleString() || 0} so'm` });
+      toast({ title: "✅ Balansi yangilandi", description: `Yangi balans: ${(data?.balance || 0).toLocaleString()} so'm` });
       setTimeout(() => refetch(), 300);
     },
     onError: (error: any) => {
@@ -296,7 +296,7 @@ export default function AdminCouriers() {
                         {courier.isActive ? "Faol" : "Nofaol"}
                       </Badge>
                       <Badge variant="outline" data-testid={`badge-courier-balance-${courier.id}`}>
-                        💰 {courier.balance?.toLocaleString() || 0} so'm
+                        💰 {(courier.balance || 0).toLocaleString()} so'm
                       </Badge>
                     </div>
 
@@ -385,7 +385,7 @@ export default function AdminCouriers() {
             <div>
               <p className="text-sm text-muted-foreground">Hozirgi Balansi</p>
               <p className="text-2xl font-bold" data-testid="text-current-balance">
-                {selectedCourier?.balance?.toLocaleString() || 0} so'm
+                {(selectedCourier?.balance || 0).toLocaleString()} so'm
               </p>
             </div>
             <Input
@@ -399,7 +399,7 @@ export default function AdminCouriers() {
               }}
               data-testid="input-balance-amount"
             />
-            {balanceAmount && <p className="text-xs text-muted-foreground">Yuboriladi: {parseInt(balanceAmount).toLocaleString()} so'm</p>}
+            {balanceAmount && <p className="text-xs text-muted-foreground">Yuboriladi: {(parseInt(balanceAmount) || 0).toLocaleString()} so'm</p>}
             <div className="flex gap-2">
               <Button
                 className="flex-1"

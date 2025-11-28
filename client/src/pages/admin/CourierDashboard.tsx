@@ -35,7 +35,7 @@ export default function CourierDashboard() {
           <div>
             <p className="text-sm opacity-90">Balansi</p>
             <p className="text-3xl font-bold" data-testid="text-courier-balance">
-              {courier.balance?.toLocaleString() || 0} so'm
+              {(courier.balance || 0).toLocaleString()} so'm
             </p>
           </div>
         </div>
