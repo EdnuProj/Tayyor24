@@ -50,8 +50,6 @@ const settingsSchema = z.object({
   primaryColor: z.string().optional(),
   deliveryPrice: z.coerce.number().min(0),
   freeDeliveryThreshold: z.coerce.number().min(0).optional(),
-  telegramBotToken: z.string().optional(),
-  telegramGroupId: z.string().optional(),
 });
 
 const categorySchema = z.object({
@@ -91,8 +89,6 @@ export default function AdminSettings() {
       primaryColor: settings.primaryColor || "#7c3aed",
       deliveryPrice: settings.deliveryPrice,
       freeDeliveryThreshold: settings.freeDeliveryThreshold || 500000,
-      telegramBotToken: settings.telegramBotToken || "",
-      telegramGroupId: settings.telegramGroupId || "",
     } : undefined,
   });
 
@@ -264,10 +260,6 @@ export default function AdminSettings() {
           <TabsTrigger value="categories">
             <Palette className="h-4 w-4 mr-2" />
             Kategoriyalar
-          </TabsTrigger>
-          <TabsTrigger value="telegram">
-            <MessageCircle className="h-4 w-4 mr-2" />
-            Telegram
           </TabsTrigger>
         </TabsList>
 
@@ -575,121 +567,6 @@ export default function AdminSettings() {
               </Card>
             </TabsContent>
 
-            {/* Telegram Settings */}
-            <TabsContent value="telegram">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Telegram integratsiyasi</CardTitle>
-                  <CardDescription>
-                    Telegram bot orqali buyurtmalar haqida xabar olish
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="telegramBotToken"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bot Token</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="123456789:ABCDefGhIJKlmNoPQRsTUVwxyZ"
-                            data-testid="input-bot-token"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          @BotFather dan olingan token
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="telegramGroupId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telegram Guruh ID</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="-1001234567890" data-testid="input-group-id" />
-                        </FormControl>
-                        <FormDescription>
-                          Guruh ID (bot-ni admin qilib qo'shing va shu guruh ID kiriting)
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-                    <CardContent className="pt-6">
-                      <h4 className="font-semibold mb-2 text-sm">🤖 Telegram Bot Sozlash</h4>
-                      <ol className="text-xs space-y-1 text-muted-foreground mb-3">
-                        <li>1. @BotFather-ga /start bosing</li>
-                        <li>2. Yangi bot yaratish uchun /newbot bosing</li>
-                        <li>3. Bot nomini va username-ni kiriting</li>
-                        <li>4. Token-ni olib yuqorida kiriting</li>
-                        <li>5. @BotFather-da "Bot Settings" bosing</li>
-                        <li>6. "Inline Mode" → OFF qilib, "Web App" ON qiling</li>
-                        <li>7. Quyida "Telegram Bot-ni Sozlash" bosgani</li>
-                      </ol>
-                    </CardContent>
-                  </Card>
-
-                  <div className="flex gap-2">
-                    <Button type="submit" disabled={updateSettingsMutation.isPending} className="flex-1">
-                      {updateSettingsMutation.isPending && (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      )}
-                      <Save className="h-4 w-4 mr-2" />
-                      Saqlash
-                    </Button>
-                    <Button 
-                      type="button"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={async () => {
-                        const token = form.getValues("telegramBotToken");
-                        if (!token) {
-                          toast({ title: "❌ Bot tokenini avval kiriting", variant: "destructive" });
-                          return;
-                        }
-                        try {
-                          const res = await fetch("/api/admin/setup-telegram-webhook", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                          });
-                          const data = await res.json();
-                          if (res.ok) {
-                            toast({ 
-                              title: "✅ Telegram Bot Sozlandi!",
-                              description: "Telegramda /start bosing"
-                            });
-                          } else {
-                            toast({ 
-                              title: "❌ Xatolik", 
-                              description: data.error,
-                              variant: "destructive" 
-                            });
-                          }
-                        } catch (error) {
-                          toast({ 
-                            title: "❌ Xatolik yuz berdi", 
-                            variant: "destructive" 
-                          });
-                        }
-                      }}
-                      data-testid="button-setup-webhook"
-                    >
-                      🤖 Sozlash
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </form>
         </Form>
       </Tabs>

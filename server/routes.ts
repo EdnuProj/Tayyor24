@@ -384,9 +384,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Send Telegram notification to group
-      const settings = await storage.getSettings();
-      if (settings.telegramBotToken && settings.telegramGroupId) {
-        const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      const groupId = process.env.TELEGRAM_GROUP_ID;
+      if (botToken && groupId) {
+        const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
         
         // Send to group
         const orderItems = JSON.parse(data.items || "[]");
