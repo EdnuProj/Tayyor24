@@ -43,6 +43,8 @@ export default function CourierApp() {
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json() as Promise<CourierDashboardData>;
     },
+    refetchInterval: 1000, // Poll every 1 second for real-time order updates
+    refetchIntervalInBackground: true, // Continue polling even if tab is not focused
   });
 
   const topupMutation = useMutation({
@@ -63,6 +65,25 @@ export default function CourierApp() {
     },
     onError: () => {
       toast({ title: "❌ Xatolik", description: "Topup amalga oshirilmadi", variant: "destructive" });
+    },
+  });
+
+  const acceptOrderMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const res = await fetch(`/api/courier/accept-order/${orderId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telegramId }),
+      });
+      if (!res.ok) throw new Error("Failed to accept order");
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "✅ Zakaz qabul qilindi" });
+      refetch(); // Immediately refetch to update list for all couriers
+    },
+    onError: () => {
+      toast({ title: "❌ Xatolik", description: "Zakazni qabul qilish muvaffaq bo'lmadi", variant: "destructive" });
     },
   });
 
@@ -169,6 +190,41 @@ export default function CourierApp() {
           </Card>
         )}
       </div>
+
+      {/* Available Orders */}
+      {data?.assignments && data.assignments.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-3">📦 Yangi Zakazlar</h2>
+          <div className="space-y-2">
+            {data.assignments.map((assignment: any) => (
+              <Card key={assignment.id} className="bg-blue-900/40 border-blue-700 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">
+                      Zakaz #{assignment.orderId?.slice(0, 8) || assignment.id}
+                    </p>
+                    <p className="text-xs text-slate-300 mt-1">
+                      💰 {assignment.estimatedEarnings?.toLocaleString() || "0"} so'm
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      📍 {assignment.distance?.toFixed(1) || "?"} km
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => assignment.orderId && acceptOrderMutation.mutate(assignment.orderId)}
+                    disabled={acceptOrderMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700 text-white whitespace-nowrap"
+                    size="sm"
+                    data-testid={`button-accept-order-${assignment.id}`}
+                  >
+                    {acceptOrderMutation.isPending ? "Jarayonda..." : "Qabul qilish"}
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Transactions History */}
       <div>
