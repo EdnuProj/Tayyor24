@@ -176,17 +176,18 @@ export default function CourierPayme() {
     return `${category.icon || "📦"} ${category.name}`;
   };
 
-  // Get product names from order items
-  const getProductNames = (order: any): string => {
+  // Get product names with category from order items
+  const getProductsWithCategory = (order: any): Array<{ name: string; category: string }> => {
     try {
-      if (!order || !order.items) return "Mahsulot";
+      if (!order || !order.items) return [];
       const items = typeof order.items === "string" ? JSON.parse(order.items) : order.items;
-      if (!Array.isArray(items) || items.length === 0) return "Mahsulot";
-      const names = items.map((item: any) => item.productName || "Mahsulot").slice(0, 2);
-      const suffix = items.length > 2 ? ` +${items.length - 2}` : "";
-      return names.join(", ") + suffix;
+      if (!Array.isArray(items) || items.length === 0) return [];
+      return items.map((item: any) => ({
+        name: item.productName || "Mahsulot",
+        category: getCategoryName(item.categoryId || "elektronika")
+      }));
     } catch {
-      return "Mahsulot";
+      return [];
     }
   };
 
@@ -877,6 +878,11 @@ export default function CourierPayme() {
                       </div>
                     </div>
                     <div className="text-xs sm:text-sm space-y-1">
+                      {getProductsWithCategory(orderData).map((product, idx) => (
+                        <p key={idx} className="text-slate-300">
+                          📦 {product.name} - {product.category}
+                        </p>
+                      ))}
                       <p className="text-slate-300 truncate">
                         📍 {orderData?.customerAddress}
                       </p>
@@ -948,9 +954,11 @@ export default function CourierPayme() {
                     </div>
 
                     <div className="text-sm space-y-1">
-                      <p className="text-slate-300">
-                        📂 {getCategoryName(orderData?.categoryId || "elektronika")}
-                      </p>
+                      {getProductsWithCategory(orderData).map((product, idx) => (
+                        <p key={idx} className="text-slate-300 text-xs">
+                          📦 {product.name} - {product.category}
+                        </p>
+                      ))}
                       <p className="text-slate-300">
                         📍 {orderData?.customerAddress}
                       </p>
@@ -1197,12 +1205,11 @@ export default function CourierPayme() {
                               </span>
                             </div>
                             <div className="space-y-1">
-                              <div className="text-xs text-slate-300 px-2 py-1 bg-slate-600/50 rounded inline-block">
-                                📦 {getProductNames((assignment as any).order)}
-                              </div>
-                              <div className="text-xs text-slate-400 px-2 py-1 bg-slate-600/50 rounded inline-block ml-1">
-                                📂 {getCategoryName(categoryId)}
-                              </div>
+                              {getProductsWithCategory((assignment as any).order).map((product, idx) => (
+                                <div key={idx} className="text-xs text-slate-300 px-2 py-1 bg-slate-600/50 rounded inline-block mr-1">
+                                  📦 {product.name} - {product.category}
+                                </div>
+                              ))}
                             </div>
                             <div className="bg-slate-600 p-2 rounded space-y-1 text-sm">
                               <p className="text-slate-300">👤 Mijoz</p>
