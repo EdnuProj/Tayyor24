@@ -37,7 +37,8 @@ export function Footer() {
                 <SiInstagram className="h-4 w-4" />
               </a>
               <a
-                href="#"
+                href="#
+                "
                 className="flex h-9 w-9 items-center justify-center rounded-md bg-muted hover-elevate"
                 data-testid="link-social-facebook"
               >
@@ -79,7 +80,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-3 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4" />
-                <span>+998 90 123 45 67</span>
+                <span>+998 33 020 60 00 </span>
               </li>
               <li className="flex items-center gap-3 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4" />
@@ -87,7 +88,7 @@ export function Footer() {
               </li>
               <li className="flex items-start gap-3 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4 mt-0.5" />
-                <span>Toshkent shahri, Chilonzor tumani</span>
+                <span>Ohanagaron shahar yoshlar tenxoparki</span>
               </li>
             </ul>
           </div>
