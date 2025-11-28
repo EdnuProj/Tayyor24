@@ -378,7 +378,7 @@ export default function CourierPayme() {
       const data = await res.json();
       toast({
         title: "✅ Buyurtma qabul qilindi!",
-        description: `Balans: ${data.newBalance.toLocaleString()} so'm`,
+        description: `Balans: ${(data?.newBalance || 0).toLocaleString()} so'm`,
       });
 
       // Remove accepted order from nearby orders immediately
@@ -515,7 +515,7 @@ export default function CourierPayme() {
       const data = await res.json();
       toast({ 
         title: "✅ O'tkazma muvaffaqiyatli!",
-        description: `${amount.toLocaleString()} so'm yuborildi. Yangi balans: ${(courierBalance - amount).toLocaleString()} so'm`
+        description: `${(amount || 0).toLocaleString()} so'm yuborildi. Yangi balans: ${((courierBalance || 0) - (amount || 0)).toLocaleString()} so'm`
       });
       
       setTransferCard("");
@@ -545,7 +545,7 @@ export default function CourierPayme() {
             {/* Balance Card */}
             <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 border-0 text-white p-6">
               <p className="text-emerald-100 text-sm mb-2">Joriy Balans</p>
-              <p className="text-4xl font-bold">{courierBalance.toLocaleString()}</p>
+              <p className="text-4xl font-bold">{(courierBalance || 0).toLocaleString()}</p>
               <p className="text-emerald-100 text-sm mt-2">so'm</p>
               {courierCard && <p className="text-emerald-100 text-xs mt-2">💳 {courierCard}</p>}
             </Card>
@@ -650,7 +650,7 @@ export default function CourierPayme() {
                   className="w-full bg-slate-700 border-slate-600 text-white p-2 rounded mt-1"
                   data-testid="input-transfer-amount"
                 />
-                <p className="text-xs text-slate-400 mt-1">Mavjud: {courierBalance.toLocaleString()} so'm</p>
+                <p className="text-xs text-slate-400 mt-1">Mavjud: {(courierBalance || 0).toLocaleString()} so'm</p>
               </div>
               <Button 
                 onClick={handleTransfer}
@@ -758,7 +758,7 @@ export default function CourierPayme() {
                       data-testid={`text-amount-${tx.id}`}
                     >
                       {isDebit ? "-" : "+"}
-                      {Math.abs(tx.amount).toLocaleString()}
+                      {Math.abs(tx.amount || 0).toLocaleString()}
                     </p>
                   </Card>
                 );

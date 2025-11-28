@@ -429,7 +429,7 @@ export default function CategoryProducts() {
                               <div key={idx} className="bg-primary/10 text-foreground px-3 py-2 rounded-md text-sm flex items-center gap-2">
                                 <span className="font-medium">{type.name}</span>
                                 <span className="text-muted-foreground">·</span>
-                                <span>+{type.price.toLocaleString()} so'm</span>
+                                <span>+{(type.price || 0).toLocaleString()} so'm</span>
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -503,7 +503,7 @@ export default function CategoryProducts() {
                                 <div key={idx} className="bg-primary/10 text-foreground px-3 py-2 rounded-md text-sm flex items-center gap-2">
                                   <span className="font-medium">{name}</span>
                                   <span className="text-muted-foreground">·</span>
-                                  <span>{parseInt(price).toLocaleString()} so'm</span>
+                                  <span>{(parseInt(price) || 0).toLocaleString()} so'm</span>
                                   <button
                                     type="button"
                                     onClick={() => {
