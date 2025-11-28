@@ -111,8 +111,13 @@ export default function Checkout() {
         categoryId: item.product.categoryId,
       }));
 
-      // Get category from first item
-      const categoryId = items.length > 0 ? items[0].product.categoryId : "elektronika";
+      // Get all unique categories from all items
+      const categoriesSet = new Set<string>();
+      items.forEach(item => {
+        categoriesSet.add(item.product.categoryId);
+      });
+      const allCategories = Array.from(categoriesSet).join(",");
+      const categoryId = allCategories || "elektronika";
 
       // Ensure customerTelegramId is from form, not URL params
       const finalTelegramId = data.customerTelegramId || initialTelegramId;
