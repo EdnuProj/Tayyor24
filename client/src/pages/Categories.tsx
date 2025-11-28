@@ -77,9 +77,13 @@ export default function Categories() {
                     className="hover-elevate cursor-pointer h-full group"
                   >
                     <CardContent className="p-8 text-center space-y-4">
-                      <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
-                        {category.icon || "📦"}
-                      </div>
+                      {category.imageData ? (
+                        <img src={category.imageData} alt={category.name} className="w-16 h-16 mx-auto rounded-full object-cover group-hover:scale-110 transition-transform" />
+                      ) : (
+                        <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                          {category.icon || "📦"}
+                        </div>
+                      )}
                       <div>
                         <h3 className="font-semibold text-lg">{category.name}</h3>
                       </div>
@@ -94,7 +98,11 @@ export default function Categories() {
               <DialogContent className="w-[95vw] sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl line-clamp-2">
-                    <span className="text-xl sm:text-2xl shrink-0">{selectedCategory?.icon || "📦"}</span>
+                    {selectedCategory?.imageData ? (
+                      <img src={selectedCategory.imageData} alt={selectedCategory.name} className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <span className="text-xl sm:text-2xl shrink-0">{selectedCategory?.icon || "📦"}</span>
+                    )}
                     <span className="truncate">{selectedCategory?.name} mahsulotlari</span>
                   </DialogTitle>
                   <DialogDescription className="text-xs sm:text-sm">
