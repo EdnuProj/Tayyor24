@@ -583,8 +583,9 @@ Qabul qilamizmi?
                     }
 
                     // Send notification to group
-                    try {
-                      const expandMessage = `
+                    if (groupId) {
+                      try {
+                        const expandMessage = `
 🔔 *BUYURTMA BARCHAGA YUBORILDI*
 
 Buyurtma: #${order.orderNumber}
@@ -595,19 +596,21 @@ Buyurtma: #${order.orderNumber}
 💰 Jami: ${order.total} so'm
 
 ⚠️ Yaqin kuryerlar qabul qilmadi, barchaga yuborildi
-                      `.trim();
-                      
-                      await fetch(telegramUrl, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          chat_id: settings.telegramGroupId,
-                          text: expandMessage,
-                          parse_mode: "Markdown",
-                        }),
-                      });
-                    } catch (error) {
-                      console.error("Failed to send expand notification to group:", error);
+                        `.trim();
+                        
+                        await fetch(telegramUrl, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            chat_id: groupId,
+                            text: expandMessage,
+                            parse_mode: "Markdown",
+                          }),
+                        });
+                        console.log(`✅ Expansion notification sent to group: ${groupId}`);
+                      } catch (error) {
+                        console.error("Failed to send expand notification to group:", error);
+                      }
                     }
                   }
                 }
@@ -1582,7 +1585,8 @@ Tez orada yetkazib bering! ⚡
           console.log(`Courier notification sent to ${courier.telegramId}`);
 
           // Send to group
-          if (settings.telegramGroupId) {
+          const groupId = process.env.TELEGRAM_GROUP_ID;
+          if (groupId) {
             const messageToGroup = `
 ✅ *BUYURTMA QABUL QILINDI*
 
@@ -1600,17 +1604,17 @@ Raqam: #${order.orderNumber}
 Kuryer yetkazishni boshlaydi!
             `.trim();
 
-            console.log(`Sending group notification to ${settings.telegramGroupId}`);
+            console.log(`Sending group notification to ${groupId}`);
             await fetch(telegramUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                chat_id: settings.telegramGroupId,
+                chat_id: groupId,
                 text: messageToGroup,
                 parse_mode: "Markdown",
               }),
             });
-            console.log(`Group notification sent`);
+            console.log(`✅ Group notification sent`);
           }
         } catch (telegramError) {
           console.error("Telegram notification failed:", telegramError);
@@ -1646,8 +1650,9 @@ Kuryer yetkazishni boshlaydi!
       const order = await storage.updateOrder(orderId, { status: "rejected" });
 
       // Send notification to group
-      const settings = await storage.getSettings();
-      if (settings.telegramBotToken && settings.telegramGroupId && order) {
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      const groupId = process.env.TELEGRAM_GROUP_ID;
+      if (botToken && groupId && order) {
         const message = `
 ❌ *BUYURTMA BEKOR QILINGAN*
 
@@ -1657,16 +1662,17 @@ Sababu: Redd etilgan
         `.trim();
 
         try {
-          const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+          const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
           await fetch(telegramUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              chat_id: settings.telegramGroupId,
+              chat_id: groupId,
               text: message,
               parse_mode: "Markdown",
             }),
           });
+          console.log(`✅ Rejection notification sent to group: ${groupId}`);
         } catch (telegramError) {
           console.error("Telegram notification failed:", telegramError);
         }
@@ -1699,9 +1705,9 @@ Sababu: Redd etilgan
       }
 
       // Send notifications only to customer
-      const settings = await storage.getSettings();
-      if (settings.telegramBotToken && order && order.customerTelegramId) {
-        const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      if (botToken && order && order.customerTelegramId) {
+        const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
         let messageToCustomer = "";
         
         if (status === "accepted") {
