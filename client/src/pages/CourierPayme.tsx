@@ -1128,99 +1128,124 @@ export default function CourierPayme() {
                 Yangi buyurtma yo'q
               </Card>
             ) : (
-              orders.map((assignment) => {
-                const isAccepted = assignment.courierId !== undefined && assignment.courierId !== null;
-                const statusLabel = assignment.status === "pending" ? "Yangi" : 
-                                   assignment.status === "accepted" ? "Qabul qilgan" :
-                                   assignment.status === "shipping" ? "Yo'lda" :
-                                   assignment.status === "delivered" ? "Yetkazildi" :
-                                   assignment.status === "rejected" ? "Rad etilgan" : assignment.status;
-                
-                const statusColor = assignment.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
-                                   assignment.status === "accepted" ? "bg-blue-500/20 text-blue-400" :
-                                   assignment.status === "shipping" ? "bg-purple-500/20 text-purple-400" :
-                                   assignment.status === "delivered" ? "bg-green-500/20 text-green-400" :
-                                   "bg-red-500/20 text-red-400";
+              (() => {
+                // Group orders by category
+                const groupedByCategory = orders.reduce((acc, assignment) => {
+                  const categoryId = (assignment as any).order?.categoryId || "elektronika";
+                  if (!acc[categoryId]) {
+                    acc[categoryId] = [];
+                  }
+                  acc[categoryId].push(assignment);
+                  return acc;
+                }, {} as Record<string, Assignment[]>);
 
-                return (
-                  <Card
-                    key={assignment.id}
-                    className="bg-slate-800 border-slate-700 p-4 space-y-3"
-                    data-testid={`card-order-${assignment.orderId}`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-bold text-lg text-white">#${assignment.orderId?.substring(0, 6) || 'N/A'}</p>
-                        <p className="text-sm text-slate-300">{new Date(assignment.assignedAt).toLocaleDateString('uz-UZ')}</p>
-                      </div>
-                      <span className={`px-3 py-1 rounded text-xs font-medium ${statusColor}`}>
-                        {statusLabel}
-                      </span>
+                return Object.entries(groupedByCategory).map(([categoryId, categoryOrders]) => (
+                  <div key={categoryId} className="space-y-2">
+                    {/* Category Header */}
+                    <div className="px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-800 rounded-lg border border-slate-600">
+                      <p className="text-lg font-bold text-white">
+                        {getCategoryName(categoryId)}
+                      </p>
+                      <p className="text-sm text-slate-400">
+                        {categoryOrders.length} buyurtma
+                      </p>
                     </div>
-                    <div className="bg-slate-700 p-3 rounded space-y-1">
-                      <p className="text-slate-400 text-sm">📂 Kategoriya</p>
-                      <p className="text-white font-semibold">{getCategoryName((assignment as any).order?.categoryId || "elektronika")}</p>
-                    </div>
-                    <div className="bg-slate-700 p-3 rounded space-y-1">
-                      <p className="text-white font-medium">👤 Mijoz</p>
-                      <p className="text-slate-200">Telefon: +998 33 020 60 00</p>
-                      <p className="text-slate-300 text-sm mt-2">📍 Manzil</p>
-                    </div>
-                    <div className="flex gap-2">
-                      {assignment.status === "pending" && !isAccepted && (
-                        <>
-                          <Button
-                            onClick={() => handleAcceptOrder(assignment.orderId, assignment.id, assignment)}
-                            disabled={acceptingOrderId === assignment.orderId}
-                            className="flex-1 bg-green-600 hover:bg-green-700"
-                            data-testid={`button-accept-order-${assignment.orderId}`}
+
+                    {/* Orders in this category */}
+                    <div className="space-y-2 ml-2">
+                      {categoryOrders.map((assignment) => {
+                        const isAccepted = assignment.courierId !== undefined && assignment.courierId !== null;
+                        const statusLabel = assignment.status === "pending" ? "Yangi" : 
+                                           assignment.status === "accepted" ? "Qabul qilgan" :
+                                           assignment.status === "shipping" ? "Yo'lda" :
+                                           assignment.status === "delivered" ? "Yetkazildi" :
+                                           assignment.status === "rejected" ? "Rad etilgan" : assignment.status;
+                        
+                        const statusColor = assignment.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                                           assignment.status === "accepted" ? "bg-blue-500/20 text-blue-400" :
+                                           assignment.status === "shipping" ? "bg-purple-500/20 text-purple-400" :
+                                           assignment.status === "delivered" ? "bg-green-500/20 text-green-400" :
+                                           "bg-red-500/20 text-red-400";
+
+                        return (
+                          <Card
+                            key={assignment.id}
+                            className="bg-slate-800 border-slate-700 p-4 space-y-3"
+                            data-testid={`card-order-${assignment.orderId}`}
                           >
-                            {acceptingOrderId === assignment.orderId ? "Qabul qilinmoqda..." : "✅ Qabul Qilish"}
-                          </Button>
-                          <Button
-                            onClick={() => handleRejectOrder(assignment.orderId, assignment.id)}
-                            disabled={rejectingOrderId === assignment.orderId}
-                            variant="destructive"
-                            className="flex-1"
-                            data-testid={`button-reject-order-${assignment.orderId}`}
-                          >
-                            {rejectingOrderId === assignment.orderId ? "Bekor qilinmoqda..." : "❌ Bekor Qilish"}
-                          </Button>
-                        </>
-                      )}
-                      {assignment.status === "accepted" && (
-                        <Button
-                          onClick={() => handleUpdateOrderStatus("shipping")}
-                          disabled={updatingStatus}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700"
-                          data-testid={`button-shipping-${assignment.orderId}`}
-                        >
-                          {updatingStatus ? "⏳ Yangilanmoqda..." : "🚗 Yo'lda"}
-                        </Button>
-                      )}
-                      {assignment.status === "shipping" && (
-                        <Button
-                          onClick={() => handleUpdateOrderStatus("delivered")}
-                          disabled={updatingStatus}
-                          className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                          data-testid={`button-delivered-${assignment.orderId}`}
-                        >
-                          {updatingStatus ? "⏳ Yangilanmoqda..." : "✅ Yetkazildi"}
-                        </Button>
-                      )}
-                      {assignment.status === "delivered" && (
-                        <Button
-                          onClick={() => setOrders(prev => prev.filter(o => o.orderId !== assignment.orderId))}
-                          className="flex-1 bg-gray-600 hover:bg-gray-700"
-                          data-testid={`button-done-${assignment.orderId}`}
-                        >
-                          ❌ Chiqish
-                        </Button>
-                      )}
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-bold text-lg text-white">#${assignment.orderId?.substring(0, 6) || 'N/A'}</p>
+                                <p className="text-sm text-slate-300">{new Date(assignment.assignedAt).toLocaleDateString('uz-UZ')}</p>
+                              </div>
+                              <span className={`px-3 py-1 rounded text-xs font-medium ${statusColor}`}>
+                                {statusLabel}
+                              </span>
+                            </div>
+                            <div className="bg-slate-700 p-3 rounded space-y-1">
+                              <p className="text-white font-medium">👤 Mijoz</p>
+                              <p className="text-slate-200">Telefon: +998 33 020 60 00</p>
+                              <p className="text-slate-300 text-sm mt-2">📍 Manzil</p>
+                            </div>
+                            <div className="flex gap-2">
+                              {assignment.status === "pending" && !isAccepted && (
+                                <>
+                                  <Button
+                                    onClick={() => handleAcceptOrder(assignment.orderId, assignment.id, assignment)}
+                                    disabled={acceptingOrderId === assignment.orderId}
+                                    className="flex-1 bg-green-600 hover:bg-green-700"
+                                    data-testid={`button-accept-order-${assignment.orderId}`}
+                                  >
+                                    {acceptingOrderId === assignment.orderId ? "Qabul qilinmoqda..." : "✅ Qabul Qilish"}
+                                  </Button>
+                                  <Button
+                                    onClick={() => handleRejectOrder(assignment.orderId, assignment.id)}
+                                    disabled={rejectingOrderId === assignment.orderId}
+                                    variant="destructive"
+                                    className="flex-1"
+                                    data-testid={`button-reject-order-${assignment.orderId}`}
+                                  >
+                                    {rejectingOrderId === assignment.orderId ? "Bekor qilinmoqda..." : "❌ Bekor Qilish"}
+                                  </Button>
+                                </>
+                              )}
+                              {assignment.status === "accepted" && (
+                                <Button
+                                  onClick={() => handleUpdateOrderStatus("shipping")}
+                                  disabled={updatingStatus}
+                                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                  data-testid={`button-shipping-${assignment.orderId}`}
+                                >
+                                  {updatingStatus ? "⏳ Yangilanmoqda..." : "🚗 Yo'lda"}
+                                </Button>
+                              )}
+                              {assignment.status === "shipping" && (
+                                <Button
+                                  onClick={() => handleUpdateOrderStatus("delivered")}
+                                  disabled={updatingStatus}
+                                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                                  data-testid={`button-delivered-${assignment.orderId}`}
+                                >
+                                  {updatingStatus ? "⏳ Yangilanmoqda..." : "✅ Yetkazildi"}
+                                </Button>
+                              )}
+                              {assignment.status === "delivered" && (
+                                <Button
+                                  onClick={() => setOrders(prev => prev.filter(o => o.orderId !== assignment.orderId))}
+                                  className="flex-1 bg-gray-600 hover:bg-gray-700"
+                                  data-testid={`button-done-${assignment.orderId}`}
+                                >
+                                  ❌ Chiqish
+                                </Button>
+                              )}
+                            </div>
+                          </Card>
+                        );
+                      })}
                     </div>
-                  </Card>
-                );
-              })
+                  </div>
+                ));
+              })()
             )}
           </div>
         );
