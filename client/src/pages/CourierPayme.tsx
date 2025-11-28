@@ -1063,9 +1063,12 @@ export default function CourierPayme() {
                     {orderItems.length > 0 ? (
                       orderItems.map((item: any, idx: number) => (
                         <div key={idx} className="bg-slate-700 p-2 rounded text-sm">
-                          <div className="flex justify-between items-start">
-                            <p className="text-white font-medium flex-1">{item.productName}</p>
-                            <span className="text-slate-300 ml-2 whitespace-nowrap">x{item.quantity}</span>
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="flex-1">
+                              <p className="text-white font-medium">{item.productName}</p>
+                              <p className="text-slate-400 text-xs mt-0.5">📂 {getCategoryName(item.categoryId || "elektronika")}</p>
+                            </div>
+                            <span className="text-slate-300 whitespace-nowrap">x{item.quantity}</span>
                           </div>
                           <p className="text-slate-400 text-xs mt-1">
                             {(item.price * item.quantity).toLocaleString()} so'm
