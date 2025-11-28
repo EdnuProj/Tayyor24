@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCart } from "@/contexts/CartContext";
+import logoUrl from "@assets/photo_2025-05-11_15-33-54_1764328387857.jpg";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -36,9 +37,7 @@ export function Header({ onSearch }: HeaderProps) {
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2" data-testid="link-home">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary">
-              <span className="text-lg font-bold text-primary-foreground">D</span>
-            </div>
+            <img src={logoUrl} alt="Lavyor" className="h-9 w-auto" />
             <span className="hidden text-xl font-semibold sm:inline-block">Tayyor24</span>
           </Link>
 
