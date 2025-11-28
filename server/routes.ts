@@ -1853,6 +1853,7 @@ Do'kon-da xarid qilib davomi bering!
       await storage.createNewsletter({ title, message, imageUrl: imageUrl || null });
 
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      const groupId = process.env.TELEGRAM_GROUP_ID;
       let sentCount = 0;
       let totalUsers = 0;
 
@@ -1868,6 +1869,26 @@ ${title}
 ${message}
           `.trim();
 
+          // First, always send to the group
+          if (groupId) {
+            try {
+              const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+              await fetch(telegramUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  chat_id: groupId,
+                  text: `📢 *YANGILIK*\n\n${telegramMessage}`,
+                  parse_mode: "Markdown",
+                }),
+              });
+              console.log("✅ Newsletter sent to group");
+            } catch (groupError) {
+              console.error("Failed to send newsletter to group:", groupError);
+            }
+          }
+
+          // Then send to individual users
           for (const user of telegramUsers) {
             try {
               if (imageUrl) {
@@ -1916,7 +1937,7 @@ ${message}
       res.json({ 
         success: true, 
         message: botToken 
-          ? `Newsletter saved and sent to ${sentCount} out of ${totalUsers} users`
+          ? `✅ Newsletter: Gruppaga yuborildi. ${sentCount}/${totalUsers} users-ga jo'natildi`
           : "Newsletter saved successfully (Telegram not configured)",
         sentCount,
         totalUsers
@@ -1934,13 +1955,14 @@ ${message}
       }
 
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      const groupId = process.env.TELEGRAM_GROUP_ID;
       const couriers = await storage.getCouriers();
       const activeCouriers = couriers.filter((c) => c.isActive && c.telegramId);
 
       let sentCount = 0;
 
-      // Send via Telegram if token is configured and couriers exist
-      if (botToken && activeCouriers.length > 0) {
+      // Send via Telegram if token is configured
+      if (botToken) {
         try {
           const telegramMessage = `
 📢 *${title}*
@@ -1951,6 +1973,25 @@ ${message}
           const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
           const photoUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
 
+          // First, always send to the group
+          if (groupId) {
+            try {
+              await fetch(telegramUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  chat_id: groupId,
+                  text: `📢 *KURYER RASSILKASI*\n\n${telegramMessage}`,
+                  parse_mode: "Markdown",
+                }),
+              });
+              console.log("✅ Courier rassilka sent to group");
+            } catch (groupError) {
+              console.error("Failed to send courier rassilka to group:", groupError);
+            }
+          }
+
+          // Then send to individual couriers if they exist
           for (const courier of activeCouriers) {
             try {
               if (imageUrl) {
@@ -1995,7 +2036,7 @@ ${message}
       }
 
       const message_text = botToken 
-        ? `Rassilka ${sentCount} ta kuryerga yuborildi`
+        ? `✅ Rassilka: Gruppaga yuborildi. ${sentCount}/${activeCouriers.length} kuryerga jo'natildi`
         : `Telegram to'g'ri sozlangan emas (${activeCouriers.length} aktiv kuryer topildi)`;
 
       res.json({ success: true, message: message_text, sentCount, totalCouriers: activeCouriers.length });
