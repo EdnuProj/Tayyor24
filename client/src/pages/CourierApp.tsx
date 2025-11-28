@@ -69,21 +69,30 @@ export default function CourierApp() {
   });
 
   const acceptOrderMutation = useMutation({
-    mutationFn: async (orderId: string) => {
-      const res = await fetch(`/api/courier/accept-order/${orderId}`, {
+    mutationFn: async (assignment: any) => {
+      const res = await fetch("/api/courier/accept-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telegramId }),
+        body: JSON.stringify({
+          orderId: assignment.orderId,
+          assignmentId: assignment.id,
+          telegramId,
+        }),
       });
       if (!res.ok) throw new Error("Failed to accept order");
       return res.json();
     },
     onSuccess: () => {
       toast({ title: "✅ Zakaz qabul qilindi" });
-      refetch(); // Immediately refetch to update list for all couriers
+      // Immediately refetch - all couriers poll every 1 second so they'll see it removed
+      setTimeout(() => refetch(), 100);
     },
-    onError: () => {
-      toast({ title: "❌ Xatolik", description: "Zakazni qabul qilish muvaffaq bo'lmadi", variant: "destructive" });
+    onError: (error: any) => {
+      toast({
+        title: "❌ Xatolik",
+        description: error.message.includes("Balans") ? "Balans yetarli emas" : "Zakazni qabul qilish muvaffaq bo'lmadi",
+        variant: "destructive"
+      });
     },
   });
 
@@ -191,37 +200,44 @@ export default function CourierApp() {
         )}
       </div>
 
-      {/* Available Orders */}
-      {data?.assignments && data.assignments.length > 0 && (
+      {/* Available Orders - Only show pending assignments without a courier */}
+      {data?.assignments && data.assignments.filter((a: any) => a.status === "pending" && !a.courierId).length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">📦 Yangi Zakazlar</h2>
+          <h2 className="text-lg font-semibold mb-3">📦 Yangi Zakazlar ({data.assignments.filter((a: any) => a.status === "pending" && !a.courierId).length})</h2>
           <div className="space-y-2">
-            {data.assignments.map((assignment: any) => (
-              <Card key={assignment.id} className="bg-blue-900/40 border-blue-700 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">
-                      Zakaz #{assignment.orderId?.slice(0, 8) || assignment.id}
-                    </p>
-                    <p className="text-xs text-slate-300 mt-1">
-                      💰 {assignment.estimatedEarnings?.toLocaleString() || "0"} so'm
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      📍 {assignment.distance?.toFixed(1) || "?"} km
-                    </p>
+            {data.assignments
+              .filter((a: any) => a.status === "pending" && !a.courierId)
+              .map((assignment: any) => (
+                <Card key={assignment.id} className="bg-blue-900/40 border-blue-700 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">
+                        Zakaz #{assignment.orderId?.slice(0, 8) || assignment.id}
+                      </p>
+                      <p className="text-xs text-slate-300 mt-1">
+                        💰 Yetkazish: 2,000 so'm
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        📍 {assignment.distance?.toFixed(1) || "?"} km
+                      </p>
+                      {assignment.order?.customerAddress && (
+                        <p className="text-xs text-slate-400 mt-1">
+                          📮 {assignment.order.customerAddress}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      onClick={() => acceptOrderMutation.mutate(assignment)}
+                      disabled={acceptOrderMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700 text-white whitespace-nowrap"
+                      size="sm"
+                      data-testid={`button-accept-order-${assignment.id}`}
+                    >
+                      {acceptOrderMutation.isPending ? "Jarayonda..." : "Qabul"}
+                    </Button>
                   </div>
-                  <Button
-                    onClick={() => assignment.orderId && acceptOrderMutation.mutate(assignment.orderId)}
-                    disabled={acceptOrderMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700 text-white whitespace-nowrap"
-                    size="sm"
-                    data-testid={`button-accept-order-${assignment.id}`}
-                  >
-                    {acceptOrderMutation.isPending ? "Jarayonda..." : "Qabul qilish"}
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
           </div>
         </div>
       )}
