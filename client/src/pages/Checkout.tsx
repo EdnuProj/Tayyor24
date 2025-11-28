@@ -117,9 +117,14 @@ export default function Checkout() {
       // Calculate total with containers
       let finalSubtotal = 0;
       const finalItems: OrderItem[] = items.map((item) => {
-        const itemContainers = item.selectedContainer ? 1 : 1;
-        const itemQty = item.quantity * itemContainers;
-        finalSubtotal += item.product.price * itemQty;
+        let containerPrice = 0;
+        if (item.selectedContainer) {
+          const [, priceStr] = item.selectedContainer.split("|");
+          containerPrice = priceStr ? parseInt(priceStr) : 0;
+        }
+        const itemPrice = item.product.price + containerPrice;
+        const itemQty = item.quantity;
+        finalSubtotal += itemPrice * itemQty;
         return {
           productId: item.productId,
           productName: item.product.name,
@@ -129,6 +134,7 @@ export default function Checkout() {
           selectedColor: item.selectedColor || undefined,
           selectedSize: item.selectedSize || undefined,
           selectedContainer: item.selectedContainer || undefined,
+          containerPrice: containerPrice,
           categoryId: item.product.categoryId,
         };
       });

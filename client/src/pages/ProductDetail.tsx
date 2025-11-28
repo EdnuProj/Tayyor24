@@ -308,17 +308,22 @@ export default function ProductDetail() {
                   Idish: <span className="text-muted-foreground">{selectedContainer || "Tanlang"}</span>
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {product.containers.map((container) => (
-                    <Button
-                      key={container}
-                      variant={selectedContainer === container ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedContainer(container)}
-                      data-testid={`button-container-${container}`}
-                    >
-                      {container}
-                    </Button>
-                  ))}
+                  {product.containers.map((containerStr) => {
+                    const [name, priceStr] = containerStr.split("|");
+                    const price = priceStr ? parseInt(priceStr) : 0;
+                    const displayText = price > 0 ? `${name} +${formatPrice(price)}` : name;
+                    return (
+                      <Button
+                        key={containerStr}
+                        variant={selectedContainer === containerStr ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedContainer(containerStr)}
+                        data-testid={`button-container-${name}`}
+                      >
+                        {displayText}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
             )}

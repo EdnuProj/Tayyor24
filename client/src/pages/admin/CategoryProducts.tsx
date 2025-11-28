@@ -377,10 +377,35 @@ export default function CategoryProducts() {
                 name="containers"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Idish (optional) - vergul bilan ajrating</FormLabel>
-                    <FormControl>
-                      <Input placeholder="1kg, 2kg, 5kg" {...field} value={field.value?.join(", ") || ""} onChange={(e) => field.onChange(e.target.value ? e.target.value.split(",").map(s => s.trim()) : [])} data-testid="input-containers" />
-                    </FormControl>
+                    <FormLabel>Idish (optional) - "nomi|narx" formatida</FormLabel>
+                    <div className="space-y-3">
+                      <FormControl>
+                        <Input placeholder="1kg|5000" {...field} value={field.value?.join(", ") || ""} onChange={(e) => field.onChange(e.target.value ? e.target.value.split(",").map(s => s.trim()).filter(s => s) : [])} data-testid="input-containers" />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">Misol: 1kg|5000, 2kg|10000, 5kg|20000</p>
+                      {field.value && field.value.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {field.value.map((container, idx) => {
+                            const [name, price] = container.split("|");
+                            return (
+                              <div key={idx} className="bg-secondary text-secondary-foreground px-3 py-1 rounded-md text-sm flex items-center gap-2">
+                                <span>{name} - {price ? parseInt(price).toLocaleString() : "0"} so'm</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = field.value!.filter((_, i) => i !== idx);
+                                    field.onChange(updated);
+                                  }}
+                                  className="hover:text-destructive"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -123,12 +123,23 @@ export interface OrderWithAssignment extends Order {
   assignment?: CourierAssignment;
 }
 
+// Container with price
+export interface Container {
+  name: string;
+  price: number;
+}
+
 // Order Items (for display)
 export interface OrderItem {
   productId: string;
   productName: string;
   price: number;
   quantity: number;
+  selectedColor?: string;
+  selectedSize?: string;
+  selectedContainer?: string;
+  containerPrice?: number;
+  categoryId: string;
 }
 
 // Cart Items with Products for display
