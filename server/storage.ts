@@ -29,8 +29,19 @@ import {
   type InsertCourierAssignment,
   type ChatMessage,
   type InsertChatMessage,
+  categories as categoriesTable,
+  products as productsTable,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { eq, and, desc } from "drizzle-orm";
+
+let db: any = null;
+try {
+  const dbModule = require("./db");
+  db = dbModule.getDb();
+} catch (e) {
+  // DB module not available yet
+}
 
 export interface IStorage {
   // Users
@@ -446,6 +457,32 @@ export class MemStorage implements IStorage {
     new?: boolean;
     limit?: number;
   }): Promise<Product[]> {
+    if (db) {
+      try {
+        let query = db.query.products.findMany({
+          orderBy: [desc(productsTable.createdAt)],
+        });
+        
+        let products = await query;
+
+        if (filters?.categoryId) {
+          products = products.filter((p) => p.categoryId === filters.categoryId);
+        }
+        if (filters?.popular) {
+          products = products.filter((p) => p.isPopular);
+        }
+        if (filters?.new) {
+          products = products.filter((p) => p.isNew);
+        }
+        if (filters?.limit) {
+          products = products.slice(0, filters.limit);
+        }
+        return products;
+      } catch (e) {
+        console.error("DB query failed, falling back to memory:", e);
+      }
+    }
+
     let products = Array.from(this.products.values());
 
     if (filters?.categoryId) {
@@ -469,21 +506,63 @@ export class MemStorage implements IStorage {
   }
 
   async getProduct(id: string): Promise<Product | undefined> {
+    if (db) {
+      try {
+        const result = await db.query.products.findFirst({
+          where: eq(productsTable.id, id),
+        });
+        if (result) return result;
+      } catch (e) {
+        console.error("DB query failed, falling back to memory:", e);
+      }
+    }
     return this.products.get(id);
   }
 
   async getProductBySlug(slug: string): Promise<Product | undefined> {
+    if (db) {
+      try {
+        const result = await db.query.products.findFirst({
+          where: eq(productsTable.slug, slug),
+        });
+        if (result) return result;
+      } catch (e) {
+        console.error("DB query failed, falling back to memory:", e);
+      }
+    }
     return Array.from(this.products.values()).find((p) => p.slug === slug);
   }
 
   async createProduct(product: InsertProduct): Promise<Product> {
     const id = randomUUID();
     const newProduct: Product = { ...product, id, createdAt: new Date() } as Product;
+    
+    if (db) {
+      try {
+        await db.insert(productsTable).values(newProduct);
+        return newProduct;
+      } catch (e) {
+        console.error("DB insert failed, using memory:", e);
+      }
+    }
+    
     this.products.set(id, newProduct);
     return newProduct;
   }
 
   async updateProduct(id: string, data: Partial<InsertProduct>): Promise<Product | undefined> {
+    if (db) {
+      try {
+        const updated = await db.update(productsTable).set(data).where(eq(productsTable.id, id)).returning();
+        if (updated[0]) {
+          this.products.set(id, updated[0]);
+          return updated[0];
+        }
+      } catch (e) {
+        console.error("DB update failed, falling back to memory:", e);
+      }
+    }
+    
     const product = this.products.get(id);
     if (!product) return undefined;
     const updated = { ...product, ...data };
@@ -492,26 +571,74 @@ export class MemStorage implements IStorage {
   }
 
   async deleteProduct(id: string): Promise<boolean> {
+    if (db) {
+      try {
+        await db.delete(productsTable).where(eq(productsTable.id, id));
+        this.products.delete(id);
+        return true;
+      } catch (e) {
+        console.error("DB delete failed, falling back to memory:", e);
+      }
+    }
     return this.products.delete(id);
   }
 
   // Categories
   async getCategories(): Promise<Category[]> {
+    if (db) {
+      try {
+        return await db.query.categories.findMany();
+      } catch (e) {
+        console.error("DB query failed, falling back to memory:", e);
+      }
+    }
     return Array.from(this.categories.values());
   }
 
   async getCategory(id: string): Promise<Category | undefined> {
+    if (db) {
+      try {
+        const result = await db.query.categories.findFirst({
+          where: eq(categoriesTable.id, id),
+        });
+        if (result) return result;
+      } catch (e) {
+        console.error("DB query failed, falling back to memory:", e);
+      }
+    }
     return this.categories.get(id);
   }
 
   async createCategory(category: InsertCategory): Promise<Category> {
     const id = randomUUID();
     const newCategory: Category = { ...category, id };
+    
+    if (db) {
+      try {
+        await db.insert(categoriesTable).values(newCategory);
+        return newCategory;
+      } catch (e) {
+        console.error("DB insert failed, using memory:", e);
+      }
+    }
+    
     this.categories.set(id, newCategory);
     return newCategory;
   }
 
   async updateCategory(id: string, data: Partial<InsertCategory>): Promise<Category | undefined> {
+    if (db) {
+      try {
+        const updated = await db.update(categoriesTable).set(data).where(eq(categoriesTable.id, id)).returning();
+        if (updated[0]) {
+          this.categories.set(id, updated[0]);
+          return updated[0];
+        }
+      } catch (e) {
+        console.error("DB update failed, falling back to memory:", e);
+      }
+    }
+    
     const category = this.categories.get(id);
     if (!category) return undefined;
     const updated = { ...category, ...data };
@@ -520,6 +647,15 @@ export class MemStorage implements IStorage {
   }
 
   async deleteCategory(id: string): Promise<boolean> {
+    if (db) {
+      try {
+        await db.delete(categoriesTable).where(eq(categoriesTable.id, id));
+        this.categories.delete(id);
+        return true;
+      } catch (e) {
+        console.error("DB delete failed, falling back to memory:", e);
+      }
+    }
     return this.categories.delete(id);
   }
 
