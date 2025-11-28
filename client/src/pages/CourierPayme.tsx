@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import type { Category } from "@shared/schema";
 import {
   Wallet,
   ArrowRightLeft,
@@ -152,6 +154,26 @@ export default function CourierPayme() {
   const [selectedDeliveryDate, setSelectedDeliveryDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
+
+  // Fetch all categories to get real names
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
+  });
+
+  // Get category name by ID (handles parent categories)
+  const getCategoryName = (categoryId: string): string => {
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) return `📦 ${categoryId}`;
+    
+    // If it's a subcategory, get parent's name
+    if (category.parentId) {
+      const parentCategory = categories.find(c => c.id === category.parentId);
+      return parentCategory ? `${parentCategory.icon || "📦"} ${parentCategory.name}` : `${category.icon || "📦"} ${category.name}`;
+    }
+    
+    return `${category.icon || "📦"} ${category.name}`;
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -986,16 +1008,8 @@ export default function CourierPayme() {
             orderItems = [];
           }
           
-          // Category name mapping
-          const categoryNames: Record<string, string> = {
-            "elektronika": "📱 Elektronika",
-            "kiyim": "👕 Kiyim",
-            "sport": "⚽ Sport",
-            "oziq-ovqat": "🍔 Oziq-ovqat",
-            "kitoblar": "📚 Kitoblar",
-            "mebellar": "🪑 Mebellar"
-          };
-          const categoryName = categoryNames[categoryId] || `📦 ${categoryId}`;
+          // Get category name dynamically
+          const categoryName = getCategoryName(categoryId);
 
           return (
             <div className="space-y-4">
