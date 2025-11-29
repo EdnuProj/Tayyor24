@@ -383,19 +383,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`⚠️ Order ${order.orderNumber}: Main category has no location (lat=${mainCategory?.latitude}, lon=${mainCategory?.longitude})`);
       }
 
-      // Send Telegram notification to group
+      // Send Telegram notification to group and couriers
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
       const settings = await storage.getSettings();
-      if (settings.telegramBotToken && settings.telegramGroupId) {
-        const telegramUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+      
+      if (botToken) {
+        const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
         
-        // Send to group
+        // Prepare order items for group message
         const orderItems = JSON.parse(data.items || "[]");
         const itemsList = orderItems
           .map((item: any) => `• ${item.productName} x${item.quantity}`)
           .join("\n");
 
-        const message = `
-📦 *BUYURTMA*
+        const groupMessage = `
+📦 *YANGI BUYURTMA*
 
 Raqam: #${order.orderNumber}
 👤 Mijoz: ${order.customerName}
@@ -413,81 +415,43 @@ ${itemsList}
 ✅ Holati: Yangi
         `.trim();
 
-        try {
-          await fetch(telegramUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: settings.telegramGroupId,
-              text: message,
-              parse_mode: "Markdown",
-            }),
-          });
-        } catch (telegramError) {
-          console.error("Telegram notification failed:", telegramError);
+        // Send to Telegram GROUP/CHANNEL
+        if (settings.telegramGroupId) {
+          try {
+            await fetch(telegramUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: settings.telegramGroupId,
+                text: groupMessage,
+                parse_mode: "Markdown",
+              }),
+            });
+            console.log(`✅ Telegram GROUP notification sent for order #${order.orderNumber}`);
+          } catch (telegramError) {
+            console.error("Telegram GROUP notification failed:", telegramError);
+          }
         }
 
-        // Send to eligible couriers if delivery is courier
+        // Send to BARCHA ACTIVE COURIERS if delivery is courier
         if (order.deliveryType === "courier") {
           try {
-            // Get ALL active couriers
+            // Get ALL active couriers with telegram ID
             const allCouriers = await storage.getCouriers("");
             const activeCouriers = allCouriers.filter((c) => c.isActive && c.telegramId);
             
-            // Get MAIN category information to check for location
-            let nearByCouriers = activeCouriers;
-            let needsExpand = false;
-            let orderCategory = allCategories.find(c => c.id === order.categoryId);
-            
-            // If it's a subcategory, get parent category for location
-            if (orderCategory?.parentId) {
-              const parentCategory = allCategories.find(c => c.id === orderCategory.parentId);
-              if (parentCategory) {
-                orderCategory = parentCategory;
-              }
-            }
-            
-            if (orderCategory?.latitude && orderCategory?.longitude) {
-              console.log(`Order ${order.orderNumber}: Main category location: (${orderCategory.latitude}, ${orderCategory.longitude})`);
-              // Filter couriers within 1km of main category location
-              nearByCouriers = activeCouriers.filter((courier) => {
-                console.log(`Checking courier ${courier.id}: lat=${courier.latitude}, lon=${courier.longitude}`);
-                if (!courier.latitude || !courier.longitude) return false;
-                const distance = calculateDistance(orderCategory.latitude!, orderCategory.longitude!, courier.latitude, courier.longitude);
-                console.log(`Distance: ${distance}km`);
-                return distance <= 1; // 1km radius from category location
-              });
-              console.log(`Order ${order.orderNumber}: Category has location. Found ${nearByCouriers.length} couriers within 1km (total: ${activeCouriers.length})`);
-              
-              // If no nearby couriers, send to ALL immediately
-              if (nearByCouriers.length === 0) {
-                console.log(`Order ${order.orderNumber}: No nearby couriers, sending to ALL ${activeCouriers.length} couriers immediately`);
-                nearByCouriers = activeCouriers;
-                needsExpand = false;
-              } else {
-                // If found nearby couriers, will expand after 30s if no one accepts
-                needsExpand = true;
-              }
-            } else {
-              console.log(`Order ${order.orderNumber}: Category has no location, sending to all ${activeCouriers.length} couriers`);
-              nearByCouriers = activeCouriers;
-              needsExpand = false;
-            }
-            
-            console.log(`Order ${order.orderNumber}: Sending to ${nearByCouriers.length} couriers`);
+            console.log(`📤 Order #${order.orderNumber}: Sending to ${activeCouriers.length} active couriers`);
 
             // Always create assignment for pending orders
             const assignment = await storage.createAssignment({
               orderId: order.id,
               status: "pending",
             });
-            
-            console.log(`Created assignment ${assignment.id} for order ${order.orderNumber}`);
 
-            // Send messages to nearby couriers with buttons
-            for (const courier of nearByCouriers) {
+            // Send messages to BARCHA COURIERS with accept/reject buttons
+            for (const courier of activeCouriers) {
               const courierMessage = `
-🎯 *Yangi Buyurtma Mavjud*
+🎯 *YANGI BUYURTMA MAVJUD*
 
 📋 #${order.orderNumber}
 👤 ${order.customerName} - ${order.customerPhone.replace(/\s/g, "")}
@@ -514,103 +478,24 @@ Qabul qilamizmi?
                 ],
               };
 
-              await fetch(telegramUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  chat_id: courier.telegramId,
-                  text: courierMessage,
-                  reply_markup: keyboard,
-                  parse_mode: "Markdown",
-                }),
-              });
+              try {
+                await fetch(telegramUrl, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    chat_id: courier.telegramId,
+                    text: courierMessage,
+                    reply_markup: keyboard,
+                    parse_mode: "Markdown",
+                  }),
+                });
+                console.log(`📬 Message sent to courier ${courier.name} (ID: ${courier.telegramId})`);
+              } catch (error) {
+                console.error(`Failed to send message to courier ${courier.name}:`, error);
+              }
             }
 
-            // Set 30-second timeout ONLY if nearby couriers were found and need expansion
-            if (needsExpand) {
-              setTimeout(async () => {
-                const currentAssignment = await storage.getAssignment(order.id);
-                if (currentAssignment && currentAssignment.status === "pending") {
-                  // Find couriers we haven't sent to yet
-                  const sentCourierIds = new Set(nearByCouriers.map(c => c.id));
-                  const remainingCouriers = activeCouriers.filter(c => !sentCourierIds.has(c.id));
-                  
-                  if (remainingCouriers.length > 0) {
-                    console.log(`30s timeout: Sending to ${remainingCouriers.length} remaining couriers for order ${order.orderNumber}`);
-                    
-                    // Send to remaining couriers
-                    for (const courier of remainingCouriers) {
-                      const courierMessage = `
-🎯 *Yangi Buyurtma Mavjud (Qo'shimcha)*
-
-📋 #${order.orderNumber}
-👤 ${order.customerName} - ${order.customerPhone.replace(/\s/g, "")}
-📍 ${order.customerAddress}
-📂 ${categoryName}
-
-💰 ${order.total} so'm
-
-Qabul qilamizmi?
-                      `.trim();
-
-                      const keyboard = {
-                        inline_keyboard: [
-                          [
-                            {
-                              text: "✅ Qabul qilish",
-                              callback_data: `courier_accept_${order.id}_${courier.id}`,
-                            },
-                            {
-                              text: "❌ Rad etish",
-                              callback_data: `courier_reject_${order.id}_${courier.id}`,
-                            },
-                          ],
-                        ],
-                      };
-
-                      await fetch(telegramUrl, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          chat_id: courier.telegramId,
-                          text: courierMessage,
-                          reply_markup: keyboard,
-                          parse_mode: "Markdown",
-                        }),
-                      });
-                    }
-
-                    // Send notification to group
-                    try {
-                      const expandMessage = `
-🔔 *BUYURTMA BARCHAGA YUBORILDI*
-
-Buyurtma: #${order.orderNumber}
-👤 Mijoz: ${order.customerName}
-📞 Tel: ${order.customerPhone.replace(/\s/g, "")}
-📍 Manzil: ${order.customerAddress}
-
-💰 Jami: ${order.total} so'm
-
-⚠️ Yaqin kuryerlar qabul qilmadi, barchaga yuborildi
-                      `.trim();
-                      
-                      await fetch(telegramUrl, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          chat_id: settings.telegramGroupId,
-                          text: expandMessage,
-                          parse_mode: "Markdown",
-                        }),
-                      });
-                    } catch (error) {
-                      console.error("Failed to send expand notification to group:", error);
-                    }
-                  }
-                }
-              }, 30000);
-            }
+            console.log(`✅ All ${activeCouriers.length} couriers notified for order #${order.orderNumber}`);
           } catch (courierError) {
             console.error("Failed to send courier notifications:", courierError);
           }
