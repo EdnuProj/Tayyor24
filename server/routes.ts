@@ -30,14 +30,24 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Get the actual domain - try multiple sources
+  let publishedDomain = process.env.REPLIT_DOMAINS;
+  
   // Auto-setup Telegram webhook on server start
-  const setupTelegramWebhook = async () => {
+  const setupTelegramWebhook = async (domain?: string) => {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) return;
     
     try {
-      const webhookUrl = `https://${process.env.REPLIT_DOMAINS || 'localhost'}/api/telegram-webhook`;
+      // Use provided domain or try to get from environment
+      const actualDomain = domain || process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN;
+      const webhookUrl = actualDomain 
+        ? `https://${actualDomain}/api/telegram-webhook`
+        : `https://localhost:5000/api/telegram-webhook`;
+      
       const setWebhookUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;
+      
+      console.log("🔄 Setting Telegram webhook to:", webhookUrl);
       
       const response = await fetch(setWebhookUrl, {
         method: "POST",
@@ -45,16 +55,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         body: JSON.stringify({ url: webhookUrl, drop_pending_updates: false }),
       });
       
-      if (response.ok) {
-        console.log("✅ Telegram webhook configured at startup");
+      const result = await response.json();
+      if (result.ok) {
+        console.log("✅ Telegram webhook configured:", webhookUrl);
+        publishedDomain = actualDomain;
+      } else {
+        console.log("⚠️ Webhook setup response:", result);
       }
     } catch (error) {
-      console.log("ℹ️ Telegram webhook setup skipped at startup");
+      console.log("ℹ️ Telegram webhook setup error:", error);
     }
   };
 
   // Setup webhook after a short delay
-  setTimeout(setupTelegramWebhook, 2000);
+  setTimeout(() => setupTelegramWebhook(), 2000);
 
   // ========== PRODUCTS ==========
   app.get("/api/products", async (req, res) => {
