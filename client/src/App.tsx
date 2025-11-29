@@ -18,7 +18,6 @@ import SupportChat from "@/pages/Chat";
 
 // Courier App
 import CourierApp from "@/pages/CourierApp";
-import CourierLogin from "@/pages/CourierLogin";
 import CourierBalance from "@/pages/CourierBalance";
 import CourierPayme from "@/pages/CourierPayme";
 
@@ -44,10 +43,8 @@ function Router() {
   return (
     <Switch>
       {/* Courier Routes */}
-      <Route path="/courier" component={CourierLogin} />
-      <Route path="/courier/login" component={CourierLogin} />
+      <Route path="/courier" component={CourierBalance} />
       <Route path="/courier/dashboard" component={CourierApp} />
-      <Route path="/courier/balance" component={CourierBalance} />
       <Route path="/courier/payme" component={CourierPayme} />
 
       {/* Store Routes */}
