@@ -39,9 +39,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!botToken) return;
     
     try {
-      // Prioritize NGROK URL for development, then Replit domain, then dev domain
+      // Try multiple sources in order of priority:
+      // 1. Passed domain parameter
+      // 2. NGROK_WEBHOOK_URL (full URL)
+      // 3. DOMAIN env var (can be used on any platform: Render, Railway, etc.)
+      // 4. REPLIT_DOMAINS
+      // 5. REPLIT_DEV_DOMAIN
       let webhookUrl = domain 
-        || process.env.NGROK_WEBHOOK_URL 
+        || process.env.NGROK_WEBHOOK_URL
+        || (process.env.DOMAIN ? `https://${process.env.DOMAIN}/api/telegram-webhook` : null)
         || (process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}/api/telegram-webhook` : null)
         || (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}/api/telegram-webhook` : null);
       
