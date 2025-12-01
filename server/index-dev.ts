@@ -34,7 +34,21 @@ export async function setupVite(app: Express, server: Server) {
 
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
+    // Skip non-HTML requests to API or other non-page routes
+    if (req.path.startsWith("/api/") || req.path.startsWith("/.vite/") || req.path.includes(".")) {
+      return next();
+    }
+
     const url = req.originalUrl;
+    let responded = false;
+
+    // Timeout handler - if response takes more than 5 seconds, send error
+    const timeoutHandle = setTimeout(() => {
+      if (!responded) {
+        responded = true;
+        res.status(500).set({ "Content-Type": "text/html" }).end("<h1>Request Timeout</h1>");
+      }
+    }, 5000);
 
     try {
       const clientTemplate = path.resolve(
@@ -51,10 +65,19 @@ export async function setupVite(app: Express, server: Server) {
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
       const page = await vite.transformIndexHtml(url, template);
-      res.status(200).set({ "Content-Type": "text/html" }).end(page);
+      
+      clearTimeout(timeoutHandle);
+      if (!responded) {
+        responded = true;
+        res.status(200).set({ "Content-Type": "text/html" }).end(page);
+      }
     } catch (e) {
-      vite.ssrFixStacktrace(e as Error);
-      next(e);
+      clearTimeout(timeoutHandle);
+      if (!responded) {
+        responded = true;
+        vite.ssrFixStacktrace(e as Error);
+        res.status(500).set({ "Content-Type": "text/html" }).end("<h1>Server Error</h1>");
+      }
     }
   });
 }
