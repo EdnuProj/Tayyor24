@@ -27,13 +27,7 @@ export async function setupVite(app: Express, server: Server) {
   const vite = await createViteServer({
     ...viteConfig,
     configFile: false,
-    customLogger: {
-      ...viteLogger,
-      error: (msg, options) => {
-        viteLogger.error(msg, options);
-        process.exit(1);
-      },
-    },
+    customLogger: viteLogger,
     server: serverOptions,
     appType: "custom",
   });
@@ -56,7 +50,14 @@ export async function setupVite(app: Express, server: Server) {
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
-      const page = await vite.transformIndexHtml(url, template);
+      
+      // Add timeout for transformIndexHtml to prevent hangs
+      const transformPromise = vite.transformIndexHtml(url, template);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("HTML transform timeout")), 5000)
+      );
+      
+      const page = await Promise.race([transformPromise, timeoutPromise]);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
