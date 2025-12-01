@@ -28,35 +28,19 @@ export async function setupVite(app: Express, server: Server) {
 
   app.use(vite.middlewares);
   
-  // Serve index.html for all non-API routes (SPA)
-  app.use("*", async (req, res, next) => {
-    if (req.path.startsWith("/api/")) return next();
+  // Serve index.html for all non-API, non-asset routes (SPA)
+  app.use("*", (req, res, next) => {
+    const path = req.path;
     
-    const clientTemplate = path.resolve(
-      import.meta.dirname,
-      "..",
-      "client",
-      "index.html",
-    );
-
-    try {
-      let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      // Timeout protection: if transformation takes too long, serve as-is
-      const transformPromise = vite.transformIndexHtml(req.originalUrl, template);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Transformation timeout")), 3000)
-      );
-      
-      try {
-        const page = await Promise.race([transformPromise, timeoutPromise]);
-        res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).end(page);
-      } catch (timeoutErr) {
-        // Fallback: serve raw HTML if transformation times out
-        res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).end(template);
-      }
-    } catch (e) {
-      res.status(500).set({ "Content-Type": "text/html" }).end("<h1>500 Internal Server Error</h1>");
+    // Skip API and static asset routes - let them fall through
+    if (path.startsWith("/api/") || 
+        path.includes("/@") ||
+        /\.(js|css|json|png|jpg|jpeg|svg|ico|gif|woff|woff2|ttf|eot)$/i.test(path)) {
+      return next();
     }
+    
+    const clientTemplate = require.resolve("../client/index.html");
+    res.sendFile(clientTemplate);
   });
 }
 
