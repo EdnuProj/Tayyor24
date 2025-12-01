@@ -39,17 +39,6 @@ export async function setupVite(app: Express, server: Server) {
       return next();
     }
 
-    const url = req.originalUrl;
-    let responded = false;
-
-    // Timeout handler - if response takes more than 5 seconds, send error
-    const timeoutHandle = setTimeout(() => {
-      if (!responded) {
-        responded = true;
-        res.status(500).set({ "Content-Type": "text/html" }).end("<h1>Request Timeout</h1>");
-      }
-    }, 5000);
-
     try {
       const clientTemplate = path.resolve(
         import.meta.dirname,
@@ -58,26 +47,16 @@ export async function setupVite(app: Express, server: Server) {
         "index.html",
       );
 
-      // always reload the index.html file from disk incase it changes
+      // Read and serve HTML directly without transformation
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
-      const page = await vite.transformIndexHtml(url, template);
-      
-      clearTimeout(timeoutHandle);
-      if (!responded) {
-        responded = true;
-        res.status(200).set({ "Content-Type": "text/html" }).end(page);
-      }
+      res.status(200).set({ "Content-Type": "text/html" }).end(template);
     } catch (e) {
-      clearTimeout(timeoutHandle);
-      if (!responded) {
-        responded = true;
-        vite.ssrFixStacktrace(e as Error);
-        res.status(500).set({ "Content-Type": "text/html" }).end("<h1>Server Error</h1>");
-      }
+      console.error("HTML serve error:", e);
+      res.status(500).set({ "Content-Type": "text/html" }).end("<h1>Server Error</h1>");
     }
   });
 }
