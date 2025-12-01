@@ -39,11 +39,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!botToken) return;
     
     try {
-      // Use provided domain or try to get from environment
-      const actualDomain = domain || process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN;
-      const webhookUrl = actualDomain 
-        ? `https://${actualDomain}/api/telegram-webhook`
-        : `https://localhost:5000/api/telegram-webhook`;
+      // Prioritize NGROK URL for development, then Replit domain, then dev domain
+      let webhookUrl = domain 
+        || process.env.NGROK_WEBHOOK_URL 
+        || (process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}/api/telegram-webhook` : null)
+        || (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}/api/telegram-webhook` : null);
+      
+      if (!webhookUrl) {
+        console.log("⚠️ No valid webhook URL found - skipping webhook setup");
+        return;
+      }
       
       const setWebhookUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;
       
@@ -58,7 +63,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await response.json();
       if (result.ok) {
         console.log("✅ Telegram webhook configured:", webhookUrl);
-        publishedDomain = actualDomain;
       } else {
         console.log("⚠️ Webhook setup response:", result);
       }

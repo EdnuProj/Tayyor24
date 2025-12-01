@@ -23,6 +23,10 @@ externalPort = 3001
 localPort = 34947
 externalPort = 3000
 
+[[ports]]
+localPort = 40119
+externalPort = 3002
+
 [env]
 PORT = "5000"
 
@@ -55,3 +59,4 @@ integrations = ["javascript_mem_db:1.0.0"]
 [userenv.shared]
 TELEGRAM_BOT_TOKEN = "7728103760:AAF3yGuebypNhVk23hzlYjKD1-HSSzVknaM"
 TELEGRAM_GROUP_ID = "-1003423785751"
+NGROK_WEBHOOK_URL = "https://unceremonious-dorris-unbroadcast.ngrok-free.dev/api/telegram-webhook"
