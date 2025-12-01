@@ -11,9 +11,19 @@ import runApp from "./app";
 
 export async function setupVite(app: Express, server: Server) {
   const viteLogger = createLogger();
+  
+  // Determine HMR protocol and host based on environment
+  let hmrConfig: any = { server };
+  
+  // In production environments (Render, Railway, etc), disable HMR or configure it properly
+  if (process.env.NODE_ENV === 'production' || process.env.DOMAIN) {
+    // Disable HMR in production - it's not needed and causes blank page issues
+    hmrConfig = false;
+  }
+  
   const serverOptions = {
     middlewareMode: true,
-    hmr: { server },
+    hmr: hmrConfig,
     allowedHosts: true as const,
   };
 
