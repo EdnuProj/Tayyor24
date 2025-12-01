@@ -100,11 +100,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.log(`❌ Fetch error (attempt ${attempt}/${maxAttempts}):`, errorMsg);
+      const errorCode = error instanceof Error && (error as any).code ? (error as any).code : 'UNKNOWN';
+      const errorCause = error instanceof Error && (error as any).cause ? (error as any).cause : null;
+      
+      console.log(`❌ Fetch error (attempt ${attempt}/${maxAttempts}):`, {
+        message: errorMsg,
+        code: errorCode,
+        cause: errorCause?.toString?.() || errorCause,
+      });
+      
       if (attempt < maxAttempts) {
         const delay = 5000 * attempt;
         console.log(`⏳ Retry ${attempt + 1}/${maxAttempts} in ${delay}ms...`);
         setTimeout(() => setupTelegramWebhook(domain, attempt + 1), delay);
+      } else {
+        console.log("⚠️ Webhook setup failed after all retries. Bot may not receive messages.");
+        console.log("🔍 Possible causes: Network blocked on Render, Telegram API temporarily down, or DNS resolution failed.");
       }
     }
   };
