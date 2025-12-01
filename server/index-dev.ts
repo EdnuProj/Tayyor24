@@ -41,10 +41,20 @@ export async function setupVite(app: Express, server: Server) {
 
     try {
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      const page = await vite.transformIndexHtml(req.originalUrl, template);
-      res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).end(page);
+      // Timeout protection: if transformation takes too long, serve as-is
+      const transformPromise = vite.transformIndexHtml(req.originalUrl, template);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Transformation timeout")), 3000)
+      );
+      
+      try {
+        const page = await Promise.race([transformPromise, timeoutPromise]);
+        res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).end(page);
+      } catch (timeoutErr) {
+        // Fallback: serve raw HTML if transformation times out
+        res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).end(template);
+      }
     } catch (e) {
-      vite.ssrFixStacktrace(e as Error);
       res.status(500).set({ "Content-Type": "text/html" }).end("<h1>500 Internal Server Error</h1>");
     }
   });
