@@ -38,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) return;
     
-    const maxAttempts = 3;
+    const maxAttempts = 5;
     
     try {
       // Try multiple sources in order of priority:
@@ -75,7 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: webhookUrl, drop_pending_updates: false }),
-        signal: AbortSignal.timeout(10000), // 10 second timeout
+        signal: AbortSignal.timeout(30000), // 30 second timeout for slow networks
       });
       
       const result = await response.json();
@@ -85,22 +85,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("⚠️ Webhook setup response:", result);
         // Retry if there's an error
         if (attempt < maxAttempts) {
-          const delay = 5000 * attempt; // 5s, 10s, 15s
+          const delay = 5000 * attempt; // 5s, 10s, 15s, 20s, 25s
+          console.log(`⏳ Scheduling retry in ${delay}ms...`);
           setTimeout(() => setupTelegramWebhook(domain, attempt + 1), delay);
         }
       }
     } catch (error) {
-      console.log(`ℹ️ Telegram webhook setup error (attempt ${attempt}/${maxAttempts}):`, error instanceof Error ? error.message : error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.log(`ℹ️ Telegram webhook setup error (attempt ${attempt}/${maxAttempts}): ${errorMsg}`);
       // Retry on error (network timeout, etc)
       if (attempt < maxAttempts) {
-        const delay = 5000 * attempt; // 5s, 10s, 15s
+        const delay = 5000 * attempt; // 5s, 10s, 15s, 20s, 25s
+        console.log(`⏳ Scheduling retry ${attempt + 1}/${maxAttempts} in ${delay}ms...`);
         setTimeout(() => setupTelegramWebhook(domain, attempt + 1), delay);
       }
     }
   };
 
   // Setup webhook after a short delay, with retry mechanism
-  setTimeout(() => setupTelegramWebhook(), 3000);
+  setTimeout(() => setupTelegramWebhook(), 5000);
 
   // ========== PRODUCTS ==========
   app.get("/api/products", async (req, res) => {
