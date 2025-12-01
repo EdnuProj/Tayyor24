@@ -31,11 +31,6 @@ import {
   type InsertChatMessage,
   categories as categoriesTable,
   products as productsTable,
-  couriers as couriersTable,
-  courierAssignments as assignmentsTable,
-  siteSettings as settingsTable,
-  telegramUsers as telegramUsersTable,
-  courierTransactions as transactionsTable,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { eq, and, desc } from "drizzle-orm";
@@ -941,23 +936,9 @@ export class MemStorage implements IStorage {
     return newNewsletter;
   }
 
-  // Settings - Database Persistent
+  // Settings
   async getSettings(): Promise<SiteSettings> {
-    if (db) {
-      try {
-        const result = await db.select().from(settingsTable).where(eq(settingsTable.id, "default"));
-        if (result.length > 0) {
-          return {
-            ...result[0],
-            telegramGroupId: process.env.TELEGRAM_GROUP_ID || result[0].telegramGroupId,
-            telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || result[0].telegramBotToken,
-          };
-        }
-      } catch (e) {
-        // fallback
-      }
-    }
-    
+    // Merge environment variables with stored settings
     return {
       ...this.settings,
       telegramGroupId: process.env.TELEGRAM_GROUP_ID || this.settings.telegramGroupId,
@@ -966,49 +947,25 @@ export class MemStorage implements IStorage {
   }
 
   async updateSettings(data: Partial<InsertSiteSettings>): Promise<SiteSettings> {
-    if (db) {
-      try {
-        const result = await db.update(settingsTable).set(data).where(eq(settingsTable.id, "default")).returning();
-        if (result.length > 0) return result[0];
-      } catch (e) {
-        // fallback to memory
-      }
-    }
     this.settings = { ...this.settings, ...data };
     return this.settings;
   }
 
-  // Couriers - Database Persistent
+  // Couriers
   async getCouriers(categoryId?: string): Promise<Courier[]> {
-    if (!db) return Array.from(this.couriers.values());
-    try {
-      if (categoryId) {
-        return await db.select().from(couriersTable).where(eq(couriersTable.categoryId, categoryId));
-      }
-      return await db.select().from(couriersTable);
-    } catch (e) {
-      return Array.from(this.couriers.values());
+    const couriers = Array.from(this.couriers.values());
+    if (categoryId) {
+      return couriers.filter((c) => c.categoryId === categoryId);
     }
+    return couriers;
   }
 
   async getCourier(id: string): Promise<Courier | undefined> {
-    if (!db) return this.couriers.get(id);
-    try {
-      const result = await db.select().from(couriersTable).where(eq(couriersTable.id, id));
-      return result[0];
-    } catch (e) {
-      return this.couriers.get(id);
-    }
+    return this.couriers.get(id);
   }
 
   async getCourierByTelegramId(telegramId: string): Promise<Courier | undefined> {
-    if (!db) return Array.from(this.couriers.values()).find((c) => c.telegramId === telegramId);
-    try {
-      const result = await db.select().from(couriersTable).where(eq(couriersTable.telegramId, telegramId));
-      return result[0];
-    } catch (e) {
-      return Array.from(this.couriers.values()).find((c) => c.telegramId === telegramId);
-    }
+    return Array.from(this.couriers.values()).find((c) => c.telegramId === telegramId);
   }
 
   async createCourier(courier: InsertCourier): Promise<Courier> {
@@ -1019,29 +976,11 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       balance: typeof courier.balance === 'number' ? courier.balance : 10000
     } as Courier;
-    
-    if (db) {
-      try {
-        const result = await db.insert(couriersTable).values(newCourier).returning();
-        return result[0];
-      } catch (e) {
-        this.couriers.set(id, newCourier);
-        return newCourier;
-      }
-    }
     this.couriers.set(id, newCourier);
     return newCourier;
   }
 
   async updateCourier(id: string, data: Partial<InsertCourier>): Promise<Courier | undefined> {
-    if (db) {
-      try {
-        const result = await db.update(couriersTable).set(data).where(eq(couriersTable.id, id)).returning();
-        if (result.length > 0) return result[0];
-      } catch (e) {
-        // fallback to memory
-      }
-    }
     const courier = this.couriers.get(id);
     if (!courier) return undefined;
     const updated = { ...courier, ...data };
@@ -1050,82 +989,34 @@ export class MemStorage implements IStorage {
   }
 
   async deleteCourier(id: string): Promise<boolean> {
-    if (db) {
-      try {
-        await db.delete(couriersTable).where(eq(couriersTable.id, id));
-        return true;
-      } catch (e) {
-        return this.couriers.delete(id);
-      }
-    }
     return this.couriers.delete(id);
   }
 
-  // Courier Assignments - Database Persistent
+  // Courier Assignments
   async createAssignment(assignment: InsertCourierAssignment): Promise<CourierAssignment> {
     const id = randomUUID();
     const newAssignment: CourierAssignment = { ...assignment, id, assignedAt: new Date() } as CourierAssignment;
-    
-    if (db) {
-      try {
-        const result = await db.insert(assignmentsTable).values(newAssignment).returning();
-        return result[0];
-      } catch (e) {
-        this.assignments.set(id, newAssignment);
-        return newAssignment;
-      }
-    }
     this.assignments.set(id, newAssignment);
     return newAssignment;
   }
 
   async getAssignment(orderId: string): Promise<CourierAssignment | undefined> {
-    if (!db) return Array.from(this.assignments.values()).find((a) => a.orderId === orderId);
-    try {
-      const result = await db.select().from(assignmentsTable).where(eq(assignmentsTable.orderId, orderId));
-      return result[0];
-    } catch (e) {
-      return Array.from(this.assignments.values()).find((a) => a.orderId === orderId);
-    }
+    return Array.from(this.assignments.values()).find((a) => a.orderId === orderId);
   }
 
   async getAssignmentById(assignmentId: string): Promise<CourierAssignment | undefined> {
-    if (!db) return this.assignments.get(assignmentId);
-    try {
-      const result = await db.select().from(assignmentsTable).where(eq(assignmentsTable.id, assignmentId));
-      return result[0];
-    } catch (e) {
-      return this.assignments.get(assignmentId);
-    }
+    return this.assignments.get(assignmentId);
   }
 
   async getAssignmentsByCourierId(courierId: string): Promise<CourierAssignment[]> {
-    if (!db) return Array.from(this.assignments.values()).filter((a) => a.courierId === courierId);
-    try {
-      return await db.select().from(assignmentsTable).where(eq(assignmentsTable.courierId, courierId));
-    } catch (e) {
-      return Array.from(this.assignments.values()).filter((a) => a.courierId === courierId);
-    }
+    return Array.from(this.assignments.values()).filter((a) => a.courierId === courierId);
   }
 
   async getAllAssignments(): Promise<CourierAssignment[]> {
-    if (!db) return Array.from(this.assignments.values());
-    try {
-      return await db.select().from(assignmentsTable);
-    } catch (e) {
-      return Array.from(this.assignments.values());
-    }
+    return Array.from(this.assignments.values());
   }
 
   async updateAssignment(id: string, data: Partial<InsertCourierAssignment>): Promise<CourierAssignment | undefined> {
-    if (db) {
-      try {
-        const result = await db.update(assignmentsTable).set(data).where(eq(assignmentsTable.id, id)).returning();
-        if (result.length > 0) return result[0];
-      } catch (e) {
-        // fallback to memory
-      }
-    }
     const assignment = this.assignments.get(id);
     if (!assignment) return undefined;
     const updated = { ...assignment, ...data };
@@ -1133,49 +1024,33 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
-  // Courier Balance - Database Persistent
+  // Courier Balance
   async debitCourierBalance(courierId: string, amount: number): Promise<Courier | undefined> {
-    const courier = await this.getCourier(courierId);
+    const courier = this.couriers.get(courierId);
     if (!courier) return undefined;
-    
-    const newBalance = courier.balance - amount;
-    return this.updateCourier(courierId, { balance: newBalance });
+    const updated = { ...courier, balance: courier.balance - amount };
+    this.couriers.set(courierId, updated);
+    return updated;
   }
 
   async creditCourierBalance(courierId: string, amount: number): Promise<Courier | undefined> {
-    const courier = await this.getCourier(courierId);
+    const courier = this.couriers.get(courierId);
     if (!courier) return undefined;
-    
-    const newBalance = courier.balance + amount;
-    return this.updateCourier(courierId, { balance: newBalance });
+    const updated = { ...courier, balance: courier.balance + amount };
+    this.couriers.set(courierId, updated);
+    return updated;
   }
 
-  // Telegram Users - Database Persistent
+  // Telegram Users
   async getTelegramUsers() {
-    if (!db) return Array.from(this.telegramUsers.values());
-    try {
-      return await db.select().from(telegramUsersTable);
-    } catch (e) {
-      return Array.from(this.telegramUsers.values());
-    }
+    return Array.from(this.telegramUsers.values());
   }
 
   async getTelegramUserByTelegramId(telegramId: string) {
-    if (!db) {
-      for (const user of this.telegramUsers.values()) {
-        if (user.telegramId === telegramId) return user;
-      }
-      return undefined;
+    for (const user of this.telegramUsers.values()) {
+      if (user.telegramId === telegramId) return user;
     }
-    try {
-      const result = await db.select().from(telegramUsersTable).where(eq(telegramUsersTable.telegramId, telegramId));
-      return result[0];
-    } catch (e) {
-      for (const user of this.telegramUsers.values()) {
-        if (user.telegramId === telegramId) return user;
-      }
-      return undefined;
-    }
+    return undefined;
   }
 
   async createTelegramUser(data: { telegramId: string; firstName?: string }) {
@@ -1184,60 +1059,26 @@ export class MemStorage implements IStorage {
     
     const id = randomUUID();
     const user = { id, telegramId: data.telegramId, firstName: data.firstName || null, createdAt: new Date() };
-    
-    if (db) {
-      try {
-        const result = await db.insert(telegramUsersTable).values(user).returning();
-        return result[0];
-      } catch (e) {
-        this.telegramUsers.set(id, user);
-        return user;
-      }
-    }
     this.telegramUsers.set(id, user);
     return user;
   }
 
-  // Courier Transactions - Database Persistent
+  // Courier Transactions
   async createCourierTransaction(courierId: string, amount: number, type: string, description: string, orderId?: string) {
     const id = randomUUID();
     const transaction = { id, courierId, amount, type, description, orderId: orderId || null, createdAt: new Date() };
-    
-    if (db) {
-      try {
-        const result = await db.insert(transactionsTable).values(transaction).returning();
-        return result[0];
-      } catch (e) {
-        this.courierTransactions.set(id, transaction);
-        return transaction;
-      }
-    }
     this.courierTransactions.set(id, transaction);
     return transaction;
   }
 
   async getCourierTransactions(courierId: string) {
-    if (!db) {
-      const transactions: any[] = [];
-      for (const tx of this.courierTransactions.values()) {
-        if (tx.courierId === courierId) {
-          transactions.push(tx);
-        }
+    const transactions: any[] = [];
+    for (const tx of this.courierTransactions.values()) {
+      if (tx.courierId === courierId) {
+        transactions.push(tx);
       }
-      return transactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
-    try {
-      const result = await db.select().from(transactionsTable).where(eq(transactionsTable.courierId, courierId)).orderBy(desc(transactionsTable.createdAt));
-      return result;
-    } catch (e) {
-      const transactions: any[] = [];
-      for (const tx of this.courierTransactions.values()) {
-        if (tx.courierId === courierId) {
-          transactions.push(tx);
-        }
-      }
-      return transactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
+    return transactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   // Chat Messages

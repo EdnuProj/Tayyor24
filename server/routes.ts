@@ -30,85 +30,31 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get the actual domain - try multiple sources
-  let publishedDomain = process.env.REPLIT_DOMAINS;
-  
-  // Auto-setup Telegram webhook (silent - only shows success)
-  const setupTelegramWebhook = async (domain?: string, attempt = 1) => {
+  // Auto-setup Telegram webhook on server start
+  const setupTelegramWebhook = async () => {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) return;
     
-    const maxAttempts = 5;
-    
     try {
-      let webhookUrl = domain;
+      const webhookUrl = `https://${process.env.REPLIT_DOMAINS || 'localhost'}/api/telegram-webhook`;
+      const setWebhookUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;
       
-      if (!webhookUrl) {
-        const platformDomain = process.env.NGROK_WEBHOOK_URL 
-          || (process.env.DOMAIN && !process.env.DOMAIN.includes("auto-generated") ? process.env.DOMAIN : null)
-          || process.env.REPLIT_DOMAINS
-          || process.env.REPLIT_DEV_DOMAIN;
-        
-        if (process.env.NGROK_WEBHOOK_URL) {
-          webhookUrl = process.env.NGROK_WEBHOOK_URL;
-        } else {
-          webhookUrl = `https://${platformDomain}/api/telegram-webhook`;
-        }
-      }
-      
-      const response = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
+      const response = await fetch(setWebhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: webhookUrl, drop_pending_updates: false }),
-        signal: AbortSignal.timeout(15000),
       });
       
-      const result = await response.json();
-      
-      if (result.ok) {
-        console.log("✅ Telegram webhook configured:", webhookUrl);
-      } else if (attempt < maxAttempts) {
-        setTimeout(() => setupTelegramWebhook(domain, attempt + 1), 3000 * attempt);
+      if (response.ok) {
+        console.log("✅ Telegram webhook configured at startup");
       }
-    } catch {
-      // Silent retry - don't spam logs with temporary network failures
-      if (attempt < maxAttempts) {
-        setTimeout(() => setupTelegramWebhook(domain, attempt + 1), 3000 * attempt);
-      }
+    } catch (error) {
+      console.log("ℹ️ Telegram webhook setup skipped at startup");
     }
   };
 
-  // Setup webhook in background (non-blocking)
-  setTimeout(() => setupTelegramWebhook(), 2000);
-  
-  // Manual webhook setup endpoint for debugging
-  app.post("/api/admin/setup-webhook", async (req, res) => {
-    try {
-      const botToken = process.env.TELEGRAM_BOT_TOKEN;
-      if (!botToken) return res.status(400).json({ error: "TELEGRAM_BOT_TOKEN not set" });
-      
-      let webhookUrl = req.body.webhookUrl;
-      if (!webhookUrl) {
-        const platformDomain = process.env.NGROK_WEBHOOK_URL 
-          || process.env.DOMAIN
-          || process.env.REPLIT_DOMAINS
-          || process.env.REPLIT_DEV_DOMAIN
-          || req.get('host');
-        webhookUrl = `https://${platformDomain}/api/telegram-webhook`;
-      }
-      
-      const response = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: webhookUrl, drop_pending_updates: false }),
-      });
-      
-      const result = await response.json();
-      res.json({ success: result.ok, details: result });
-    } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
-    }
-  });
+  // Setup webhook after a short delay
+  setTimeout(setupTelegramWebhook, 2000);
 
   // ========== PRODUCTS ==========
   app.get("/api/products", async (req, res) => {
@@ -847,20 +793,7 @@ Birinchi qabul qilgan kuryer uzatib beradi!
         return res.status(400).json({ error: "Telegram bot token not configured" });
       }
 
-      // Accept custom webhook URL from request, or build from environment/request
-      let webhookUrl = req.body.webhookUrl;
-      if (!webhookUrl) {
-        // Try multiple sources: NGROK, custom DOMAIN, Replit domains, or request hostname
-        const domain = process.env.NGROK_WEBHOOK_URL 
-          || (process.env.DOMAIN && !process.env.DOMAIN.includes("auto-generated") ? process.env.DOMAIN : null)
-          || process.env.REPLIT_DOMAINS
-          || process.env.REPLIT_DEV_DOMAIN
-          || req.hostname;
-        
-        webhookUrl = process.env.NGROK_WEBHOOK_URL 
-          ? process.env.NGROK_WEBHOOK_URL 
-          : `https://${domain}/api/telegram-webhook`;
-      }
+      const webhookUrl = `https://${process.env.REPLIT_DOMAINS || 'localhost'}/api/telegram-webhook`;
       
       // Set webhook
       const setWebhookUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;

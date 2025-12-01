@@ -11,7 +11,6 @@ import runApp from "./app";
 
 export async function setupVite(app: Express, server: Server) {
   const viteLogger = createLogger();
-  
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
@@ -21,31 +20,41 @@ export async function setupVite(app: Express, server: Server) {
   const vite = await createViteServer({
     ...viteConfig,
     configFile: false,
-    customLogger: viteLogger,
+    customLogger: {
+      ...viteLogger,
+      error: (msg, options) => {
+        viteLogger.error(msg, options);
+        process.exit(1);
+      },
+    },
     server: serverOptions,
     appType: "custom",
   });
 
   app.use(vite.middlewares);
-  
-  // Serve index.html for all non-API, non-asset routes (SPA)
-  app.use("*", (req, res, next) => {
-    const reqPath = req.path;
-    
-    // Skip API and static asset routes - let them fall through
-    if (reqPath.startsWith("/api/") || 
-        reqPath.includes("/@") ||
-        /\.(js|css|json|png|jpg|jpeg|svg|ico|gif|woff|woff2|ttf|eot)$/i.test(reqPath)) {
-      return next();
+  app.use("*", async (req, res, next) => {
+    const url = req.originalUrl;
+
+    try {
+      const clientTemplate = path.resolve(
+        import.meta.dirname,
+        "..",
+        "client",
+        "index.html",
+      );
+
+      // always reload the index.html file from disk incase it changes
+      let template = await fs.promises.readFile(clientTemplate, "utf-8");
+      template = template.replace(
+        `src="/src/main.tsx"`,
+        `src="/src/main.tsx?v=${nanoid()}"`,
+      );
+      const page = await vite.transformIndexHtml(url, template);
+      res.status(200).set({ "Content-Type": "text/html" }).end(page);
+    } catch (e) {
+      vite.ssrFixStacktrace(e as Error);
+      next(e);
     }
-    
-    const clientTemplate = path.resolve(
-      import.meta.dirname,
-      "..",
-      "client",
-      "index.html",
-    );
-    res.sendFile(clientTemplate);
   });
 }
 

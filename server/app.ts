@@ -35,20 +35,6 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 
-// CORS middleware - allow requests from all origins
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  
-  // Handle preflight requests
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  
-  next();
-});
-
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -101,7 +87,7 @@ export default async function runApp(
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  const host = process.env.HOST || "0.0.0.0";
+  const host = process.env.HOST || "127.0.0.1";
   const listenOptions: any = {
     port,
     host,
