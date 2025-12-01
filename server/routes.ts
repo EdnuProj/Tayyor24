@@ -34,6 +34,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let publishedDomain = process.env.REPLIT_DOMAINS;
   
   // Auto-setup Telegram webhook on server start with retry logic
+  let webhookSetupAttempts = 0;
   const setupTelegramWebhook = async (domain?: string, attempt = 1) => {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) {
@@ -41,10 +42,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return;
     }
     
-    const maxAttempts = 5;
+    const maxAttempts = 3;
     
     try {
-      // Try multiple sources in order of priority
       let webhookUrl = domain;
       
       if (!webhookUrl) {
@@ -63,8 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const setWebhookUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;
       
       if (attempt === 1) {
-        console.log("🔄 Attempt 1: Setting Telegram webhook to:", webhookUrl);
-        console.log("📝 Token length:", botToken.length, "chars");
+        console.log("🔄 Setting Telegram webhook to:", webhookUrl);
       } else {
         console.log(`🔄 Retry ${attempt}/${maxAttempts}: Setting Telegram webhook to:`, webhookUrl);
       }
@@ -73,55 +72,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: webhookUrl, drop_pending_updates: false }),
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(15000),
       });
       
       const text = await response.text();
-      console.log("📡 Response status:", response.status, "| Body:", text.substring(0, 200));
+      const result = JSON.parse(text);
       
-      try {
-        const result = JSON.parse(text);
-        if (result.ok) {
-          console.log("✅ Telegram webhook configured:", webhookUrl);
-        } else {
-          console.log("❌ Telegram API error:", result.description || result);
-          if (attempt < maxAttempts) {
-            const delay = 5000 * attempt;
-            console.log(`⏳ Retry in ${delay}ms...`);
-            setTimeout(() => setupTelegramWebhook(domain, attempt + 1), delay);
-          }
-        }
-      } catch (parseError) {
-        console.log("❌ Failed to parse response:", text);
+      if (result.ok) {
+        webhookSetupAttempts = 0;
+        console.log("✅ Telegram webhook configured:", webhookUrl);
+      } else {
+        console.log("❌ Telegram API error:", result.description || JSON.stringify(result));
         if (attempt < maxAttempts) {
-          const delay = 5000 * attempt;
-          setTimeout(() => setupTelegramWebhook(domain, attempt + 1), delay);
+          setTimeout(() => setupTelegramWebhook(domain, attempt + 1), 5000 * attempt);
         }
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      const errorCode = error instanceof Error && (error as any).code ? (error as any).code : 'UNKNOWN';
-      const errorCause = error instanceof Error && (error as any).cause ? (error as any).cause : null;
-      
-      console.log(`❌ Fetch error (attempt ${attempt}/${maxAttempts}):`, {
-        message: errorMsg,
-        code: errorCode,
-        cause: errorCause?.toString?.() || errorCause,
-      });
+      webhookSetupAttempts = attempt;
+      const msg = error instanceof Error ? error.message : String(error);
+      console.log(`ℹ️ Webhook setup (attempt ${attempt}/${maxAttempts}): ${msg}`);
       
       if (attempt < maxAttempts) {
-        const delay = 5000 * attempt;
-        console.log(`⏳ Retry ${attempt + 1}/${maxAttempts} in ${delay}ms...`);
-        setTimeout(() => setupTelegramWebhook(domain, attempt + 1), delay);
-      } else {
-        console.log("⚠️ Webhook setup failed after all retries. Bot may not receive messages.");
-        console.log("🔍 Possible causes: Network blocked on Render, Telegram API temporarily down, or DNS resolution failed.");
+        setTimeout(() => setupTelegramWebhook(domain, attempt + 1), 5000 * attempt);
       }
     }
   };
 
-  // Setup webhook after a short delay, with retry mechanism
-  setTimeout(() => setupTelegramWebhook(), 5000);
+  // Setup webhook after app starts (non-blocking)
+  setTimeout(() => setupTelegramWebhook(), 3000);
+  
+  // Manual webhook setup endpoint for debugging
+  app.post("/api/admin/setup-webhook", async (req, res) => {
+    try {
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      if (!botToken) return res.status(400).json({ error: "TELEGRAM_BOT_TOKEN not set" });
+      
+      let webhookUrl = req.body.webhookUrl;
+      if (!webhookUrl) {
+        const platformDomain = process.env.NGROK_WEBHOOK_URL 
+          || process.env.DOMAIN
+          || process.env.REPLIT_DOMAINS
+          || process.env.REPLIT_DEV_DOMAIN
+          || req.get('host');
+        webhookUrl = `https://${platformDomain}/api/telegram-webhook`;
+      }
+      
+      const response = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: webhookUrl, drop_pending_updates: false }),
+      });
+      
+      const result = await response.json();
+      res.json({ success: result.ok, details: result });
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
 
   // ========== PRODUCTS ==========
   app.get("/api/products", async (req, res) => {
