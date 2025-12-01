@@ -26,7 +26,6 @@ export async function setupVite(app: Express, server: Server) {
     appType: "custom",
   });
 
-  // Serve static files and Vite modules first
   app.use(vite.middlewares);
   
   // Serve index.html for all non-API routes (SPA)
@@ -42,15 +41,11 @@ export async function setupVite(app: Express, server: Server) {
 
     try {
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      // Fast path: serve HTML with Vite client script injection
-      template = template.replace(
-        '</head>',
-        '<script type="module" src="/@vite/client"></script></head>'
-      );
-      res.status(200).set({ "Content-Type": "text/html" }).end(template);
+      const page = await vite.transformIndexHtml(req.originalUrl, template);
+      res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).end(page);
     } catch (e) {
-      console.error("Failed to serve HTML:", e);
-      res.status(500).end("Server Error");
+      vite.ssrFixStacktrace(e as Error);
+      res.status(500).set({ "Content-Type": "text/html" }).end("<h1>500 Internal Server Error</h1>");
     }
   });
 }
