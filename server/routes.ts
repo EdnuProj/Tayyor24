@@ -42,18 +42,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Try multiple sources in order of priority:
       // 1. Passed domain parameter
       // 2. NGROK_WEBHOOK_URL (full URL)
-      // 3. DOMAIN env var (can be used on any platform: Render, Railway, etc.)
+      // 3. DOMAIN env var (if not placeholder)
       // 4. REPLIT_DOMAINS
       // 5. REPLIT_DEV_DOMAIN
-      let webhookUrl = domain 
-        || process.env.NGROK_WEBHOOK_URL
-        || (process.env.DOMAIN ? `https://${process.env.DOMAIN}/api/telegram-webhook` : null)
-        || (process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}/api/telegram-webhook` : null)
-        || (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}/api/telegram-webhook` : null);
+      // 6. First request hostname (auto-detect from incoming request)
+      let webhookUrl = domain;
       
       if (!webhookUrl) {
-        console.log("⚠️ No valid webhook URL found - skipping webhook setup");
-        return;
+        const platformDomain = process.env.NGROK_WEBHOOK_URL 
+          || (process.env.DOMAIN && !process.env.DOMAIN.includes("auto-generated") ? process.env.DOMAIN : null)
+          || process.env.REPLIT_DOMAINS
+          || process.env.REPLIT_DEV_DOMAIN;
+        
+        if (process.env.NGROK_WEBHOOK_URL) {
+          webhookUrl = process.env.NGROK_WEBHOOK_URL;
+        } else {
+          webhookUrl = `https://${platformDomain}/api/telegram-webhook`;
+        }
       }
       
       const setWebhookUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;
@@ -817,10 +822,19 @@ Birinchi qabul qilgan kuryer uzatib beradi!
         return res.status(400).json({ error: "Telegram bot token not configured" });
       }
 
-      // Accept custom webhook URL from request, or build from environment
+      // Accept custom webhook URL from request, or build from environment/request
       let webhookUrl = req.body.webhookUrl;
       if (!webhookUrl) {
-        webhookUrl = `https://${process.env.REPLIT_DOMAINS || 'localhost'}/api/telegram-webhook`;
+        // Try multiple sources: NGROK, custom DOMAIN, Replit domains, or request hostname
+        const domain = process.env.NGROK_WEBHOOK_URL 
+          || (process.env.DOMAIN && !process.env.DOMAIN.includes("auto-generated") ? process.env.DOMAIN : null)
+          || process.env.REPLIT_DOMAINS
+          || process.env.REPLIT_DEV_DOMAIN
+          || req.hostname;
+        
+        webhookUrl = process.env.NGROK_WEBHOOK_URL 
+          ? process.env.NGROK_WEBHOOK_URL 
+          : `https://${domain}/api/telegram-webhook`;
       }
       
       // Set webhook
