@@ -807,7 +807,11 @@ Birinchi qabul qilgan kuryer uzatib beradi!
         return res.status(400).json({ error: "Telegram bot token not configured" });
       }
 
-      const webhookUrl = `https://${process.env.REPLIT_DOMAINS || 'localhost'}/api/telegram-webhook`;
+      // Accept custom webhook URL from request, or build from environment
+      let webhookUrl = req.body.webhookUrl;
+      if (!webhookUrl) {
+        webhookUrl = `https://${process.env.REPLIT_DOMAINS || 'localhost'}/api/telegram-webhook`;
+      }
       
       // Set webhook
       const setWebhookUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;
