@@ -12,15 +12,9 @@ import runApp from "./app";
 export async function setupVite(app: Express, server: Server) {
   const viteLogger = createLogger();
   
-  // Determine HMR configuration based on environment
-  let hmrConfig: any = { server };
-  
-  // For all environments, use server-based HMR which works everywhere
-  hmrConfig = { server };
-  
   const serverOptions = {
     middlewareMode: true,
-    hmr: hmrConfig,
+    hmr: { server },
     allowedHosts: true as const,
   };
 
@@ -33,30 +27,24 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   app.use(vite.middlewares);
+  
+  // Serve index.html for all non-API routes (SPA)
   app.use("*", async (req, res, next) => {
-    // Skip non-HTML requests to API or other non-page routes
-    if (req.path.startsWith("/api/") || req.path.startsWith("/.vite/") || req.path.includes(".")) {
-      return next();
-    }
+    if (req.path.startsWith("/api/")) return next();
+    
+    const clientTemplate = path.resolve(
+      import.meta.dirname,
+      "..",
+      "client",
+      "index.html",
+    );
 
     try {
-      const clientTemplate = path.resolve(
-        import.meta.dirname,
-        "..",
-        "client",
-        "index.html",
-      );
-
-      // Read and serve HTML directly without transformation
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`,
-      );
-      res.status(200).set({ "Content-Type": "text/html" }).end(template);
+      const page = await vite.transformIndexHtml(req.originalUrl, template);
+      res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
-      console.error("HTML serve error:", e);
-      res.status(500).set({ "Content-Type": "text/html" }).end("<h1>Server Error</h1>");
+      next(e);
     }
   });
 }
