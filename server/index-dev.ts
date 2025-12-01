@@ -30,16 +30,21 @@ export async function setupVite(app: Express, server: Server) {
   
   // Serve index.html for all non-API, non-asset routes (SPA)
   app.use("*", (req, res, next) => {
-    const path = req.path;
+    const reqPath = req.path;
     
     // Skip API and static asset routes - let them fall through
-    if (path.startsWith("/api/") || 
-        path.includes("/@") ||
-        /\.(js|css|json|png|jpg|jpeg|svg|ico|gif|woff|woff2|ttf|eot)$/i.test(path)) {
+    if (reqPath.startsWith("/api/") || 
+        reqPath.includes("/@") ||
+        /\.(js|css|json|png|jpg|jpeg|svg|ico|gif|woff|woff2|ttf|eot)$/i.test(reqPath)) {
       return next();
     }
     
-    const clientTemplate = require.resolve("../client/index.html");
+    const clientTemplate = path.resolve(
+      import.meta.dirname,
+      "..",
+      "client",
+      "index.html",
+    );
     res.sendFile(clientTemplate);
   });
 }
